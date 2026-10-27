@@ -1,0 +1,836 @@
+<meta charset="utf-8">
+<title>Best of 7 NBA</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap">
+<style>
+/* Layout: a sportsbook-style app. Top bar across; left rail lists the seven series games and position filters;
+   the center holds the night's hero (slate chips) and the player list with salary "odds" buttons; the right rail is the lineup slip.
+   Deliberately one dark look for every viewer. */
+:root {
+  --bg: #0E1014; --panel: #161A20; --panel-2: #1D2129; --chip: #242A33; --chip-2: #2C333E; --line: #262B34;
+  --ink: #F4F6F8; --muted: #959EAA; --dim: #6B7480;
+  --accent: #1D9BF0; --accent-2: #4FB3F6; --accent-soft: rgba(29,155,240,.16);
+  --teal: #34D3BD; --teal-soft: rgba(52,211,189,.12); --tag: #E3EF5B; --tag-ink: #1B1E0A;
+  --good: #4ADE80; --bad: #F87171; --live: #FBBF24;
+  --pill: #FFFFFF; --pill-ink: #0E1014;
+  --a: #1D9BF0; --b: #FB923C;
+  --sans: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); }
+body { color: var(--ink); font-family: var(--sans); font-size: 14px; line-height: 1.45; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num, .odds, dd, .tot, .sc { font-variant-numeric: tabular-nums; }
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: 30px; font-weight: 700; letter-spacing: -.02em; text-wrap: balance; }
+h2 { font-size: 19px; font-weight: 700; letter-spacing: -.01em; text-wrap: balance; }
+h3 { font-size: 19px; font-weight: 700; }
+p { max-width: 65ch; }
+
+.app { max-width: 1480px; margin: 0 auto; display: grid; grid-template-columns: 228px minmax(0, 1fr) 350px; gap: 16px; align-items: start;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 40px; }
+
+/* Top bar */
+.topbar { grid-column: 1 / -1; display: flex; align-items: center; gap: 28px; padding-block: 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); }
+.brand { font-weight: 800; font-size: 21px; letter-spacing: -.02em; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.brand .seven { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 7px; background: var(--accent); color: #fff; transform: skewX(-10deg); }
+.topnav { display: flex; gap: 6px; flex-wrap: wrap; }
+.navlink { border: 0; background: transparent; padding: 7px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 8px; color: var(--ink); }
+.navlink:hover:not(:disabled) { background: var(--panel-2); }
+.navlink:disabled { color: var(--dim); cursor: default; }
+.navlink i { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid currentColor; display: inline-grid; place-items: center; font-style: normal; font-size: 8px; }
+.navlink.live i { border-color: var(--live); background: var(--live); }
+.top-right { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.tchip { background: var(--panel-2); border-radius: 10px; padding: 8px 12px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.tdot { width: 9px; height: 9px; border-radius: 50%; background: var(--a); }
+.tdot.b { background: var(--b); }
+.btn { border: 0; border-radius: 10px; padding: 9px 16px; font-weight: 700; font-size: 13px; background: var(--chip); color: var(--ink); white-space: nowrap; }
+.btn:hover:not(:disabled) { background: var(--chip-2); }
+.btn.primary { background: var(--accent); color: #fff; }
+.btn.primary:hover:not(:disabled) { background: var(--accent-2); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Left rail */
+.side { display: grid; gap: 4px; position: sticky; top: 86px; }
+.side-label { font-size: 12px; color: var(--muted); padding: 14px 12px 6px; }
+.side-status { font-size: 12px; color: var(--ink); padding: 0 12px 6px; font-weight: 600; }
+.nav-item { border: 0; background: transparent; width: 100%; text-align: left; padding: 10px 12px; border-radius: 10px; display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 10px; align-items: center; font-weight: 600; font-size: 13.5px; color: var(--ink); }
+.nav-item:hover:not(:disabled) { background: var(--panel-2); }
+.nav-item[aria-pressed=true] { background: var(--panel-2); }
+.nav-item:disabled { color: var(--dim); cursor: default; }
+.gnum { width: 22px; height: 22px; border-radius: 6px; background: var(--chip); display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+.gnum.wa { background: var(--a); color: #fff; } .gnum.wb { background: var(--b); color: #1a0d03; }
+.badge { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; background: var(--chip); color: var(--muted); white-space: nowrap; }
+.badge.tag { background: rgba(227,239,91,.16); color: var(--tag); }
+.badge.live { background: rgba(251,191,36,.16); color: var(--live); }
+.badge.draft { background: var(--accent-soft); color: var(--accent-2); }
+.badge.won { background: rgba(74,222,128,.14); color: var(--good); }
+.badge.lost { background: rgba(248,113,113,.14); color: var(--bad); }
+.side-note { font-size: 12px; color: var(--muted); padding: 4px 12px; line-height: 1.6; }
+
+/* Center */
+main { display: grid; gap: 16px; min-width: 0; }
+.panel { background: var(--panel); border-radius: 16px; min-width: 0; }
+.hero-card { position: relative; overflow: hidden; padding: 24px 22px 18px; display: grid; gap: 16px; background: var(--panel); border-radius: 16px; isolation: isolate; }
+.hero-card::before { content: ""; position: absolute; inset: 0 0 0 38%; z-index: -1; opacity: .9;
+  background:
+    linear-gradient(90deg, var(--panel) 0%, transparent 45%),
+    linear-gradient(118deg, transparent 0 30%, rgba(29,155,240,.55) 30% 34%, transparent 34% 44%, rgba(251,146,60,.45) 44% 47%, transparent 47% 60%, rgba(52,211,189,.35) 60% 62%, transparent 62%),
+    radial-gradient(60% 90% at 80% 30%, rgba(29,155,240,.35), transparent 70%),
+    radial-gradient(40% 70% at 95% 90%, rgba(251,146,60,.3), transparent 70%); filter: blur(6px); }
+.hero-sub { color: var(--muted); font-size: 13.5px; margin-top: 6px; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.tab { border: 0; background: transparent; padding: 9px 14px; border-radius: 10px; font-weight: 600; font-size: 14px; color: var(--ink); }
+.tab:hover { background: var(--chip); }
+.tab[aria-pressed=true] { background: var(--accent); color: #fff; }
+.tabs .search { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.tabs input, .tabs select { background: rgba(14,16,20,.7); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; min-width: 0; }
+.tabs input { width: 200px; max-width: 100%; }
+.tabs select option { background: var(--panel); }
+.races { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.race { flex: 0 0 auto; min-width: 104px; text-align: center; padding: 10px 12px; border-radius: 10px; display: grid; gap: 2px; background: rgba(36,42,51,.6); }
+.race b { font-size: 15px; font-weight: 700; }
+.race span { font-size: 12.5px; color: var(--muted); }
+.race small { font-size: 11px; color: var(--live); font-weight: 700; }
+.race.done small { color: var(--muted); }
+.lockline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.lock { display: inline-flex; gap: 8px; align-items: center; background: var(--chip); padding: 9px 14px; border-radius: 10px; font-weight: 700; font-size: 13px; }
+.lock::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--good); }
+.lock.locked::before { background: var(--live); }
+.teal { display: inline-flex; gap: 6px; align-items: center; background: var(--teal-soft); color: var(--teal); padding: 8px 12px; border-radius: 10px; font-weight: 700; font-size: 12.5px; }
+
+.list-head { padding: 20px 22px 8px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+.list-head .sub { color: var(--muted); font-size: 13.5px; margin-top: 6px; }
+.runner { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 16px 22px; border-top: 1px solid var(--line); }
+.list-head + .runner, .list-head + div > .runner:first-child { border-top: 0; }
+.jersey { width: 36px; height: 36px; }
+.r-name { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.r-sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.r-sub .sep { color: var(--dim); margin: 0 6px; }
+.r-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.chip { background: var(--chip); border-radius: 7px; padding: 3px 8px; font-size: 12px; font-weight: 600; color: #C9D0D8; }
+.inj { font-size: 10px; font-weight: 800; letter-spacing: .04em; padding: 2px 6px; border-radius: 5px; text-transform: uppercase; }
+.inj.out { background: rgba(248,113,113,.18); color: var(--bad); }
+.inj.gtd { background: rgba(251,191,36,.16); color: var(--live); }
+.r-act { display: grid; justify-items: end; gap: 6px; }
+.odds { min-width: 108px; height: 46px; border-radius: 10px; border: 0; background: var(--pill); color: var(--pill-ink); font-weight: 800; font-size: 16px; padding: 0 14px; }
+.odds:hover { background: #E8F4FE; }
+.odds.on { background: var(--chip); color: var(--good); }
+.odds.on:hover { background: var(--chip-2); }
+.runner.cant .odds:not(.on) { opacity: .4; }
+.r-trail { font-size: 12px; color: var(--muted); }
+.r-trail b { color: var(--ink); font-weight: 600; }
+.runner.in { background: linear-gradient(90deg, var(--accent-soft), transparent 60%); }
+.more { padding: 14px; text-align: center; border-top: 1px solid var(--line); }
+.empty { padding: 28px 22px; color: var(--muted); text-align: center; }
+.legend { font-size: 12px; color: var(--muted); padding: 0 4px; line-height: 1.6; }
+
+.finals { display: flex; gap: 14px; flex-wrap: wrap; }
+.final { background: rgba(36,42,51,.65); border-radius: 12px; padding: 14px 18px; display: grid; gap: 2px; min-width: 160px; }
+.final .tot { font-size: 34px; font-weight: 800; letter-spacing: -.02em; line-height: 1.05; }
+.final.a .tot { color: var(--a); } .final.b .tot { color: var(--b); }
+.final.lose .tot { opacity: .5; }
+.final small { color: var(--muted); font-weight: 600; font-size: 12.5px; display: flex; align-items: center; gap: 8px; }
+.sc { min-width: 96px; height: 46px; border-radius: 10px; background: var(--pill); color: var(--pill-ink); font-weight: 800; font-size: 16px; display: grid; place-items: center; padding: 0 14px; }
+.sc.zero { background: var(--chip); color: var(--muted); }
+
+/* Right rail: lineup slip */
+.slip { position: sticky; top: 86px; }
+.slip-card { background: var(--panel); border-radius: 16px; overflow: hidden; }
+.slip-head { padding: 18px 18px 12px; display: flex; align-items: center; gap: 10px; }
+.count { width: 26px; height: 26px; border-radius: 50%; background: var(--chip); display: grid; place-items: center; font-size: 12px; font-weight: 800; }
+.seg { display: flex; gap: 6px; padding: 0 18px 14px; flex-wrap: wrap; }
+.seg span { padding: 7px 12px; border-radius: 9px; font-weight: 600; font-size: 13px; background: transparent; color: var(--muted); }
+.seg span.on { background: var(--accent); color: #fff; }
+.seg span.on.b { background: var(--b); color: #1a0d03; }
+.legs { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.leg { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; padding: 13px 18px; border-bottom: 1px solid var(--line); align-items: start; }
+.leg .x { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--chip-2); background: transparent; color: var(--muted); font-size: 12px; line-height: 1; display: grid; place-items: center; padding: 0; margin-top: 1px; }
+.leg .x:hover { color: var(--bad); border-color: var(--bad); }
+.leg-top { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.leg-top b { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.leg-sal { font-weight: 800; }
+.leg-sub { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.leg-sub b { color: var(--tag); }
+.capbtn { border: 1px solid var(--chip-2); background: transparent; color: var(--muted); border-radius: 7px; padding: 3px 8px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+.capbtn:hover { border-color: var(--tag); color: var(--tag); }
+.capbtn.on { background: var(--tag); border-color: var(--tag); color: var(--tag-ink); }
+.leg.cap { background: linear-gradient(90deg, rgba(227,239,91,.08), transparent 70%); }
+.ctag { font-size: 10px; font-weight: 800; letter-spacing: .04em; padding: 2px 6px; border-radius: 5px; background: var(--tag); color: var(--tag-ink); text-transform: uppercase; }
+.sc.capsc { box-shadow: 0 0 0 2px var(--tag); }
+.leg-sub { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+.ptag { background: var(--tag); color: var(--tag-ink); border-radius: 5px; padding: 1px 6px; font-size: 11px; font-weight: 800; min-width: 26px; text-align: center; }
+.ptag.dim { background: var(--chip); color: var(--muted); }
+.leg.open { color: var(--dim); }
+.leg.open .leg-top span:last-child { font-style: italic; }
+.slip-foot { padding: 16px 18px 18px; display: grid; gap: 14px; }
+.capbar { height: 6px; border-radius: 4px; background: var(--chip); overflow: hidden; }
+.capbar i { display: block; height: 100%; width: var(--w); background: var(--accent); transition: width .25s ease; }
+.totals { margin: 0; display: grid; gap: 10px; }
+.totals div { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
+.totals dt { color: var(--muted); }
+.totals dd { margin: 0; font-weight: 800; }
+.info { display: flex; gap: 10px; align-items: flex-start; background: var(--panel-2); border-radius: 10px; padding: 11px 12px; font-size: 12.5px; color: #C9D0D8; }
+.info::before { content: "i"; flex: 0 0 18px; height: 18px; border-radius: 50%; background: var(--ink); color: var(--bg); display: grid; place-items: center; font-size: 11px; font-weight: 800; font-style: italic; }
+.ctarow { display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 8px; }
+.trash { height: 46px; border-radius: 10px; border: 0; background: var(--chip); display: grid; place-items: center; }
+.trash:hover:not(:disabled) { background: var(--chip-2); }
+.trash:disabled { opacity: .4; cursor: not-allowed; }
+.cta { height: 46px; border-radius: 10px; border: 0; background: var(--accent); color: #fff; font-weight: 800; font-size: 14px; }
+.cta:hover:not(:disabled) { background: var(--accent-2); }
+.cta:disabled { background: var(--chip-2); color: var(--muted); cursor: default; }
+.cta.ok:disabled { color: var(--good); }
+.cta.err:disabled { color: var(--bad); }
+.series-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-top: 1px solid var(--line); gap: 10px; }
+.series-row b { font-size: 30px; font-weight: 800; line-height: 1; }
+.series-row span { display: flex; align-items: center; gap: 8px; font-weight: 700; min-width: 0; }
+
+/* Forms and notices */
+.card { background: var(--panel); border-radius: 16px; }
+.eyebrow { font-size: 12px; color: var(--muted); font-weight: 600; }
+.hint { font-size: 12px; color: var(--muted); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.notice { padding: 28px 24px; display: grid; gap: 10px; }
+.notice h2 { font-size: 26px; }
+.form { padding: 24px; display: grid; gap: 16px; }
+.form h2, .invite h2 { font-size: 26px; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 6px; border: 0; margin: 0; padding: 0; min-width: 0; }
+.field label, .field legend { font-size: 12px; color: var(--muted); font-weight: 600; padding: 0; }
+.field input[type=text], .field select { padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); }
+.radio { display: flex; gap: 8px; align-items: center; }
+.invite { padding: 22px; display: grid; gap: 16px; border: 1px solid var(--accent-soft); }
+.invite-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.invite-head > div { display: grid; gap: 6px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; background: var(--chip); border-radius: 10px; padding: 8px 12px; font-weight: 600; font-size: 13px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--live); }
+.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+.steps li { counter-increment: s; background: var(--panel-2); border-radius: 12px; padding: 14px 16px; color: var(--muted); display: grid; gap: 6px; font-size: 13px; }
+.steps li::before { content: counter(s); width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 12px; }
+.steps b { color: var(--ink); }
+.linkbox { display: flex; gap: 8px; flex-wrap: wrap; }
+.linkbox input { flex: 1 1 260px; min-width: 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); }
+.champ { border: 1px solid rgba(227,239,91,.35); }
+.champ h1 { font-size: 34px; }
+
+#toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); background: var(--pill); color: var(--pill-ink); padding: 11px 18px; border-radius: 10px; font-weight: 700; opacity: 0; pointer-events: none; transition: .2s ease; max-width: calc(100% - 32px); z-index: 20; }
+#toast.show { opacity: 1; transform: translateX(-50%); }
+
+@media (max-width: 1180px) {
+  .app { grid-template-columns: minmax(0, 1fr) 340px; }
+  .side { grid-column: 1 / -1; position: static; display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+  .side-label, .side-status, .side-note, .side .pos-group { display: none; }
+  .nav-item { width: auto; flex: 0 0 auto; grid-template-columns: 22px auto auto; background: var(--panel); }
+}
+@media (max-width: 860px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .slip { position: static; order: 2; }
+  main { order: 3; }
+  .topbar { position: static; gap: 14px; }
+  .top-right { margin-left: 0; }
+  .tabs .search { margin-left: 0; width: 100%; }
+  .tabs input { flex: 1; width: auto; }
+}
+@media (max-width: 520px) {
+  .runner { grid-template-columns: 32px minmax(0, 1fr); padding: 14px 16px; }
+  .r-act { grid-column: 1 / -1; grid-template-columns: auto 1fr; align-items: center; justify-items: start; }
+  .r-act .r-trail { justify-self: end; }
+  .odds, .sc { min-width: 96px; height: 42px; }
+  .hide-sm { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="app">
+  <header class="topbar" id="topbar"><div class="brand">BEST OF <span class="seven">7</span></div></header>
+  <aside class="side" id="side" aria-label="Series games"></aside>
+  <main id="main">
+    <div class="card notice"><div class="eyebrow">Loading</div><h2>Connecting to the league office</h2><p>Fetching tonight's NBA slate and the current series.</p></div>
+  </main>
+  <aside class="slip" id="slip" aria-label="Lineup"></aside>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const SLOTS = ['G', 'G', 'F', 'F', 'C', 'UTIL'];
+const SLOT_HINT = { G: 'Pick a guard', F: 'Pick a forward', C: 'Pick a center', UTIL: 'Any position' };
+const LIVE_DONE = new Set(['STATUS_FINAL', 'STATUS_POSTPONED', 'STATUS_CANCELED', 'STATUS_FORFEIT']);
+// Box score line from the sync job: [min, pts, reb, ast, stl, blk, to]
+const fpOf = l => l[1] + 1.2 * l[2] + 1.5 * l[3] + 3 * l[4] + 3 * l[5] - l[6];
+const fmt = n => n.toLocaleString('en-US');
+const f1 = n => (Math.round(n * 10) / 10).toFixed(1);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = s => document.querySelector(s);
+const dateOf = id => new Date(+id.slice(0, 4), +id.slice(4, 6) - 1, +id.slice(6, 8));
+const dayLabel = id => dateOf(id).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+const dow = id => dateOf(id).toLocaleDateString('en-US', { weekday: 'short' });
+const timeLabel = iso => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+const isOut = p => /out|suspend/i.test(p.status || '');
+const isGtd = p => /day-to-day|questionable|doubtful/i.test(p.status || '');
+
+let db = null, me = { id: null, isOwner: false }, canWrite = null;
+const PAGE_URL = 'https://claude.ai/artifact/1Vj8rBBQ26XGxihmfc2kgA';
+let days = new Map(), series = null, cpuLu = new Map();
+const lineups = {}, subs = {};
+const loaded = { days: false, series: false };
+const CAPTAIN_X = 1.5; // the captain's fantasy points count 1.5×
+const ui = { sel: null, pos: 'ALL', q: '', sort: 'sal', limit: 80, draft: null, draftCap: null, draftFor: null, save: '', setup: false, sig: '' };
+
+/* ---------- Data helpers ---------- */
+const poolCache = new WeakMap();
+function pmap(day) {
+  let m = poolCache.get(day);
+  if (!m) { m = new Map(day.players.map(p => [p.id, p])); poolCache.set(day, m); }
+  return m;
+}
+const locked = day => Date.now() >= Date.parse(day.lockAt);
+const mySeat = () => series && me.id ? series.seats.indexOf(me.id) : -1;
+const spent = (lu, day) => lu.reduce((s, id) => s + (id ? (pmap(day).get(id)?.sal || 0) : 0), 0);
+
+function savedLineup(k, date) {
+  const seat = series?.seats[k];
+  if (!seat) return null;
+  const doc = seat === 'cpu' ? cpuLu.get(date) : lineups[seat]?.get(date);
+  if (!doc || !Array.isArray(doc.ids)) return null;
+  const day = days.get(date);
+  if (day && doc.at && doc.at > Date.parse(day.lockAt)) return null; // saved after tip-off: not valid
+  return doc.ids;
+}
+function savedCaptain(k, date) {
+  const ids = savedLineup(k, date);
+  const seat = series.seats[k];
+  const doc = seat === 'cpu' ? cpuLu.get(date) : lineups[seat]?.get(date);
+  return ids && ids.includes(doc.captain) ? doc.captain : null;
+}
+const complete = ids => ids && ids.length === 6 && ids.every(Boolean);
+const bestAvg = (ids, day) => ids.filter(Boolean).reduce((b, id) => (pmap(day).get(id)?.avg || 0) > (pmap(day).get(b)?.avg || 0) ? id : b, ids.find(Boolean) || null);
+
+function scoreSide(ids, day, captain) {
+  const m = pmap(day);
+  const rows = ids.map((id, i) => {
+    const p = m.get(id) || { id, name: 'Unknown player', team: '', pos: '', sal: 0 };
+    const line = day.results?.[id];
+    const base = line ? fpOf(line) : 0, cap = id === captain;
+    return { slot: SLOTS[i], p, line, base, cap, fp: cap ? base * CAPTAIN_X : base };
+  });
+  return { rows, total: Math.round(rows.reduce((a, r) => a + r.fp, 0) * 10) / 10, best: Math.max(0, ...rows.map(r => r.fp)) };
+}
+
+// Walk the game days from the series start: final days are scored, a day with no lineups on
+// either side doesn't count, and the first manager to 4 wins ends it.
+function seriesState() {
+  const ids = [...days.keys()].filter(d => d >= series.start).sort();
+  const games = [], wins = [0, 0];
+  let winner = null;
+  for (const d of ids) {
+    if (winner !== null || games.length >= 7) break;
+    const day = days.get(d);
+    const sides = [0, 1].map(k => { const ids = savedLineup(k, d); return complete(ids) ? scoreSide(ids, day, savedCaptain(k, d)) : null; });
+    if (day.final) {
+      if (!sides[0] && !sides[1]) continue;
+      const t = sides.map(s => s ? s.total : 0);
+      const w = t[0] !== t[1] ? (t[0] > t[1] ? 0 : 1) : ((sides[0]?.best || 0) >= (sides[1]?.best || 0) ? 0 : 1);
+      wins[w]++;
+      games.push({ date: d, state: 'final', winner: w, t, sides });
+      if (wins[w] >= 4) winner = w;
+    } else {
+      games.push({ date: d, state: locked(day) ? 'live' : 'open', t: sides.map(s => s ? s.total : 0), sides });
+    }
+  }
+  return { games, wins, winner };
+}
+
+/* ---------- CPU manager ---------- */
+function seeded(str) {
+  let h = 2166136261;
+  for (const c of str) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+  return () => { h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; };
+}
+function buildLineup(base, day, cap, rnd, noise) {
+  const pl = day.players.filter(p => !isOut(p) && p.gp > 0);
+  const randn = () => Math.sqrt(-2 * Math.log(rnd() || 1e-9)) * Math.cos(2 * Math.PI * rnd());
+  const val = new Map(pl.map(p => [p.id, p.avg * (1 + noise * randn())]));
+  const sal = id => pmap(day).get(id).sal;
+  const minSal = Math.min(...pl.map(p => p.sal));
+  const elig = (slot, p) => slot === 'UTIL' || p.pos === slot;
+  const free = SLOTS.map((_, i) => i).filter(i => !base[i]);
+  let best = null, bestV = -Infinity;
+  for (let t = 0; t < 80; t++) {
+    const lu = base.slice();
+    let s = spent(lu, day), ok = true;
+    const order = free.slice().sort(() => rnd() - .5).sort((a, b) => (a === 5) - (b === 5));
+    for (let k = 0; k < order.length; k++) {
+      const i = order[k], budget = cap - s - (order.length - k - 1) * minSal;
+      const c = pl.filter(p => elig(SLOTS[i], p) && !lu.includes(p.id) && p.sal <= budget);
+      if (!c.length) { ok = false; break; }
+      const p = c[Math.floor(rnd() * c.length)];
+      lu[i] = p.id; s += p.sal;
+    }
+    if (!ok) continue;
+    for (let pass = 0; pass < 3; pass++) {
+      let improved = false;
+      for (const i of free) {
+        const cur = lu[i];
+        let pick = cur, pv = val.get(cur);
+        for (const p of pl) {
+          if (!elig(SLOTS[i], p) || lu.includes(p.id) || s - sal(cur) + p.sal > cap) continue;
+          if (val.get(p.id) > pv) { pv = val.get(p.id); pick = p.id; }
+        }
+        if (pick !== cur) { s += sal(pick) - sal(cur); lu[i] = pick; improved = true; }
+      }
+      if (!improved) break;
+    }
+    const v = lu.reduce((a, id) => a + (val.get(id) ?? 0), 0);
+    if (v > bestV) { bestV = v; best = lu; }
+  }
+  return best;
+}
+async function ensureCpuLineup(date) {
+  if (series?.seats[1] !== 'cpu' || mySeat() !== 0 || cpuLu.has(date)) return;
+  const day = days.get(date);
+  if (!day || locked(day)) return;
+  const ids = buildLineup(SLOTS.map(() => null), day, series.cap, seeded('cpu' + date), 0.2);
+  if (ids) await db.doc('cpulineups/' + date).set({ ids, captain: bestAvg(ids, day), at: Date.now() });
+}
+
+/* ---------- Rendering ---------- */
+/* ---------- Rendering ---------- */
+const TEAM_COLORS = { ATL: '#E03A3E', BOS: '#008348', BKN: '#3A3A3A', CHA: '#1D8CAB', CHI: '#CE1141', CLE: '#860038', DAL: '#0064B1', DEN: '#FEC524', DET: '#C8102E', GS: '#1D428A', HOU: '#CE1141', IND: '#FDBB30', LAC: '#C8102E', LAL: '#552583', MEM: '#5D76A9', MIA: '#98002E', MIL: '#00471B', MIN: '#236192', NO: '#85714D', NY: '#F58426', OKC: '#007AC1', ORL: '#0077C0', PHI: '#006BB6', PHX: '#E56020', POR: '#E03A3E', SAC: '#5A2D81', SA: '#8A8D8F', TOR: '#CE1141', UTAH: '#4E2A84', WSH: '#E31837' };
+const POS_NAME = { G: 'Guard', F: 'Forward', C: 'Center' };
+function jersey(team) {
+  const c = TEAM_COLORS[team] || '#5B6573';
+  return `<svg class="jersey" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 3h4.2c.3 2 1.3 3.3 2.8 3.3S18.5 5 18.8 3H23l1.3 5.4c-1.2.9-2 2.3-2 4V29H9.7V12.4c0-1.7-.8-3.1-2-4z" fill="${c}" stroke="rgba(255,255,255,.28)" stroke-width="1"/><text x="16" y="21" text-anchor="middle" font-size="6.5" font-weight="800" fill="rgba(255,255,255,.9)" font-family="Manrope, sans-serif">${esc(team).slice(0, 3)}</text></svg>`;
+}
+
+function seriesStatus(st) {
+  const names = series.teams;
+  const [x, y] = st.wins;
+  if (st.winner !== null) return `${esc(names[st.winner])} won ${Math.max(x, y)}–${Math.min(x, y)}`;
+  if (x === 3 && y === 3) return 'Game 7 · winner takes the week';
+  if (x === y) return x ? `Series tied ${x}–${y}` : 'Series opens ' + (st.games[0] ? dow(st.games[0].date) : 'soon');
+  const l = x > y ? 0 : 1;
+  return `${esc(names[l])} leads ${Math.max(x, y)}–${Math.min(x, y)}`;
+}
+
+function renderTop(st) {
+  const live = st?.games.find(g => g.state === 'live'), open = st?.games.find(g => g.state === 'open');
+  const finals = st ? st.games.filter(g => g.state === 'final') : [];
+  const last = finals[finals.length - 1];
+  const seat = mySeat();
+  const link = (g, label, cls = '') => `<button class="navlink ${cls}" ${g ? `data-action="sel" data-d="${g.date}"` : 'disabled'}><i></i>${label}</button>`;
+  $('#topbar').innerHTML = `
+    <div class="brand">BEST OF <span class="seven">7</span></div>
+    ${st ? `<nav class="topnav" aria-label="Jump to">${link(live, 'Live Now', 'live')}${link(open, 'Draft Lineup')}${link(last, 'Last Result')}</nav>` : ''}
+    <div class="top-right">
+      <span class="tchip">NBA · 2026–27</span>
+      ${series && seat >= 0 ? `<span class="tchip"><span class="tdot ${seat ? 'b' : ''}"></span>${esc(series.teams[seat])}</span>` : ''}
+      ${me.isOwner && series ? `<button class="btn" data-action="setup">New series</button>` : ''}
+      ${me.isOwner && series && !series.seats[1] ? `<button class="btn primary" data-goto="invite">Invite a friend</button>` : ''}
+    </div>`;
+}
+
+function renderSide(st, view) {
+  if (!st) { $('#side').innerHTML = ''; return; }
+  const seat = mySeat();
+  const items = Array.from({ length: 7 }, (_, i) => {
+    const g = st.games[i];
+    if (!g) return `<button class="nav-item" disabled><span class="gnum">${i + 1}</span><span>Game ${i + 1}</span><span class="badge">${st.winner !== null ? '—' : 'TBD'}</span></button>`;
+    let badge;
+    if (g.state === 'final') {
+      badge = seat >= 0 ? `<span class="badge ${g.winner === seat ? 'won' : 'lost'}">${g.winner === seat ? 'Won' : 'Lost'}</span>` : `<span class="badge">${f1(g.t[g.winner])}</span>`;
+    } else badge = g.state === 'live' ? '<span class="badge live">Live</span>' : '<span class="badge draft">Draft</span>';
+    return `<button class="nav-item" data-action="sel" data-d="${g.date}" aria-pressed="${ui.sel === g.date}"><span class="gnum ${g.state === 'final' ? (g.winner ? 'wb' : 'wa') : ''}">${i + 1}</span><span>${dayLabel(g.date)}</span>${badge}</button>`;
+  }).join('');
+  let pos = '';
+  if (view === 'build') {
+    const pl = days.get(ui.sel).players;
+    const n = p => p === 'ALL' ? pl.length : pl.filter(x => x.pos === p).length;
+    pos = `<div class="pos-group"><div class="side-label">Positions</div>${[['ALL', 'All players'], ['G', 'Guards'], ['F', 'Forwards'], ['C', 'Centers']].map(([v, l]) => `<button class="nav-item" data-action="pos" data-v="${v}" aria-pressed="${ui.pos === v}"><span class="gnum">${v === 'ALL' ? '★' : v}</span><span>${l}</span><span class="badge tag">${n(v)}</span></button>`).join('')}</div>`;
+  }
+  $('#side').innerHTML = `<div class="side-label">Series</div><div class="side-status">${seriesStatus(st)}</div>${items}${pos}
+    <div class="side-label">Scoring</div><div class="side-note">Point 1 · Rebound 1.2<br>Assist 1.5 · Steal 3<br>Block 3 · Turnover −1<br>Captain ×1.5</div>`;
+}
+
+function notice(eyebrow, title, body) {
+  return `<div class="card notice"><div class="eyebrow">${eyebrow}</div><h2>${title}</h2>${body}</div>`;
+}
+
+function openDates() {
+  return [...days.keys()].sort().filter(d => !locked(days.get(d)));
+}
+
+function setupView() {
+  const dates = openDates();
+  if (!dates.length) return notice('New series', 'Waiting for the next slate', '<p>No upcoming NBA game day has been posted yet. The daily sync posts the next slate each morning.</p>');
+  return `<form class="card form" id="setup-form">
+    <div><div class="eyebrow">New series</div><h2>Set up the week</h2></div>
+    <p class="hint">Game 1 is the first slate you pick below. Each NBA game day after that is the next game, until someone wins 4.</p>
+    <div class="form-grid">
+      <div class="field"><label for="setup-a">Your team name</label><input type="text" id="setup-a" maxlength="20" value="${esc(series?.teams[0] || 'My Squad')}"></div>
+      <fieldset class="field"><legend>Opponent</legend>
+        <label class="radio"><input type="radio" name="setup-mode" id="setup-mode-cpu" value="cpu" checked> The computer</label>
+        <label class="radio"><input type="radio" name="setup-mode" id="setup-mode-friend" value="friend"> A friend (you’ll get an invite link)</label>
+      </fieldset>
+      <div class="field"><label for="setup-cap">Daily salary cap</label>
+        <select id="setup-cap"><option value="45000">45,000 credits (tight)</option><option value="50000" selected>50,000 credits (standard)</option><option value="55000">55,000 credits (loose)</option></select></div>
+      <div class="field"><label for="setup-start">Game 1</label>
+        <select id="setup-start">${dates.map(d => `<option value="${d}">${dayLabel(d)} · ${days.get(d).games.length} games · locks ${timeLabel(days.get(d).lockAt)}</option>`).join('')}</select></div>
+    </div>
+    <div class="row"><button type="submit" class="btn primary">Start series</button>${series ? '<button type="button" class="btn" data-action="setup-cancel">Keep current series</button><span class="hint">Starting a new series ends the current one.</span>' : ''}</div>
+  </form>`;
+}
+
+function inviteCard() {
+  return `<div class="card invite">
+    <div class="invite-head"><div><div class="eyebrow">Open seat</div><h2>Invite a friend</h2></div><span class="pill"><span class="dot"></span>Waiting for them to join</span></div>
+    <ol class="steps">
+      <li><b>Share this page with them by email.</b> Use the Share menu at the top of this page, enter their email address, and set their access to <b>Editor</b> so they can save lineups.</li>
+      <li><b>Send them the link.</b> They sign in to claude.ai with that email. A free account works.</li>
+      <li><b>They press Join.</b> Their team takes the open seat, and both lineups stay hidden from each other until tip-off.</li>
+    </ol>
+    <div class="linkbox"><input id="invite-link" type="text" readonly value="${PAGE_URL}" aria-label="Game link"><button class="btn primary" data-action="copy-link">Copy link</button></div>
+    <p class="hint">You can draft your own lineup in the meantime. A game counts only if at least one side sets a lineup.</p>
+  </div>`;
+}
+
+function joinView() {
+  if (canWrite === false) return notice('Open seat', `You’re invited to watch, not play yet`, `<p>To join ${esc(series.teams[0])}’s series, ask them to share this page with your email as an <b>Editor</b> from the Share menu, then reload this page.</p>`);
+  return `<form class="card form" id="join-form">
+    <div><div class="eyebrow">Open seat</div><h2>Take on ${esc(series.teams[0])}</h2></div>
+    <p>This series has an open seat. Name your team to join as the opponent.</p>
+    <div class="form-grid"><div class="field"><label for="join-name">Your team name</label><input type="text" id="join-name" maxlength="20" value="The Rival"></div></div>
+    <div class="row"><button type="submit" class="btn primary">Join the series</button></div>
+  </form>`;
+}
+
+// The game-time chips and lock status; refreshed in place each minute.
+function slateCard(g, day, idx) {
+  const lockTxt = locked(day) ? (day.final ? 'All games final' : 'Lineups locked') : `Locks ${timeLabel(day.lockAt)} · ${until(day.lockAt)}`;
+  const races = day.games.map(x => {
+    const started = x.status !== 'STATUS_SCHEDULED';
+    const done = LIVE_DONE.has(x.status);
+    return `<div class="race ${done ? 'done' : started ? 'in' : ''}"><b>${started ? `${x.awayScore}–${x.homeScore}` : timeLabel(x.tip)}</b><span>${esc(x.away)} @ ${esc(x.home)}</span>${started ? `<small>${esc(x.detail)}</small>` : ''}</div>`;
+  }).join('');
+  return `<div class="lockline"><span class="lock ${locked(day) ? 'locked' : ''}">${lockTxt}</span><span class="teal">⇆ Cap ${fmt(series.cap)} · 6 slots</span></div><div class="races">${races}</div>`;
+}
+
+function until(iso) {
+  const ms = Date.parse(iso) - Date.now();
+  if (ms <= 0) return 'now';
+  const h = Math.floor(ms / 36e5), m = Math.floor(ms % 36e5 / 6e4);
+  return h ? `in ${h}h ${m}m` : `in ${m}m`;
+}
+
+function heroCard(g, day, idx, tools) {
+  const title = g.state === 'open' ? `NBA · Game ${idx + 1}` : g.state === 'live' ? `Game ${idx + 1} · Live` : `Game ${idx + 1} · Final`;
+  return `<section class="hero-card">
+    <div><h1>${title}</h1><p class="hero-sub">${dayLabel(g.date)} · ${day.games.length} NBA games · ${day.players.length} players</p></div>
+    ${tools ? `<div class="tabs">
+      ${[['ALL', 'All Players'], ['G', 'Guards'], ['F', 'Forwards'], ['C', 'Centers']].map(([v, l]) => `<button class="tab" data-action="pos" data-v="${v}" aria-pressed="${ui.pos === v}">${l}</button>`).join('')}
+      <div class="search"><input id="q" type="search" placeholder="Search players or teams" value="${esc(ui.q)}" aria-label="Search players">
+      <select id="sort" aria-label="Sort players">${[['sal', 'Salary'], ['avg', 'Fantasy pts'], ['value', 'Best value']].map(([v, l]) => `<option value="${v}" ${ui.sort === v ? 'selected' : ''}>Sort: ${l}</option>`).join('')}</select></div>
+    </div>` : ''}
+    <div id="slate">${slateCard(g, day, idx)}</div>
+  </section>`;
+}
+
+function builderView(day) {
+  return `<section class="panel">
+    <div class="list-head"><div><h2>${dayLabel(ui.sel)} player pool</h2><p class="sub">Tap a salary to add a player. Prices are fantasy points per game × 222 credits.</p></div></div>
+    <div id="poolrows"></div><div id="poolmore"></div>
+  </section>`;
+}
+
+function renderPool() {
+  const day = days.get(ui.sel), lu = ui.draft;
+  const left = series.cap - spent(lu, day);
+  const q = ui.q.trim().toLowerCase();
+  const rows = day.players.filter(p => (ui.pos === 'ALL' || p.pos === ui.pos) && (!q || p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q)));
+  const key = { sal: p => p.sal, avg: p => p.avg, value: p => p.avg / p.sal }[ui.sort];
+  rows.sort((a, b) => key(b) - key(a) || b.avg - a.avg);
+  const shown = rows.slice(0, ui.limit);
+  $('#poolrows').innerHTML = shown.length ? shown.map(p => {
+    const inLu = lu.includes(p.id), cant = !inLu && p.sal > left;
+    const tag = isOut(p) ? '<span class="inj out">Out</span>' : isGtd(p) ? `<span class="inj gtd" title="${esc(p.status)}">GTD</span>` : '';
+    return `<div class="runner ${inLu ? 'in' : ''} ${cant ? 'cant' : ''}">
+      ${jersey(p.team)}
+      <div><div class="r-name">${esc(p.name)}${tag}</div>
+        <div class="r-sub">${esc(p.team)} ${esc(p.opp)}<span class="sep">|</span>${POS_NAME[p.pos]}</div>
+        <div class="r-chips"><span class="chip">FPPG: ${p.gp ? f1(p.avg) : '—'}</span><span class="chip">GP: ${p.gp}</span><span class="chip hide-sm">Value: ${p.gp ? (p.avg / p.sal * 1000).toFixed(2) : '—'}</span></div></div>
+      <div class="r-act">
+        <button class="odds ${inLu ? 'on' : ''}" data-action="${inLu ? 'drop' : 'add'}" data-id="${esc(p.id)}" aria-label="${inLu ? 'Remove' : 'Add'} ${esc(p.name)}, ${fmt(p.sal)} credits">${inLu ? '✓ ' : ''}${fmt(p.sal)}</button>
+        <span class="r-trail">${cant ? `<b>${fmt(p.sal - left)}</b> over budget` : `proj <b>${p.gp ? f1(p.avg) : '0.0'}</b> pts`}</span>
+      </div>
+    </div>`;
+  }).join('') : `<p class="empty">No players match. Clear the search or pick another position.</p>`;
+  $('#poolmore').innerHTML = rows.length > shown.length ? `<div class="more"><button class="btn" data-action="more">Show ${Math.min(80, rows.length - shown.length)} more of ${rows.length - shown.length}</button></div>` : '';
+}
+
+const TRASH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
+
+function renderLineup() {
+  const day = days.get(ui.sel), lu = ui.draft, side = mySeat();
+  const s = spent(lu, day), left = series.cap - s, open = lu.filter(x => !x).length;
+  const m = pmap(day);
+  const legs = SLOTS.map((slot, i) => {
+    const p = lu[i] && m.get(lu[i]);
+    const isCap = !!p && ui.draftCap === p.id;
+    return p ? `<li class="leg ${isCap ? 'cap' : ''}"><button class="x" data-action="remove" data-i="${i}" aria-label="Remove ${esc(p.name)}">✕</button><div>
+        <div class="leg-top"><span class="ptag">${slot}</span><b>${esc(p.name)}</b><span class="leg-sal">${fmt(p.sal)}</span></div>
+        <div class="leg-sub"><span>${esc(p.team)} ${esc(p.opp)} · FPPG ${f1(p.avg)}${isCap ? ` → <b>${f1(p.avg * CAPTAIN_X)}</b>` : ''}${isOut(p) ? ' · <span class="inj out">Out</span>' : ''}</span>
+          <button class="capbtn ${isCap ? 'on' : ''}" data-action="captain" data-id="${esc(p.id)}" aria-pressed="${isCap}" aria-label="${isCap ? 'Remove captain' : 'Make captain'}: ${esc(p.name)}">${isCap ? '★ Captain ×1.5' : 'Make captain'}</button></div></div></li>`
+      : `<li class="leg open"><span></span><div class="leg-top"><span class="ptag dim">${slot}</span><span>${SLOT_HINT[slot]}</span><span></span></div></li>`;
+  }).join('');
+  const proj = lu.reduce((a, id) => a + (id ? (m.get(id)?.avg || 0) * (id === ui.draftCap ? CAPTAIN_X : 1) : 0), 0);
+  const oppSeat = series.seats[1 - side];
+  const oppName = oppSeat ? series.teams[1 - side] : 'Open seat';
+  const oppSet = complete(savedLineup(1 - side, ui.sel));
+  const info = open ? `Fill all six slots to count. ${open} open · about ${fmt(Math.floor(left / open))} credits each.`
+    : !ui.draftCap ? 'Pick a captain. Tap “Make captain” on one player and his points count 1.5×.'
+    : !oppSeat ? 'Your opponent’s seat is still open. Invite a friend from the top bar.'
+    : oppSeat === 'cpu' ? 'The computer sets its lineup once yours is saved.'
+    : oppSet ? `${esc(oppName)} has a lineup in. You’ll see it at tip-off.` : `${esc(oppName)} hasn’t set a lineup yet.`;
+  const cta = open ? `<button class="cta" data-action="auto">Auto-fill ${open} open slot${open > 1 ? 's' : ''}</button>`
+    : ui.save === 'pending' ? '<button class="cta" disabled>Saving…</button>'
+    : ui.save === 'err' ? '<button class="cta err" disabled>Couldn’t save. Make any change to retry.</button>'
+    : `<button class="cta ok" disabled>✓ Lineup saved · locks ${timeLabel(day.lockAt)}</button>`;
+  $('#lineup').innerHTML = `
+    <div class="slip-head"><span class="count">${6 - open}</span><h3>Lineup</h3></div>
+    <div class="seg"><span class="on ${side ? 'b' : ''}">${esc(series.teams[side])}</span><span>vs ${esc(oppName)}</span></div>
+    <ul class="legs">${legs}</ul>
+    <div class="slip-foot">
+      <div class="capbar"><i style="--w:${Math.min(100, s / series.cap * 100)}%"></i></div>
+      <dl class="totals"><div><dt>Salary used</dt><dd>${fmt(s)}</dd></div><div><dt>Credits left</dt><dd>${fmt(left)}</dd></div><div><dt>Projected</dt><dd>${f1(proj)} pts</dd></div></dl>
+      <div class="info">${info}</div>
+      <div class="ctarow"><button class="trash" data-action="clear" aria-label="Clear lineup" ${lu.some(Boolean) ? '' : 'disabled'}>${TRASH}</button>${cta}</div>
+    </div>`;
+}
+
+function boxCard(k, side, day) {
+  const name = series.teams[k] || 'Open seat';
+  const head = `<div class="list-head"><div><h2><span class="tdot ${k ? 'b' : ''}" style="display:inline-block;margin-right:10px"></span>${esc(name)}</h2>${side ? `<p class="sub">${fmt(side.rows.reduce((a, r) => a + r.p.sal, 0))} credits spent</p>` : ''}</div>${side ? `<span class="sc">${f1(side.total)}</span>` : ''}</div>`;
+  if (!side) return `<section class="panel">${head}<p class="empty">No lineup was set for this game, so it scores 0.</p></section>`;
+  const rows = side.rows.map(r => {
+    const l = r.line;
+    const stat = l ? `${l[1]} PTS · ${l[2]} REB · ${l[3]} AST · ${l[4]} STL · ${l[5]} BLK · ${l[6]} TO · ${l[0]} MIN` : day.final ? 'Did not play' : 'Not started';
+    return `<div class="runner">${jersey(r.p.team)}
+      <div><div class="r-name"><span class="ptag">${r.slot}</span>${esc(r.p.name)}${r.cap ? '<span class="ctag">★ Captain</span>' : ''}</div><div class="r-sub">${esc(r.p.team)}<span class="sep">|</span>${stat}</div></div>
+      <div class="r-act"><span class="sc ${l ? '' : 'zero'} ${r.cap ? 'capsc' : ''}">${l ? f1(r.fp) : '—'}</span><span class="r-trail">${r.cap && l ? `${f1(r.base)} × 1.5` : `${fmt(r.p.sal)} cr`}</span></div></div>`;
+  }).join('');
+  return `<section class="panel">${head}<div>${rows}</div></section>`;
+}
+
+function scoredView(g, day, idx, st) {
+  const n = series.teams, final = g.state === 'final';
+  const t = g.sides.map(s => s ? s.total : 0);
+  const lead = t[0] === t[1] ? null : t[0] > t[1] ? 0 : 1;
+  const title = final ? `${esc(n[g.winner])} wins Game ${idx + 1}` : lead === null ? 'All square so far' : `${esc(n[lead])} leads Game ${idx + 1}`;
+  const updated = day.updatedAt ? `Stats as of ${new Date(day.updatedAt).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}.` : '';
+  const champ = final && st.winner !== null && idx === st.games.length - 1
+    ? `<section class="hero-card champ"><div class="eyebrow">Week champion</div><h1>${esc(n[st.winner])} takes the series</h1><p class="hero-sub">${st.wins[st.winner]}–${st.wins[1 - st.winner]} in ${st.games.length} games.</p>${me.isOwner ? '<div class="row"><button class="btn primary" data-action="setup">Start next week’s series</button></div>' : ''}</section>` : '';
+  return `${champ}
+    <section class="panel"><div class="list-head"><div><h2>${title}</h2><p class="sub">${final ? 'Final' : 'Scores update when the sync runs during and after the games.'} ${updated}</p></div></div>
+      <div class="finals" style="padding:4px 22px 20px">
+        <div class="final a ${final && g.winner ? 'lose' : ''}"><span class="tot">${f1(t[0])}</span><small><span class="tdot"></span>${esc(n[0])}</small></div>
+        <div class="final b ${final && !g.winner ? 'lose' : ''}"><span class="tot">${f1(t[1])}</span><small><span class="tdot b"></span>${esc(n[1] || 'Open seat')}</small></div>
+      </div></section>
+    ${boxCard(0, g.sides[0], day)}${boxCard(1, g.sides[1], day)}`;
+}
+
+const legend = `<p class="legend">Scoring: point 1 · rebound 1.2 · assist 1.5 · steal 3 · block 3 · turnover −1. Your captain's points count 1.5×.Salaries come from each player's fantasy points per game this season and freeze at the slate's first tip-off, when lineups lock. Players ruled out score 0. If the totals tie, the side with the best single performance wins. A game day where neither side set a lineup doesn't count. Data: ESPN public NBA feed.</p>`;
+
+function renderSlip(st, view) {
+  const el = $('#slip');
+  if (view === 'build') { if (!$('#lineup')) el.innerHTML = '<div class="slip-card" id="lineup"></div>'; return; }
+  if (!st) { el.innerHTML = ''; return; }
+  const n = series.teams;
+  el.innerHTML = `<div class="slip-card">
+    <div class="slip-head"><span class="count">${st.wins[0] + st.wins[1]}</span><h3>Series</h3></div>
+    <div class="series-row"><span><span class="tdot"></span>${esc(n[0])}</span><b>${st.wins[0]}</b></div>
+    <div class="series-row"><span><span class="tdot b"></span>${esc(n[1] || 'Open seat')}</span><b>${st.wins[1]}</b></div>
+    <div class="slip-foot"><div class="info">${seriesStatus(st)}. First to 4 wins takes the week.</div></div>
+  </div>`;
+}
+
+function render() {
+  if (!loaded.days || !loaded.series) return;
+  const st = series ? seriesState() : null;
+  if (st && (!ui.sel || !st.games.some(g => g.date === ui.sel))) {
+    const cur = st.games.find(g => g.state !== 'final') || st.games[st.games.length - 1];
+    ui.sel = cur?.date || null;
+  }
+  const seat = mySeat();
+  const g = st?.games.find(x => x.date === ui.sel);
+  const idx = st ? st.games.indexOf(g) : -1;
+  const day = g && days.get(g.date);
+  let view;
+  if (!series || ui.setup) view = me.isOwner ? 'setup' : 'wait';
+  else if (!series.seats[1] && seat < 0 && me.id) view = 'join';
+  else if (!g) view = 'noslate';
+  else if (g.state === 'open') view = seat >= 0 ? 'build' : 'hidden';
+  else view = 'scored';
+  renderTop(st);
+  renderSide(st, view);
+  const sig = [view, ui.sel, seat, series?.seats.join(), series?.start].join('|');
+  if (view === 'build') {
+    if (ui.draftFor !== ui.sel) { ui.draft = (savedLineup(seat, ui.sel) || SLOTS.map(() => null)).slice(); ui.draftCap = savedCaptain(seat, ui.sel); ui.draftFor = ui.sel; ui.save = ''; }
+    if (sig === ui.sig) { renderPool(); renderLineup(); refreshSlate(g, day, idx); return; }
+  }
+  if ((view === 'setup' || view === 'join') && sig === ui.sig) return; // keep what the viewer is typing
+  ui.sig = sig;
+  $('#slip').innerHTML = '';
+  renderSlip(st, view);
+  const m = $('#main');
+  if (view === 'setup') m.innerHTML = setupView();
+  else if (view === 'wait') m.innerHTML = notice('Best of 7', 'No series running', '<p>The page owner hasn’t started a series yet. Check back soon.</p>');
+  else if (view === 'join') m.innerHTML = joinView();
+  else if (view === 'noslate') m.innerHTML = notice('Series', 'Waiting for the next slate', '<p>The next NBA game day hasn’t been posted yet. The sync posts slates and results each morning and afternoon.</p>');
+  else if (view === 'hidden') m.innerHTML = heroCard(g, day, idx, false) + notice('Lineups hidden', 'Revealed at tip-off', `<p>Both lineups stay hidden until ${timeLabel(day.lockAt)}, when the first game tips off.</p>`);
+  else if (view === 'build') { m.innerHTML = `${!series.seats[1] && seat === 0 ? `<div id="invite">${inviteCard()}</div>` : ''}${heroCard(g, day, idx, true)}${builderView(day)}${legend}`; renderPool(); renderLineup(); }
+  else m.innerHTML = `${heroCard(g, day, idx, false)}${scoredView(g, day, idx, st)}${legend}`;
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-goto]');
+  if (t) document.getElementById(t.dataset.goto)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+function refreshSlate(g, day, idx) { const el = $('#slate'); if (el) el.innerHTML = slateCard(g, day, idx); }
+
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+/* ---------- Lineup edits (saved automatically) ---------- */
+let saveTimer = null, saving = false, saveAgain = false;
+function changed() {
+  ui.save = 'pending'; renderPool(); renderLineup();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(flush, 700);
+}
+async function flush() {
+  if (saving) { saveAgain = true; return; }
+  const date = ui.draftFor, day = days.get(date), ids = ui.draft.slice(), captain = ids.includes(ui.draftCap) ? ui.draftCap : null;
+  if (!day || locked(day)) { ui.save = 'err'; toast('Lineups are locked for this slate.'); render(); return; }
+  saving = true;
+  try {
+    await db.doc(`lineups/${me.id}/days/${date}`).set({ ids, captain, at: Date.now() });
+    if (complete(ids)) await ensureCpuLineup(date);
+    ui.save = 'ok';
+  } catch (e) { ui.save = 'err'; }
+  saving = false;
+  if (saveAgain) { saveAgain = false; return flush(); }
+  if (ui.draftFor === date && $('#lineup')) renderLineup();
+}
+
+function addPlayer(id) {
+  const day = days.get(ui.sel), lu = ui.draft, p = pmap(day).get(id);
+  if (!p || lu.includes(id)) return;
+  let i = SLOTS.findIndex((s, k) => s === p.pos && !lu[k]);
+  if (i < 0 && !lu[5]) i = 5;
+  if (i < 0) return toast(`Your ${p.pos} slots and UTIL are full. Remove someone first.`);
+  const over = spent(lu, day) + p.sal - series.cap;
+  if (over > 0) return toast(`${p.name} puts you ${fmt(over)} credits over the cap.`);
+  if (isOut(p)) toast(`${p.name} is listed as out. Out players score 0.`);
+  lu[i] = id; changed();
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-action]');
+  if (!b || b.disabled) return;
+  const a = b.dataset.action;
+  if (a === 'sel') { ui.sel = b.dataset.d; ui.setup = false; ui.limit = 80; render(); }
+  else if (a === 'setup') { ui.setup = true; render(); }
+  else if (a === 'setup-cancel') { ui.setup = false; render(); }
+  else if (a === 'copy-link') {
+    navigator.clipboard.writeText(PAGE_URL).then(() => toast('Link copied. Send it to your friend.'),
+      () => { const i = $('#invite-link'); i.focus(); i.select(); toast('Press Ctrl+C to copy the selected link.'); });
+  }
+  else if (!ui.draft || days.get(ui.sel) == null) return;
+  else if (a === 'add') addPlayer(b.dataset.id);
+  else if (a === 'drop') { ui.draft[ui.draft.indexOf(b.dataset.id)] = null; if (ui.draftCap === b.dataset.id) ui.draftCap = null; changed(); }
+  else if (a === 'remove') { if (ui.draftCap === ui.draft[+b.dataset.i]) ui.draftCap = null; ui.draft[+b.dataset.i] = null; changed(); }
+  else if (a === 'clear') { ui.draft = SLOTS.map(() => null); ui.draftCap = null; changed(); }
+  else if (a === 'captain') { ui.draftCap = ui.draftCap === b.dataset.id ? null : b.dataset.id; changed(); }
+  else if (a === 'auto') {
+    const r = buildLineup(ui.draft, days.get(ui.sel), series.cap, Math.random, 0.05);
+    if (!r) return toast('No way to fill the open slots under the cap. Swap out a pricey player.');
+    ui.draft = r;
+    if (!ui.draftCap) ui.draftCap = bestAvg(r, days.get(ui.sel));
+    changed();
+  }
+  else if (a === 'more') { ui.limit += 80; renderPool(); }
+  else if (a === 'pos') { ui.pos = b.dataset.v; ui.limit = 80; document.querySelectorAll('[data-action=pos]').forEach(x => x.setAttribute('aria-pressed', x.dataset.v === ui.pos)); renderPool(); }
+});
+
+document.addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = e.target.querySelector('[type=submit]');
+  btn.disabled = true;
+  try {
+    if (e.target.id === 'setup-form') {
+      const cpu = $('#setup-mode-cpu').checked;
+      await db.doc('series/current').set({
+        start: $('#setup-start').value, cap: +$('#setup-cap').value,
+        seats: [me.id, cpu ? 'cpu' : null],
+        teams: [$('#setup-a').value.trim() || 'My Squad', cpu ? 'The Computer' : ''],
+        createdAt: Date.now(),
+      });
+      ui.setup = false; ui.sel = null; ui.draftFor = null; ui.sig = '';
+    } else if (e.target.id === 'join-form') {
+      const ref = db.doc('series/current');
+      const lease = await ref.acquire({ holder: me.id, ttlMs: 5000 });
+      if (!lease.acquired) throw new Error('busy');
+      const cur = (await ref.get()).data();
+      if (cur.seats[1]) { toast('Someone already took that seat.'); return; }
+      await ref.update({ seats: [cur.seats[0], me.id], teams: [cur.teams[0], $('#join-name').value.trim() || 'The Rival'] });
+    }
+  } catch (err) {
+    toast(err.message === 'busy' ? 'Someone else is joining right now. Try again in a few seconds.' : 'That didn’t save. You may not have permission to change this series.');
+  } finally { btn.disabled = false; }
+});
+
+document.addEventListener('input', e => { if (e.target.id === 'q') { ui.q = e.target.value; ui.limit = 80; renderPool(); } });
+document.addEventListener('change', e => { if (e.target.id === 'sort') { ui.sort = e.target.value; renderPool(); } });
+
+/* ---------- Boot ---------- */
+function subscribeLineups() {
+  for (const uid of (series?.seats || [])) {
+    if (!uid || uid === 'cpu' || subs[uid]) continue;
+    subs[uid] = db.collection(`lineups/${uid}/days`).onSnapshot(s => {
+      lineups[uid] = new Map(s.docs.map(d => [d.id, d.data()]));
+      render();
+    }, () => {});
+  }
+}
+
+async function boot() {
+  const use = window.claude?.use;
+  const [d, u] = use ? await Promise.all([window.claude.use('db'), window.claude.use('user')]) : [null, null];
+  db = d;
+  if (!db) {
+    $('#main').innerHTML = notice('Sign in needed', 'Open this page on claude.ai', '<p>Best of 7 keeps lineups and real NBA results in the page’s shared database. Open it on claude.ai while signed in to play.</p>');
+    return;
+  }
+  if (u) { me = await u.me(); canWrite = await u.can('data.write'); }
+  if (!me.id) {
+    $('#main').innerHTML = notice('Sign in needed', 'You’re viewing without an account', '<p>Sign in to claude.ai to draft a lineup.</p>');
+  }
+  db.collection('days').onSnapshot(s => { days = new Map(s.docs.map(x => [x.id, x.data()])); loaded.days = true; render(); },
+    () => { $('#main').innerHTML = notice('Error', 'Couldn’t load the NBA slate', '<p>Reload the page to try again.</p>'); });
+  db.doc('series/current').onSnapshot(s => { series = s.exists ? s.data() : null; loaded.series = true; subscribeLineups(); render(); }, () => {});
+  db.collection('cpulineups').onSnapshot(s => { cpuLu = new Map(s.docs.map(x => [x.id, x.data()])); render(); }, () => {});
+  // Re-render each minute so countdowns tick and slates lock on time.
+  setInterval(render, 60000);
+}
+boot();
+</script>

@@ -2,52 +2,49 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function seriesDoc(sid) { return get(/databases/$(database)/documents/series/$(sid)).data; }
+    function validName(n) { return n is string && n.size() >= 3 && n.size() <= 16 && n.matches('^[A-Za-z0-9_ .-]+$'); }
+    function lockMs(date) { return get(/databases/$(database)/documents/days/$(date)).data.lockMs; }
 
-    // NBA data. Only the sync writes it, with admin credentials that skip these rules.
+    // NBA data, groups and results. Only the sync writes these, with admin credentials that skip these rules.
     match /days/{date} {
       allow read: if true;
       allow write: if false;
+      match /groups/{gid} {
+        allow read: if true;
+        allow write: if false;
+      }
     }
     match /meta/{doc} {
       allow read, write: if false;
     }
 
-    match /series/{sid} {
-      allow read: if signedIn();
-      allow create: if signedIn()
-        && request.resource.data.owner == request.auth.uid
-        && request.resource.data.seats[0] == request.auth.uid
-        && request.resource.data.members == [request.auth.uid];
-      // The owner may rename teams; any signed-in friend with the link may take the open seat.
-      allow update: if signedIn() && (
-        (resource.data.owner == request.auth.uid
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['teams']))
-        || (resource.data.seats[1] == null
-          && request.resource.data.seats[0] == resource.data.seats[0]
-          && request.resource.data.seats[1] == request.auth.uid
-          && request.resource.data.members == resource.data.members.concat([request.auth.uid])
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['seats', 'teams', 'members']))
-      );
-      allow delete: if signedIn() && resource.data.owner == request.auth.uid;
+    // Public profiles. A player sets only their display name; rank fields are written by the sync.
+    match /users/{uid} {
+      allow read: if true;
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name', 'nameLower', 'createdAt'])
+        && validName(request.resource.data.name)
+        && request.resource.data.nameLower == request.resource.data.name.lower();
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'nameLower'])
+        && validName(request.resource.data.name)
+        && request.resource.data.nameLower == request.resource.data.name.lower();
+      allow delete: if false;
+    }
 
-      // Lineups are <date>_<uid>, or <date>_cpu for the computer (written by the series owner).
-      // Writes are refused once the slate's first game has tipped off.
-      match /lineups/{lid} {
-        allow read: if signedIn();
-        allow create, update: if signedIn()
-          && request.resource.data.date is string
-          && request.time.toMillis() < get(/databases/$(database)/documents/days/$(request.resource.data.date)).data.lockMs
-          && (
-            (lid == request.resource.data.date + '_' + request.auth.uid
-              && request.resource.data.uid == request.auth.uid
-              && request.auth.uid in seriesDoc(sid).seats)
-            || (lid == request.resource.data.date + '_cpu'
-              && seriesDoc(sid).owner == request.auth.uid
-              && seriesDoc(sid).seats[1] == 'cpu')
-          );
-        allow delete: if false;
-      }
+    // One entry per player per night: entries/<date>_<uid>. Editable until the first tip-off.
+    // Others see your lineup only through your group, which the sync builds after lock.
+    match /entries/{eid} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow create, update: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.date is string
+        && eid == request.resource.data.date + '_' + request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'date', 'ids', 'captain', 'at'])
+        && request.resource.data.ids is list && request.resource.data.ids.size() == 6
+        && request.time.toMillis() < lockMs(request.resource.data.date);
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid
+        && request.time.toMillis() < lockMs(resource.data.date);
     }
   }
 }

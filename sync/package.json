@@ -2,7 +2,7 @@
   "name": "best-of-7-nba-sync",
   "private": true,
   "type": "module",
-  "description": "Pulls ESPN NBA slates and box scores into Firestore for Best of 7.",
+  "description": "Pulls ESPN NBA data into Firestore and runs ranked groups and scoring for Best of 7.",
   "scripts": {
     "sync": "node nba-sync.mjs",
     "dry": "DRY_RUN=1 node nba-sync.mjs"

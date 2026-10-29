@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Best of 7 NBA</title>
-<meta name="description" content="Head-to-head NBA fantasy: draft six real players a night under a salary cap, first to four wins takes the week.">
+<meta name="description" content="Ranked NBA fantasy: draft six real players on a star budget any night you like and climb from Bronze to Elite.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap">
@@ -16,7 +16,7 @@ img { max-width: 100%; }
 a { color: var(--accent-2); }
 .series-item .gnum { width: 34px; height: 34px; font-size: 11px; }
 /* Layout: a sportsbook-style app. Top bar across; left rail lists the seven series games and position filters;
-   the center holds the night's hero (slate chips) and the player list with salary "odds" buttons; the right rail is the lineup slip.
+   the center holds the night's hero (slate chips) and the player list with star-rating "odds" buttons; the right rail is the lineup slip.
    Deliberately one dark look for every viewer. */
 :root {
   --bg: #0E1014; --panel: #161A20; --panel-2: #1D2129; --chip: #242A33; --chip-2: #2C333E; --line: #262B34;
@@ -166,6 +166,11 @@ main { display: grid; gap: 16px; min-width: 0; }
 .leg-top { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; }
 .leg-top b { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .leg-sal { font-weight: 800; }
+.stars { letter-spacing: 1px; white-space: nowrap; }
+.stars i { font-style: normal; opacity: .22; }
+.odds .stars { font-size: 17px; }
+.leg-sal .stars, .r-trail .stars { font-size: 13px; color: var(--tag); }
+.leg-sal .stars i { color: var(--ink); }
 .leg-sub { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 .leg-sub b { color: var(--tag); }
 .capbtn { border: 1px solid var(--chip-2); background: transparent; color: var(--muted); border-radius: 7px; padding: 3px 8px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
@@ -255,6 +260,50 @@ main { display: grid; gap: 16px; min-width: 0; }
   .hide-sm { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* Ranked mode */
+:root { --t0: #C8875A; --t1: #B9C3CE; --t2: #E8B931; --t3: #5CCFD0; --t4: #8FB8FF; --t5: #E3EF5B; }
+.navlink.on { background: var(--panel-2); }
+.tier { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; border: 1px solid currentColor; white-space: nowrap; }
+.tier::before { content: ""; width: 7px; height: 7px; transform: rotate(45deg); background: currentColor; }
+.tier.t0 { color: var(--t0); } .tier.t1 { color: var(--t1); } .tier.t2 { color: var(--t2); } .tier.t3 { color: var(--t3); } .tier.t4 { color: var(--t4); } .tier.t5 { color: var(--t5); }
+.rank-card { background: var(--panel); border-radius: 14px; padding: 16px; display: grid; gap: 8px; margin-bottom: 6px; }
+.rank-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.rank-rp { font-size: 13px; color: var(--muted); }
+.rank-rp b { font-size: 30px; font-weight: 800; color: var(--ink); letter-spacing: -.02em; margin-right: 4px; }
+.rank-sub { font-size: 12px; color: var(--muted); }
+.rank-stats { display: flex; gap: 14px; font-size: 12px; color: var(--muted); }
+.rank-stats b { color: var(--ink); }
+.linkbtn { border: 0; background: transparent; color: var(--accent-2); font-size: 12px; font-weight: 700; padding: 2px 0; }
+.linkbtn:hover { text-decoration: underline; }
+.field-err { color: var(--bad); font-size: 13px; min-height: 1em; margin: -6px 0 0; }
+.you { font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 2px 6px; border-radius: 5px; background: var(--accent); color: #fff; margin-left: 8px; vertical-align: 1px; }
+.bot { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 2px 6px; border-radius: 5px; background: var(--chip); color: var(--muted); margin-left: 8px; vertical-align: 1px; }
+.gboard { border-top: 1px solid var(--line); }
+.gboard-row { border-bottom: 1px solid var(--line); }
+.gboard-row:last-child { border-bottom: 0; }
+.gboard-row.me { background: linear-gradient(90deg, var(--accent-soft), transparent 70%); }
+.grow { width: 100%; border: 0; background: transparent; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto auto; gap: 12px; align-items: center; padding: 12px 22px; text-align: left; color: var(--ink); }
+.grow:hover { background: var(--panel-2); }
+.gpos { width: 28px; height: 28px; border-radius: 8px; background: var(--chip); display: grid; place-items: center; font-weight: 800; font-size: 13px; }
+.gboard-row:nth-child(1) .gpos { background: var(--tag); color: var(--tag-ink); }
+.gname { font-weight: 700; font-size: 15px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gdetail { padding: 0 0 8px 34px; }
+.runner.sub { padding: 10px 22px; border-top: 1px solid var(--line); }
+.sc.big { min-width: 120px; height: 56px; font-size: 22px; }
+.lb { width: 100%; border-collapse: collapse; }
+.lb th { text-align: left; font-size: 12px; color: var(--muted); font-weight: 600; padding: 10px 22px; border-bottom: 1px solid var(--line); }
+.lb td { padding: 12px 22px; border-bottom: 1px solid var(--line); }
+.lb .r { text-align: right; }
+.lb tr.me td { background: var(--accent-soft); }
+.lb tbody tr:last-child td { border-bottom: 0; }
+.tablewrap { overflow-x: auto; }
+.runner.hist { width: 100%; border: 0; border-top: 1px solid var(--line); background: transparent; text-align: left; color: var(--ink); grid-template-columns: 40px minmax(0, 1fr) auto; }
+.runner.hist:hover { background: var(--panel-2); }
+.runner.hist .r-act { grid-auto-flow: column; align-items: center; gap: 10px; }
+.series-row b.up { color: var(--good); } .series-row b.down { color: var(--bad); }
+.series-row b.small { font-size: 16px; }
+@media (max-width: 1180px) { .rank-card { flex: 0 0 auto; min-width: 220px; margin-bottom: 0; } }
+@media (max-width: 520px) { .grow { grid-template-columns: 28px minmax(0, 1fr) auto; padding: 12px 16px; } .grow .badge { display: none; } .gdetail { padding-left: 0; } }
 </style>
 </head>
 <body>
@@ -274,29 +323,35 @@ main { display: grid; gap: 16px; min-width: 0; }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="config.js"></script>
 <script>
+/* ---------- Game rules (keep in step with sync/game.mjs) ---------- */
 const SLOTS = ['G', 'G', 'F', 'F', 'C', 'UTIL'];
 const SLOT_HINT = { G: 'Pick a guard', F: 'Pick a forward', C: 'Pick a center', UTIL: 'Any position' };
+const CAP = 16;          // star budget for six players
+const CAPTAIN_X = 1.5;   // the captain scores 1.5×…
+const CAPTAIN_EXTRA = 1; // …and costs one extra star
+const MAX_FIVE = 1;      // at most one 5★ player per lineup
+const TIERS = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Elite'];
+const RP_BY_FINISH = [30, 20, 20, 5, 5, -5, -5, -15, -15, -15];
 const LIVE_DONE = new Set(['STATUS_FINAL', 'STATUS_POSTPONED', 'STATUS_CANCELED', 'STATUS_FORFEIT']);
 // Box score line from the sync job: [min, pts, reb, ast, stl, blk, to]
 const fpOf = l => l[1] + 1.2 * l[2] + 1.5 * l[3] + 3 * l[4] + 3 * l[5] - l[6];
-const fmt = n => n.toLocaleString('en-US');
+const tierOf = rp => Math.min(TIERS.length - 1, Math.floor(Math.max(0, rp || 0) / 100));
+const fmt = n => Math.round(n).toLocaleString('en-US');
 const f1 = n => (Math.round(n * 10) / 10).toFixed(1);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const $ = s => document.querySelector(s);
 const dateOf = id => new Date(+id.slice(0, 4), +id.slice(4, 6) - 1, +id.slice(6, 8));
 const dayLabel = id => dateOf(id).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-const dow = id => dateOf(id).toLocaleDateString('en-US', { weekday: 'short' });
 const timeLabel = iso => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 const isOut = p => /out|suspend/i.test(p.status || '');
 const isGtd = p => /day-to-day|questionable|doubtful/i.test(p.status || '');
+const ordinal = n => n + (['th', 'st', 'nd', 'rd'][(n % 100 - 20) % 10] || ['th', 'st', 'nd', 'rd'][n % 100] || 'th');
+const elig = (slot, p) => slot === 'UTIL' || p.pos === slot;
 
-let db = null, auth = null, me = { id: null, isOwner: false, email: '' };
-let seriesId = new URLSearchParams(location.search).get('s');
-let days = new Map(), series = null, luDocs = new Map(), mySeries = [];
-const loaded = { auth: false, days: false, series: false };
-const inviteUrl = () => `${location.origin}${location.pathname}?s=${encodeURIComponent(seriesId)}`;
-const CAPTAIN_X = 1.5; // the captain's fantasy points count 1.5×
-const ui = { sel: null, pos: 'ALL', q: '', sort: 'sal', limit: 80, draft: null, draftCap: null, draftFor: null, save: '', setup: false, sig: '' };
+let db = null, auth = null, me = { id: null, email: '' };
+let profile = null, days = new Map(), entries = new Map(), group = null, leaders = [];
+const loaded = { auth: false, profile: false, days: false };
+const ui = { view: 'night', sel: null, pos: 'ALL', q: '', sort: 'stars', limit: 80, draft: null, draftCap: null, draftFor: null, save: '', sig: '', auth: '', authEmail: '', open: null, editName: false };
 
 /* ---------- Data helpers ---------- */
 const poolCache = new WeakMap();
@@ -306,377 +361,140 @@ function pmap(day) {
   return m;
 }
 const locked = day => Date.now() >= (day.lockMs || Date.parse(day.lockAt));
-const mySeat = () => series && me.id ? series.seats.indexOf(me.id) : -1;
-const spent = (lu, day) => lu.reduce((s, id) => s + (id ? (pmap(day).get(id)?.sal || 0) : 0), 0);
-
-function savedLineup(k, date) {
-  const seat = series?.seats[k];
-  if (!seat) return null;
-  const doc = luDocs.get(`${date}_${seat}`);
-  if (!doc || !Array.isArray(doc.ids)) return null;
-  const day = days.get(date);
-  if (day && doc.at && doc.at > Date.parse(day.lockAt)) return null; // saved after tip-off: not valid
-  return doc.ids;
-}
-function savedCaptain(k, date) {
-  const ids = savedLineup(k, date);
-  const seat = series.seats[k];
-  const doc = luDocs.get(`${date}_${seat}`);
-  return ids && ids.includes(doc.captain) ? doc.captain : null;
-}
 const complete = ids => ids && ids.length === 6 && ids.every(Boolean);
-const bestAvg = (ids, day) => ids.filter(Boolean).reduce((b, id) => (pmap(day).get(id)?.avg || 0) > (pmap(day).get(b)?.avg || 0) ? id : b, ids.find(Boolean) || null);
-
-function scoreSide(ids, day, captain) {
+function cost(ids, captain, day) {
   const m = pmap(day);
-  const rows = ids.map((id, i) => {
-    const p = m.get(id) || { id, name: 'Unknown player', team: '', pos: '', sal: 0 };
+  return ids.reduce((s, id) => s + (id ? m.get(id)?.stars || 0 : 0), 0) + (captain && ids.includes(captain) ? CAPTAIN_EXTRA : 0);
+}
+const fiveStars = (ids, day) => ids.filter(id => id && pmap(day).get(id)?.stars === 5).length;
+const starsHtml = n => `<span class="stars" aria-label="${n} star${n > 1 ? 's' : ''}">${'★'.repeat(n)}<i>${'★'.repeat(5 - n)}</i></span>`;
+function scoreRows(ids, captain, day) {
+  const m = pmap(day);
+  return ids.map((id, i) => {
+    const p = m.get(id) || { id, name: 'Unknown player', team: '', pos: '', stars: 0 };
     const line = day.results?.[id];
     const base = line ? fpOf(line) : 0, cap = id === captain;
     return { slot: SLOTS[i], p, line, base, cap, fp: cap ? base * CAPTAIN_X : base };
   });
-  return { rows, total: Math.round(rows.reduce((a, r) => a + r.fp, 0) * 10) / 10, best: Math.max(0, ...rows.map(r => r.fp)) };
 }
+const total = rows => Math.round(rows.reduce((a, r) => a + r.fp, 0) * 10) / 10;
+const nightState = day => day.final ? 'final' : locked(day) ? 'live' : 'open';
 
-// Walk the game days from the series start: final days are scored, a day with no lineups on
-// either side doesn't count, and the first manager to 4 wins ends it.
-function seriesState() {
-  const ids = [...days.keys()].filter(d => d >= series.start).sort();
-  const games = [], wins = [0, 0];
-  let winner = null;
-  for (const d of ids) {
-    if (winner !== null || games.length >= 7) break;
-    const day = days.get(d);
-    const sides = [0, 1].map(k => { const ids = savedLineup(k, d); return complete(ids) ? scoreSide(ids, day, savedCaptain(k, d)) : null; });
-    if (day.final) {
-      if (!sides[0] && !sides[1]) continue;
-      const t = sides.map(s => s ? s.total : 0);
-      const w = t[0] !== t[1] ? (t[0] > t[1] ? 0 : 1) : ((sides[0]?.best || 0) >= (sides[1]?.best || 0) ? 0 : 1);
-      wins[w]++;
-      games.push({ date: d, state: 'final', winner: w, t, sides });
-      if (wins[w] >= 4) winner = w;
-    } else {
-      games.push({ date: d, state: locked(day) ? 'live' : 'open', t: sides.map(s => s ? s.total : 0), sides });
-    }
-  }
-  return { games, wins, winner };
-}
-
-/* ---------- CPU manager ---------- */
-function seeded(str) {
-  let h = 2166136261;
-  for (const c of str) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
-  return () => { h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; };
-}
-function buildLineup(base, day, cap, rnd, noise) {
-  const pl = day.players.filter(p => !isOut(p) && p.gp > 0);
+// Random legal lineups, then greedy upgrades, keeping the best. Mirrors buildLineup in sync/game.mjs.
+function buildLineup(players, { base = SLOTS.map(() => null), captain = null, rnd = Math.random, noise = 0, tries = 120 } = {}) {
+  const m = new Map(players.map(p => [p.id, p]));
+  const pl = players.filter(p => p.gp > 0 && !isOut(p));
+  if (!pl.length) return null;
+  const lc = (lu, c) => lu.reduce((s, id) => s + (id ? m.get(id).stars : 0), 0) + (c && lu.includes(c) ? CAPTAIN_EXTRA : 0);
+  const fives = lu => lu.filter(id => id && m.get(id).stars === 5).length;
   const randn = () => Math.sqrt(-2 * Math.log(rnd() || 1e-9)) * Math.cos(2 * Math.PI * rnd());
   const val = new Map(pl.map(p => [p.id, p.avg * (1 + noise * randn())]));
-  const sal = id => pmap(day).get(id).sal;
-  const minSal = Math.min(...pl.map(p => p.sal));
-  const elig = (slot, p) => slot === 'UTIL' || p.pos === slot;
+  const v = id => val.get(id) ?? m.get(id)?.avg ?? 0;
   const free = SLOTS.map((_, i) => i).filter(i => !base[i]);
+  const fixedCap = captain && base.includes(captain) ? captain : null;
+  const pickCaptain = lu => fixedCap || (lc(lu, null) + CAPTAIN_EXTRA <= CAP ? lu.slice().sort((x, y) => v(y) - v(x))[0] : null);
+  const legal = (lu, c) => lc(lu, c) <= CAP && fives(lu) <= MAX_FIVE;
+  const score = (lu, c) => lu.reduce((s, id) => s + v(id), 0) + (c ? v(c) * (CAPTAIN_X - 1) : 0);
   let best = null, bestV = -Infinity;
-  for (let t = 0; t < 80; t++) {
+  for (let t = 0; t < tries; t++) {
     const lu = base.slice();
-    let s = spent(lu, day), ok = true;
-    const order = free.slice().sort(() => rnd() - .5).sort((a, b) => (a === 5) - (b === 5));
+    let ok = true;
+    const order = free.slice().sort(() => rnd() - .5).sort((x, y) => (x === 5) - (y === 5));
     for (let k = 0; k < order.length; k++) {
-      const i = order[k], budget = cap - s - (order.length - k - 1) * minSal;
-      const c = pl.filter(p => elig(SLOTS[i], p) && !lu.includes(p.id) && p.sal <= budget);
+      const i = order[k], budget = CAP - lc(lu, fixedCap) - (order.length - k - 1), fiveOk = fives(lu) < MAX_FIVE;
+      const c = pl.filter(p => elig(SLOTS[i], p) && !lu.includes(p.id) && p.stars <= budget && (fiveOk || p.stars < 5));
       if (!c.length) { ok = false; break; }
-      const p = c[Math.floor(rnd() * c.length)];
-      lu[i] = p.id; s += p.sal;
+      lu[i] = c[Math.floor(rnd() * c.length)].id;
     }
     if (!ok) continue;
+    let cap = pickCaptain(lu), cur = score(lu, cap);
     for (let pass = 0; pass < 3; pass++) {
       let improved = false;
       for (const i of free) {
-        const cur = lu[i];
-        let pick = cur, pv = val.get(cur);
+        const was = lu[i];
         for (const p of pl) {
-          if (!elig(SLOTS[i], p) || lu.includes(p.id) || s - sal(cur) + p.sal > cap) continue;
-          if (val.get(p.id) > pv) { pv = val.get(p.id); pick = p.id; }
+          if (!elig(SLOTS[i], p) || lu.includes(p.id)) continue;
+          lu[i] = p.id;
+          const c2 = pickCaptain(lu);
+          if (legal(lu, c2) && score(lu, c2) > cur + 1e-9) { cur = score(lu, c2); cap = c2; improved = true; break; }
+          lu[i] = was;
         }
-        if (pick !== cur) { s += sal(pick) - sal(cur); lu[i] = pick; improved = true; }
       }
       if (!improved) break;
     }
-    const v = lu.reduce((a, id) => a + (val.get(id) ?? 0), 0);
-    if (v > bestV) { bestV = v; best = lu; }
+    if (legal(lu, cap) && cur > bestV) { bestV = cur; best = { ids: lu.slice(), captain: cap }; }
   }
   return best;
 }
-async function ensureCpuLineup(date) {
-  if (series?.seats[1] !== 'cpu' || mySeat() !== 0 || luDocs.has(`${date}_cpu`)) return;
-  const day = days.get(date);
-  if (!day || locked(day)) return;
-  const ids = buildLineup(SLOTS.map(() => null), day, series.cap, seeded('cpu' + date), 0.2);
-  if (ids) await db.doc(`series/${seriesId}/lineups/${date}_cpu`).set({ ids, captain: bestAvg(ids, day), at: Date.now(), date, uid: 'cpu' });
-}
 
-/* ---------- Rendering ---------- */
-/* ---------- Rendering ---------- */
+/* ---------- Pieces ---------- */
 const TEAM_COLORS = { ATL: '#E03A3E', BOS: '#008348', BKN: '#3A3A3A', CHA: '#1D8CAB', CHI: '#CE1141', CLE: '#860038', DAL: '#0064B1', DEN: '#FEC524', DET: '#C8102E', GS: '#1D428A', HOU: '#CE1141', IND: '#FDBB30', LAC: '#C8102E', LAL: '#552583', MEM: '#5D76A9', MIA: '#98002E', MIL: '#00471B', MIN: '#236192', NO: '#85714D', NY: '#F58426', OKC: '#007AC1', ORL: '#0077C0', PHI: '#006BB6', PHX: '#E56020', POR: '#E03A3E', SAC: '#5A2D81', SA: '#8A8D8F', TOR: '#CE1141', UTAH: '#4E2A84', WSH: '#E31837' };
 const POS_NAME = { G: 'Guard', F: 'Forward', C: 'Center' };
 function jersey(team) {
   const c = TEAM_COLORS[team] || '#5B6573';
   return `<svg class="jersey" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 3h4.2c.3 2 1.3 3.3 2.8 3.3S18.5 5 18.8 3H23l1.3 5.4c-1.2.9-2 2.3-2 4V29H9.7V12.4c0-1.7-.8-3.1-2-4z" fill="${c}" stroke="rgba(255,255,255,.28)" stroke-width="1"/><text x="16" y="21" text-anchor="middle" font-size="6.5" font-weight="800" fill="rgba(255,255,255,.9)" font-family="Manrope, sans-serif">${esc(team).slice(0, 3)}</text></svg>`;
 }
-
-function seriesStatus(st) {
-  const names = series.teams;
-  const [x, y] = st.wins;
-  if (st.winner !== null) return `${esc(names[st.winner])} won ${Math.max(x, y)}–${Math.min(x, y)}`;
-  if (x === 3 && y === 3) return 'Game 7 · winner takes the week';
-  if (x === y) return x ? `Series tied ${x}–${y}` : 'Series opens ' + (st.games[0] ? dow(st.games[0].date) : 'soon');
-  const l = x > y ? 0 : 1;
-  return `${esc(names[l])} leads ${Math.max(x, y)}–${Math.min(x, y)}`;
-}
-
-function renderTop(st) {
-  const live = st?.games.find(g => g.state === 'live'), open = st?.games.find(g => g.state === 'open');
-  const finals = st ? st.games.filter(g => g.state === 'final') : [];
-  const last = finals[finals.length - 1];
-  const seat = mySeat();
-  const link = (g, label, cls = '') => `<button class="navlink ${cls}" ${g ? `data-action="sel" data-d="${g.date}"` : 'disabled'}><i></i>${label}</button>`;
-  $('#topbar').innerHTML = `
-    <div class="brand">BEST OF <span class="seven">7</span></div>
-    ${st ? `<nav class="topnav" aria-label="Jump to">${link(live, 'Live Now', 'live')}${link(open, 'Draft Lineup')}${link(last, 'Last Result')}</nav>` : ''}
-    <div class="top-right">
-      <span class="tchip">NBA · 2026–27</span>
-      ${series && seat >= 0 ? `<span class="tchip"><span class="tdot ${seat ? 'b' : ''}"></span>${esc(series.teams[seat])}</span>` : ''}
-      ${me.id ? `<button class="btn" data-action="home">My series</button>` : ''}
-      ${me.isOwner && series && !series.seats[1] ? `<button class="btn primary" data-goto="invite">Invite a friend</button>` : ''}
-      ${me.id ? `<button class="btn" data-action="signout" title="Signed in as ${esc(me.email)}">Sign out</button>` : ''}
-    </div>`;
-}
-
-function renderSide(st, view) {
-  if (!st) { $('#side').innerHTML = ''; return; }
-  const seat = mySeat();
-  const items = Array.from({ length: 7 }, (_, i) => {
-    const g = st.games[i];
-    if (!g) return `<button class="nav-item" disabled><span class="gnum">${i + 1}</span><span>Game ${i + 1}</span><span class="badge">${st.winner !== null ? '—' : 'TBD'}</span></button>`;
-    let badge;
-    if (g.state === 'final') {
-      badge = seat >= 0 ? `<span class="badge ${g.winner === seat ? 'won' : 'lost'}">${g.winner === seat ? 'Won' : 'Lost'}</span>` : `<span class="badge">${f1(g.t[g.winner])}</span>`;
-    } else badge = g.state === 'live' ? '<span class="badge live">Live</span>' : '<span class="badge draft">Draft</span>';
-    return `<button class="nav-item" data-action="sel" data-d="${g.date}" aria-pressed="${ui.sel === g.date}"><span class="gnum ${g.state === 'final' ? (g.winner ? 'wb' : 'wa') : ''}">${i + 1}</span><span>${dayLabel(g.date)}</span>${badge}</button>`;
-  }).join('');
-  let pos = '';
-  if (view === 'build') {
-    const pl = days.get(ui.sel).players;
-    const n = p => p === 'ALL' ? pl.length : pl.filter(x => x.pos === p).length;
-    pos = `<div class="pos-group"><div class="side-label">Positions</div>${[['ALL', 'All players'], ['G', 'Guards'], ['F', 'Forwards'], ['C', 'Centers']].map(([v, l]) => `<button class="nav-item" data-action="pos" data-v="${v}" aria-pressed="${ui.pos === v}"><span class="gnum">${v === 'ALL' ? '★' : v}</span><span>${l}</span><span class="badge tag">${n(v)}</span></button>`).join('')}</div>`;
-  }
-  $('#side').innerHTML = `<div class="side-label">Series</div><div class="side-status">${seriesStatus(st)}</div>${items}${pos}
-    <div class="side-label">Scoring</div><div class="side-note">Point 1 · Rebound 1.2<br>Assist 1.5 · Steal 3<br>Block 3 · Turnover −1<br>Captain ×1.5</div>`;
-}
-
-function notice(eyebrow, title, body) {
-  return `<div class="card notice"><div class="eyebrow">${eyebrow}</div><h2>${title}</h2>${body}</div>`;
-}
-
-function openDates() {
-  return [...days.keys()].sort().filter(d => !locked(days.get(d)));
-}
-
-function setupView() {
-  const dates = openDates();
-  if (!dates.length) return notice('New series', 'Waiting for the next slate', '<p>No upcoming NBA game day has been posted yet. The sync posts upcoming slates a day ahead.</p>');
-  return `<form class="card form" id="setup-form">
-    <div><div class="eyebrow">New series</div><h2>Set up the week</h2></div>
-    <p class="hint">Game 1 is the first slate you pick below. Each NBA game day after that is the next game, until someone wins 4.</p>
-    <div class="form-grid">
-      <div class="field"><label for="setup-a">Your team name</label><input type="text" id="setup-a" maxlength="20" value="${esc(mySeries.find(s => s.owner === me.id)?.teams[0] || 'My Squad')}"></div>
-      <fieldset class="field"><legend>Opponent</legend>
-        <label class="radio"><input type="radio" name="setup-mode" id="setup-mode-cpu" value="cpu" checked> The computer</label>
-        <label class="radio"><input type="radio" name="setup-mode" id="setup-mode-friend" value="friend"> A friend (you’ll get an invite link)</label>
-      </fieldset>
-      <div class="field"><label for="setup-cap">Daily salary cap</label>
-        <select id="setup-cap"><option value="45000">45,000 credits (tight)</option><option value="50000" selected>50,000 credits (standard)</option><option value="55000">55,000 credits (loose)</option></select></div>
-      <div class="field"><label for="setup-start">Game 1</label>
-        <select id="setup-start">${dates.map(d => `<option value="${d}">${dayLabel(d)} · ${days.get(d).games.length} games · locks ${timeLabel(days.get(d).lockAt)}</option>`).join('')}</select></div>
-    </div>
-    <div class="row"><button type="submit" class="btn primary">Start series</button></div>
-  </form>`;
-}
-
-function inviteCard() {
-  return `<div class="card invite">
-    <div class="invite-head"><div><div class="eyebrow">Open seat</div><h2>Invite a friend</h2></div><span class="pill"><span class="dot"></span>Waiting for them to join</span></div>
-    <ol class="steps">
-      <li><b>Copy the invite link.</b> It opens this series and nothing else.</li>
-      <li><b>Send it to your friend.</b> They sign in with their email. No password, just a link we email them.</li>
-      <li><b>They press Join.</b> Their team takes the open seat, and both lineups stay hidden from each other until tip-off.</li>
-    </ol>
-    <div class="linkbox"><input id="invite-link" type="text" readonly value="${esc(inviteUrl())}" aria-label="Game link"><button class="btn primary" data-action="copy-link">Copy link</button></div>
-    <p class="hint">You can draft your own lineup in the meantime. A game counts only if at least one side sets a lineup.</p>
-  </div>`;
-}
-
-function joinView() {
-  return `<form class="card form" id="join-form">
-    <div><div class="eyebrow">Open seat</div><h2>Take on ${esc(series.teams[0])}</h2></div>
-    <p>This series has an open seat. Name your team to join as the opponent.</p>
-    <div class="form-grid"><div class="field"><label for="join-name">Your team name</label><input type="text" id="join-name" maxlength="20" value="The Rival"></div></div>
-    <div class="row"><button type="submit" class="btn primary">Join the series</button></div>
-  </form>`;
-}
-
-// The game-time chips and lock status; refreshed in place each minute.
-function slateCard(g, day, idx) {
-  const lockTxt = locked(day) ? (day.final ? 'All games final' : 'Lineups locked') : `Locks ${timeLabel(day.lockAt)} · ${until(day.lockAt)}`;
-  const races = day.games.map(x => {
-    const started = x.status !== 'STATUS_SCHEDULED';
-    const done = LIVE_DONE.has(x.status);
-    return `<div class="race ${done ? 'done' : started ? 'in' : ''}"><b>${started ? `${x.awayScore}–${x.homeScore}` : timeLabel(x.tip)}</b><span>${esc(x.away)} @ ${esc(x.home)}</span>${started ? `<small>${esc(x.detail)}</small>` : ''}</div>`;
-  }).join('');
-  return `<div class="lockline"><span class="lock ${locked(day) ? 'locked' : ''}">${lockTxt}</span><span class="teal">⇆ Cap ${fmt(series.cap)} · 6 slots</span></div><div class="races">${races}</div>`;
-}
+const tierBadge = tier => `<span class="tier t${tier}">${TIERS[tier]}</span>`;
+const notice = (eyebrow, title, body) => `<div class="card notice"><div class="eyebrow">${eyebrow}</div><h2>${title}</h2>${body}</div>`;
+const TRASH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
+const legend = `<p class="legend">Scoring: point 1 · rebound 1.2 · assist 1.5 · steal 3 · block 3 · turnover −1. Every player is rated 1–5★ from his fantasy points per game (45+ = 5★, 35+ = 4★, 25+ = 3★, 15+ = 2★). Your six players must fit a ${CAP}★ budget, with at most one 5★ player. Your captain scores 1.5× and costs one extra star. Lineups lock at the night's first tip-off. Then you're placed in a group of 10 at your rank, with computer lineups filling empty seats. Finish 1st: +30 rank points · 2nd–3rd: +20 · 4th–5th: +5 · 6th–7th: −5 · 8th–10th: −15. Every 100 points is a new tier, and you can't drop out of a tier the night after reaching it. Data: ESPN public NBA feed.</p>`;
 
 function until(iso) {
   const ms = Date.parse(iso) - Date.now();
   if (ms <= 0) return 'now';
-  const h = Math.floor(ms / 36e5), m = Math.floor(ms % 36e5 / 6e4);
-  return h ? `in ${h}h ${m}m` : `in ${m}m`;
+  const h = Math.floor(ms / 36e5), mm = Math.floor(ms % 36e5 / 6e4);
+  return h ? `in ${h}h ${mm}m` : `in ${mm}m`;
 }
 
-function heroCard(g, day, idx, tools) {
-  const title = g.state === 'open' ? `NBA · Game ${idx + 1}` : g.state === 'live' ? `Game ${idx + 1} · Live` : `Game ${idx + 1} · Final`;
-  return `<section class="hero-card">
-    <div><h1>${title}</h1><p class="hero-sub">${dayLabel(g.date)} · ${day.games.length} NBA games · ${day.players.length} players</p></div>
-    ${tools ? `<div class="tabs">
-      ${[['ALL', 'All Players'], ['G', 'Guards'], ['F', 'Forwards'], ['C', 'Centers']].map(([v, l]) => `<button class="tab" data-action="pos" data-v="${v}" aria-pressed="${ui.pos === v}">${l}</button>`).join('')}
-      <div class="search"><input id="q" type="search" placeholder="Search players or teams" value="${esc(ui.q)}" aria-label="Search players">
-      <select id="sort" aria-label="Sort players">${[['sal', 'Salary'], ['avg', 'Fantasy pts'], ['value', 'Best value']].map(([v, l]) => `<option value="${v}" ${ui.sort === v ? 'selected' : ''}>Sort: ${l}</option>`).join('')}</select></div>
-    </div>` : ''}
-    <div id="slate">${slateCard(g, day, idx)}</div>
-  </section>`;
-}
-
-function builderView(day) {
-  return `<section class="panel">
-    <div class="list-head"><div><h2>${dayLabel(ui.sel)} player pool</h2><p class="sub">Tap a salary to add a player. Prices are fantasy points per game × 222 credits.</p></div></div>
-    <div id="poolrows"></div><div id="poolmore"></div>
-  </section>`;
-}
-
-function renderPool() {
-  const day = days.get(ui.sel), lu = ui.draft;
-  const left = series.cap - spent(lu, day);
-  const q = ui.q.trim().toLowerCase();
-  const rows = day.players.filter(p => (ui.pos === 'ALL' || p.pos === ui.pos) && (!q || p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q)));
-  const key = { sal: p => p.sal, avg: p => p.avg, value: p => p.avg / p.sal }[ui.sort];
-  rows.sort((a, b) => key(b) - key(a) || b.avg - a.avg);
-  const shown = rows.slice(0, ui.limit);
-  $('#poolrows').innerHTML = shown.length ? shown.map(p => {
-    const inLu = lu.includes(p.id), cant = !inLu && p.sal > left;
-    const tag = isOut(p) ? '<span class="inj out">Out</span>' : isGtd(p) ? `<span class="inj gtd" title="${esc(p.status)}">GTD</span>` : '';
-    return `<div class="runner ${inLu ? 'in' : ''} ${cant ? 'cant' : ''}">
-      ${jersey(p.team)}
-      <div><div class="r-name">${esc(p.name)}${tag}</div>
-        <div class="r-sub">${esc(p.team)} ${esc(p.opp)}<span class="sep">|</span>${POS_NAME[p.pos]}</div>
-        <div class="r-chips"><span class="chip">FPPG: ${p.gp ? f1(p.avg) : '—'}</span><span class="chip">GP: ${p.gp}</span><span class="chip hide-sm">Value: ${p.gp ? (p.avg / p.sal * 1000).toFixed(2) : '—'}</span></div></div>
-      <div class="r-act">
-        <button class="odds ${inLu ? 'on' : ''}" data-action="${inLu ? 'drop' : 'add'}" data-id="${esc(p.id)}" aria-label="${inLu ? 'Remove' : 'Add'} ${esc(p.name)}, ${fmt(p.sal)} credits">${inLu ? '✓ ' : ''}${fmt(p.sal)}</button>
-        <span class="r-trail">${cant ? `<b>${fmt(p.sal - left)}</b> over budget` : `proj <b>${p.gp ? f1(p.avg) : '0.0'}</b> pts`}</span>
-      </div>
-    </div>`;
-  }).join('') : `<p class="empty">No players match. Clear the search or pick another position.</p>`;
-  $('#poolmore').innerHTML = rows.length > shown.length ? `<div class="more"><button class="btn" data-action="more">Show ${Math.min(80, rows.length - shown.length)} more of ${rows.length - shown.length}</button></div>` : '';
-}
-
-const TRASH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
-
-function renderLineup() {
-  const day = days.get(ui.sel), lu = ui.draft, side = mySeat();
-  const s = spent(lu, day), left = series.cap - s, open = lu.filter(x => !x).length;
-  const m = pmap(day);
-  const legs = SLOTS.map((slot, i) => {
-    const p = lu[i] && m.get(lu[i]);
-    const isCap = !!p && ui.draftCap === p.id;
-    return p ? `<li class="leg ${isCap ? 'cap' : ''}"><button class="x" data-action="remove" data-i="${i}" aria-label="Remove ${esc(p.name)}">✕</button><div>
-        <div class="leg-top"><span class="ptag">${slot}</span><b>${esc(p.name)}</b><span class="leg-sal">${fmt(p.sal)}</span></div>
-        <div class="leg-sub"><span>${esc(p.team)} ${esc(p.opp)} · FPPG ${f1(p.avg)}${isCap ? ` → <b>${f1(p.avg * CAPTAIN_X)}</b>` : ''}${isOut(p) ? ' · <span class="inj out">Out</span>' : ''}</span>
-          <button class="capbtn ${isCap ? 'on' : ''}" data-action="captain" data-id="${esc(p.id)}" aria-pressed="${isCap}" aria-label="${isCap ? 'Remove captain' : 'Make captain'}: ${esc(p.name)}">${isCap ? '★ Captain ×1.5' : 'Make captain'}</button></div></div></li>`
-      : `<li class="leg open"><span></span><div class="leg-top"><span class="ptag dim">${slot}</span><span>${SLOT_HINT[slot]}</span><span></span></div></li>`;
-  }).join('');
-  const proj = lu.reduce((a, id) => a + (id ? (m.get(id)?.avg || 0) * (id === ui.draftCap ? CAPTAIN_X : 1) : 0), 0);
-  const oppSeat = series.seats[1 - side];
-  const oppName = oppSeat ? series.teams[1 - side] : 'Open seat';
-  const oppSet = complete(savedLineup(1 - side, ui.sel));
-  const info = open ? `Fill all six slots to count. ${open} open · about ${fmt(Math.floor(left / open))} credits each.`
-    : !ui.draftCap ? 'Pick a captain. Tap “Make captain” on one player and his points count 1.5×.'
-    : !oppSeat ? 'Your opponent’s seat is still open. Invite a friend from the top bar.'
-    : oppSeat === 'cpu' ? 'The computer sets its lineup once yours is saved.'
-    : oppSet ? `${esc(oppName)} has a lineup in. You’ll see it at tip-off.` : `${esc(oppName)} hasn’t set a lineup yet.`;
-  const cta = open ? `<button class="cta" data-action="auto">Auto-fill ${open} open slot${open > 1 ? 's' : ''}</button>`
-    : ui.save === 'pending' ? '<button class="cta" disabled>Saving…</button>'
-    : ui.save === 'err' ? '<button class="cta err" disabled>Couldn’t save. Make any change to retry.</button>'
-    : `<button class="cta ok" disabled>✓ Lineup saved · locks ${timeLabel(day.lockAt)}</button>`;
-  $('#lineup').innerHTML = `
-    <div class="slip-head"><span class="count">${6 - open}</span><h3>Lineup</h3></div>
-    <div class="seg"><span class="on ${side ? 'b' : ''}">${esc(series.teams[side])}</span><span>vs ${esc(oppName)}</span></div>
-    <ul class="legs">${legs}</ul>
-    <div class="slip-foot">
-      <div class="capbar"><i style="--w:${Math.min(100, s / series.cap * 100)}%"></i></div>
-      <dl class="totals"><div><dt>Salary used</dt><dd>${fmt(s)}</dd></div><div><dt>Credits left</dt><dd>${fmt(left)}</dd></div><div><dt>Projected</dt><dd>${f1(proj)} pts</dd></div></dl>
-      <div class="info">${info}</div>
-      <div class="ctarow"><button class="trash" data-action="clear" aria-label="Clear lineup" ${lu.some(Boolean) ? '' : 'disabled'}>${TRASH}</button>${cta}</div>
+function renderTop() {
+  const rp = profile?.rp || 0, tier = tierOf(rp);
+  const open = [...days.values()].sort((a, b) => a.date < b.date ? -1 : 1).find(d => !locked(d));
+  const nav = (view, label, extra = '') => `<button class="navlink ${ui.view === view ? 'on' : ''}" data-action="view" data-v="${view}" ${extra}><i></i>${label}</button>`;
+  $('#topbar').innerHTML = `
+    <div class="brand">BEST OF <span class="seven">7</span></div>
+    ${me.id && profile?.name ? `<nav class="topnav" aria-label="Sections">${open ? `<button class="navlink ${ui.view === 'night' && ui.sel === open.date ? 'on' : ''}" data-action="sel" data-d="${open.date}"><i></i>Enter ${dayLabel(open.date).split(',')[0]}</button>` : ''}${nav('leaders', 'Leaderboard')}${nav('history', 'My nights')}</nav>` : ''}
+    <div class="top-right">
+      <span class="tchip">NBA · 2026–27</span>
+      ${profile?.name ? `<span class="tchip">${tierBadge(tier)}<span>${esc(profile.name)} · ${fmt(rp)} RP</span></span>` : ''}
+      ${me.id ? `<button class="btn" data-action="signout" title="Signed in as ${esc(me.email)}">Sign out</button>` : ''}
     </div>`;
 }
 
-function boxCard(k, side, day) {
-  const name = series.teams[k] || 'Open seat';
-  const head = `<div class="list-head"><div><h2><span class="tdot ${k ? 'b' : ''}" style="display:inline-block;margin-right:10px"></span>${esc(name)}</h2>${side ? `<p class="sub">${fmt(side.rows.reduce((a, r) => a + r.p.sal, 0))} credits spent</p>` : ''}</div>${side ? `<span class="sc">${f1(side.total)}</span>` : ''}</div>`;
-  if (!side) return `<section class="panel">${head}<p class="empty">No lineup was set for this game, so it scores 0.</p></section>`;
-  const rows = side.rows.map(r => {
-    const l = r.line;
-    const stat = l ? `${l[1]} PTS · ${l[2]} REB · ${l[3]} AST · ${l[4]} STL · ${l[5]} BLK · ${l[6]} TO · ${l[0]} MIN` : day.final ? 'Did not play' : 'Not started';
-    return `<div class="runner">${jersey(r.p.team)}
-      <div><div class="r-name"><span class="ptag">${r.slot}</span>${esc(r.p.name)}${r.cap ? '<span class="ctag">★ Captain</span>' : ''}</div><div class="r-sub">${esc(r.p.team)}<span class="sep">|</span>${stat}</div></div>
-      <div class="r-act"><span class="sc ${l ? '' : 'zero'} ${r.cap ? 'capsc' : ''}">${l ? f1(r.fp) : '—'}</span><span class="r-trail">${r.cap && l ? `${f1(r.base)} × 1.5` : `${fmt(r.p.sal)} cr`}</span></div></div>`;
-  }).join('');
-  return `<section class="panel">${head}<div>${rows}</div></section>`;
-}
-
-function scoredView(g, day, idx, st) {
-  const n = series.teams, final = g.state === 'final';
-  const t = g.sides.map(s => s ? s.total : 0);
-  const lead = t[0] === t[1] ? null : t[0] > t[1] ? 0 : 1;
-  const title = final ? `${esc(n[g.winner])} wins Game ${idx + 1}` : lead === null ? 'All square so far' : `${esc(n[lead])} leads Game ${idx + 1}`;
-  const updated = day.updatedAt ? `Stats as of ${new Date(day.updatedAt).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}.` : '';
-  const champ = final && st.winner !== null && idx === st.games.length - 1
-    ? `<section class="hero-card champ"><div class="eyebrow">Week champion</div><h1>${esc(n[st.winner])} takes the series</h1><p class="hero-sub">${st.wins[st.winner]}–${st.wins[1 - st.winner]} in ${st.games.length} games.</p>${me.isOwner ? '<div class="row"><button class="btn primary" data-action="home">Start next week’s series</button></div>' : ''}</section>` : '';
-  return `${champ}
-    <section class="panel"><div class="list-head"><div><h2>${title}</h2><p class="sub">${final ? 'Final' : 'Scores update when the sync runs during and after the games.'} ${updated}</p></div></div>
-      <div class="finals" style="padding:4px 22px 20px">
-        <div class="final a ${final && g.winner ? 'lose' : ''}"><span class="tot">${f1(t[0])}</span><small><span class="tdot"></span>${esc(n[0])}</small></div>
-        <div class="final b ${final && !g.winner ? 'lose' : ''}"><span class="tot">${f1(t[1])}</span><small><span class="tdot b"></span>${esc(n[1] || 'Open seat')}</small></div>
-      </div></section>
-    ${boxCard(0, g.sides[0], day)}${boxCard(1, g.sides[1], day)}`;
-}
-
-const legend = `<p class="legend">Scoring: point 1 · rebound 1.2 · assist 1.5 · steal 3 · block 3 · turnover −1. Your captain's points count 1.5×. Salaries come from each player's fantasy points per game this season and freeze at the slate's first tip-off, when lineups lock. Players ruled out score 0. If the totals tie, the side with the best single performance wins. A game day where neither side set a lineup doesn't count. Data: ESPN public NBA feed.</p>`;
-
-function renderSlip(st, view) {
-  const el = $('#slip');
-  if (view === 'build') { if (!$('#lineup')) el.innerHTML = '<div class="slip-card" id="lineup"></div>'; return; }
-  if (!st) { el.innerHTML = ''; return; }
-  const n = series.teams;
-  el.innerHTML = `<div class="slip-card">
-    <div class="slip-head"><span class="count">${st.wins[0] + st.wins[1]}</span><h3>Series</h3></div>
-    <div class="series-row"><span><span class="tdot"></span>${esc(n[0])}</span><b>${st.wins[0]}</b></div>
-    <div class="series-row"><span><span class="tdot b"></span>${esc(n[1] || 'Open seat')}</span><b>${st.wins[1]}</b></div>
-    <div class="slip-foot"><div class="info">${seriesStatus(st)}. First to 4 wins takes the week.</div></div>
+function rankCard() {
+  const rp = profile?.rp || 0, tier = tierOf(rp), top = tier === TIERS.length - 1;
+  const into = rp - tier * 100;
+  return `<div class="rank-card">
+    <div class="rank-head">${tierBadge(tier)}<button class="linkbtn" data-action="edit-name">Edit name</button></div>
+    <div class="rank-rp"><b>${fmt(rp)}</b> RP</div>
+    <div class="capbar"><i style="--w:${top ? 100 : into}%"></i></div>
+    <div class="rank-sub">${top ? 'Top tier. Keep climbing the leaderboard.' : `${100 - into} RP to ${TIERS[tier + 1]}`}</div>
+    <div class="rank-stats"><span><b>${profile?.nights || 0}</b> nights</span><span><b>${profile?.wins || 0}</b> group wins</span></div>
   </div>`;
 }
 
-/* ---------- Sign-in and series list ---------- */
+function renderSide() {
+  if (!me.id || !profile?.name) { $('#side').innerHTML = ''; return; }
+  const list = [...days.values()].sort((a, b) => a.date < b.date ? -1 : 1).map(d => {
+    const st = nightState(d), e = entries.get(d.date);
+    const badge = st === 'open' ? (e ? '<span class="badge won">Entered</span>' : '<span class="badge draft">Open</span>')
+      : !e ? '<span class="badge">—</span>'
+      : st === 'live' ? '<span class="badge live">Live</span>'
+      : e.finish ? `<span class="badge ${e.rpDelta >= 0 ? 'won' : 'lost'}">${ordinal(e.finish)}</span>` : '<span class="badge">Final</span>';
+    return `<button class="nav-item" data-action="sel" data-d="${d.date}" aria-pressed="${ui.view === 'night' && ui.sel === d.date}"><span class="gnum">${dateOf(d.date).getDate()}</span><span>${dayLabel(d.date)}</span>${badge}</button>`;
+  }).join('');
+  let pos = '';
+  const day = days.get(ui.sel);
+  if (ui.view === 'night' && day && !locked(day)) {
+    const n = p => p === 'ALL' ? day.players.length : day.players.filter(x => x.pos === p).length;
+    pos = `<div class="pos-group"><div class="side-label">Positions</div>${[['ALL', 'All players'], ['G', 'Guards'], ['F', 'Forwards'], ['C', 'Centers']].map(([v, l]) => `<button class="nav-item" data-action="pos" data-v="${v}" aria-pressed="${ui.pos === v}"><span class="gnum">${v === 'ALL' ? '★' : v}</span><span>${l}</span><span class="badge tag">${n(v)}</span></button>`).join('')}</div>`;
+  }
+  $('#side').innerHTML = `${rankCard()}<div class="side-label">Nights</div>${list}${pos}
+    <div class="side-label">Scoring</div><div class="side-note">Point 1 · Rebound 1.2<br>Assist 1.5 · Steal 3<br>Block 3 · Turnover −1<br>Captain ×1.5 · costs +1★<br>Budget ${CAP}★ · one 5★ max</div>`;
+}
+
+/* ---------- Sign-in and profile ---------- */
 function signinView() {
-  const intro = `<section class="hero-card"><div><h1>Best of 7 · NBA</h1><p class="hero-sub">Draft six real NBA players each night under a salary cap. Beat a friend, or the computer, in a best-of-7 series.</p></div></section>`;
+  const intro = `<section class="hero-card"><div><h1>Best of 7 · NBA</h1><p class="hero-sub">Draft six real NBA players on a star budget any night you like. Beat your group of 10 to climb from Bronze to Elite.</p></div></section>`;
   if (ui.auth === 'confirm') return intro + `<form class="card form" id="confirm-form">
     <div><div class="eyebrow">Almost there</div><h2>Confirm your email</h2></div>
     <p class="hint">You opened the sign-in link on a different device or browser. Enter the email address you used.</p>
@@ -684,80 +502,259 @@ function signinView() {
     <div class="row"><button type="submit" class="btn primary">Sign in</button></div></form>`;
   if (ui.auth === 'sent') return intro + notice('Check your inbox', 'Sign-in link sent', `<p>We emailed a sign-in link to <b>${esc(ui.authEmail)}</b>. Open it on this device to continue. It can take a minute and may land in spam.</p><div class="row"><button class="btn" data-action="auth-reset">Use a different email</button></div>`);
   return intro + `<form class="card form" id="signin-form">
-    <div><div class="eyebrow">${seriesId ? 'You’ve been invited' : 'Sign in'}</div><h2>${seriesId ? 'Sign in to join the series' : 'Sign in with your email'}</h2></div>
+    <div><div class="eyebrow">Sign in</div><h2>Sign in with your email</h2></div>
     <p class="hint">No password. We’ll email you a link that signs you in.</p>
     <div class="form-grid"><div class="field"><label for="signin-email">Email</label><input type="email" id="signin-email" required autocomplete="email" placeholder="you@example.com"></div></div>
     <div class="row"><button type="submit" class="btn primary">Email me a sign-in link</button></div></form>`;
 }
 
-function homeView() {
-  const list = mySeries.length ? `<section class="panel"><div class="list-head"><div><h2>Your series</h2><p class="sub">Open one to draft tonight’s lineup or check results.</p></div></div>
-    ${mySeries.map(s => `<div class="runner series-item"><span class="gnum">${s.seats[1] === 'cpu' ? 'AI' : 'vs'}</span>
-      <div><div class="r-name">${esc(s.teams[0])} vs ${esc(s.teams[1] || 'Open seat')}</div><div class="r-sub">Game 1 ${dayLabel(s.start)}<span class="sep">|</span>Cap ${fmt(s.cap)}${s.owner === me.id ? '<span class="sep">|</span>You created it' : ''}</div></div>
-      <div class="r-act"><button class="odds" data-action="open" data-id="${esc(s.id)}">Open</button></div></div>`).join('')}</section>` : '';
-  return list + setupView();
+function nameView() {
+  const first = !profile?.name;
+  return `<form class="card form" id="name-form">
+    <div><div class="eyebrow">${first ? 'One more step' : 'Display name'}</div><h2>${first ? 'Pick your display name' : 'Change your display name'}</h2></div>
+    <p class="hint">Shown on the leaderboard and to the players in your group. 3–16 characters: letters, numbers, spaces, dots, dashes or underscores.</p>
+    <div class="form-grid"><div class="field"><label for="name-input">Display name</label><input type="text" id="name-input" required minlength="3" maxlength="16" pattern="[A-Za-z0-9_ .\\-]+" value="${esc(profile?.name || '')}" autocomplete="nickname"></div></div>
+    <p class="field-err" id="name-err" role="alert"></p>
+    <div class="row"><button type="submit" class="btn primary">${first ? 'Start playing' : 'Save name'}</button>${first ? '' : '<button type="button" class="btn" data-action="name-cancel">Cancel</button>'}</div></form>`;
 }
 
-function openSeries(id) {
-  seriesId = id;
-  history.pushState({}, '', id ? `?s=${encodeURIComponent(id)}` : location.pathname);
-  watchSeries();
-  window.scrollTo({ top: 0 });
+/* ---------- Drafting ---------- */
+function slateCard(day) {
+  const lockTxt = locked(day) ? (day.final ? 'All games final' : 'Lineups locked') : `Locks ${timeLabel(day.lockAt)} · ${until(day.lockAt)}`;
+  const races = day.games.map(x => {
+    const started = x.status !== 'STATUS_SCHEDULED', done = LIVE_DONE.has(x.status);
+    return `<div class="race ${done ? 'done' : started ? 'in' : ''}"><b>${started ? `${x.awayScore}–${x.homeScore}` : timeLabel(x.tip)}</b><span>${esc(x.away)} @ ${esc(x.home)}</span>${started ? `<small>${esc(x.detail)}</small>` : ''}</div>`;
+  }).join('');
+  return `<div class="lockline"><span class="lock ${locked(day) ? 'locked' : ''}">${lockTxt}</span><span class="teal">⇆ Budget ${CAP}★ · one 5★ max · captain +1★</span></div><div class="races">${races}</div>`;
+}
+
+function heroCard(day, tools) {
+  const st = nightState(day);
+  const title = st === 'open' ? `NBA · ${dayLabel(day.date).split(',')[0]} night` : st === 'live' ? 'Games in progress' : 'Final';
+  return `<section class="hero-card">
+    <div><h1>${title}</h1><p class="hero-sub">${dayLabel(day.date)} · ${day.games.length} NBA games · ${day.players.length} players${day.entrants ? ` · ${day.entrants} entries` : ''}</p></div>
+    ${tools ? `<div class="tabs">
+      ${[['ALL', 'All Players'], ['G', 'Guards'], ['F', 'Forwards'], ['C', 'Centers']].map(([v, l]) => `<button class="tab" data-action="pos" data-v="${v}" aria-pressed="${ui.pos === v}">${l}</button>`).join('')}
+      <div class="search"><input id="q" type="search" placeholder="Search players or teams" value="${esc(ui.q)}" aria-label="Search players">
+      <select id="sort" aria-label="Sort players">${[['stars', 'Rating'], ['avg', 'Fantasy pts'], ['value', 'Best value']].map(([v, l]) => `<option value="${v}" ${ui.sort === v ? 'selected' : ''}>Sort: ${l}</option>`).join('')}</select></div>
+    </div>` : ''}
+    <div id="slate">${slateCard(day)}</div>
+  </section>`;
+}
+
+function renderPool() {
+  const day = days.get(ui.sel), lu = ui.draft;
+  const left = CAP - cost(lu, ui.draftCap, day);
+  const q = ui.q.trim().toLowerCase();
+  const rows = day.players.filter(p => (ui.pos === 'ALL' || p.pos === ui.pos) && (!q || p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q)));
+  const key = { stars: p => p.stars + p.avg / 100, avg: p => p.avg, value: p => p.avg / p.stars }[ui.sort];
+  rows.sort((a, b) => key(b) - key(a) || b.avg - a.avg);
+  const shown = rows.slice(0, ui.limit);
+  $('#poolrows').innerHTML = shown.length ? shown.map(p => {
+    const inLu = lu.includes(p.id), fiveFull = !inLu && p.stars === 5 && fiveStars(lu, day) >= MAX_FIVE, cant = !inLu && (p.stars > left || fiveFull);
+    const tag = isOut(p) ? '<span class="inj out">Out</span>' : isGtd(p) ? `<span class="inj gtd" title="${esc(p.status)}">GTD</span>` : '';
+    return `<div class="runner ${inLu ? 'in' : ''} ${cant ? 'cant' : ''}">
+      ${jersey(p.team)}
+      <div><div class="r-name">${esc(p.name)}${tag}</div>
+        <div class="r-sub">${esc(p.team)} ${esc(p.opp)}<span class="sep">|</span>${POS_NAME[p.pos]}</div>
+        <div class="r-chips"><span class="chip">FPPG: ${p.gp ? f1(p.avg) : '—'}</span><span class="chip">GP: ${p.gp}</span><span class="chip hide-sm">Pts per ★: ${p.gp ? f1(p.avg / p.stars) : '—'}</span></div></div>
+      <div class="r-act">
+        <button class="odds ${inLu ? 'on' : ''}" data-action="${inLu ? 'drop' : 'add'}" data-id="${esc(p.id)}" aria-label="${inLu ? 'Remove' : 'Add'} ${esc(p.name)}, ${p.stars} stars">${inLu ? '✓ ' : ''}${starsHtml(p.stars)}</button>
+        <span class="r-trail">${fiveFull ? 'You already have a 5★' : cant ? `needs <b>${p.stars - left}★</b> more` : `proj <b>${p.gp ? f1(p.avg) : '0.0'}</b> pts`}</span>
+      </div>
+    </div>`;
+  }).join('') : `<p class="empty">No players match. Clear the search or pick another position.</p>`;
+  $('#poolmore').innerHTML = rows.length > shown.length ? `<div class="more"><button class="btn" data-action="more">Show ${Math.min(80, rows.length - shown.length)} more of ${rows.length - shown.length}</button></div>` : '';
+}
+
+function renderLineup() {
+  const day = days.get(ui.sel), lu = ui.draft, m = pmap(day);
+  const s = cost(lu, ui.draftCap, day), left = CAP - s, open = lu.filter(x => !x).length;
+  const legs = SLOTS.map((slot, i) => {
+    const p = lu[i] && m.get(lu[i]);
+    const isCap = !!p && ui.draftCap === p.id;
+    return p ? `<li class="leg ${isCap ? 'cap' : ''}"><button class="x" data-action="remove" data-i="${i}" aria-label="Remove ${esc(p.name)}">✕</button><div>
+        <div class="leg-top"><span class="ptag">${slot}</span><b>${esc(p.name)}</b><span class="leg-sal">${starsHtml(p.stars)}${isCap ? ' +1' : ''}</span></div>
+        <div class="leg-sub"><span>${esc(p.team)} ${esc(p.opp)} · FPPG ${f1(p.avg)}${isCap ? ` → <b>${f1(p.avg * CAPTAIN_X)}</b>` : ''}${isOut(p) ? ' · <span class="inj out">Out</span>' : ''}</span>
+          <button class="capbtn ${isCap ? 'on' : ''}" data-action="captain" data-id="${esc(p.id)}" aria-pressed="${isCap}" aria-label="${isCap ? 'Remove captain' : 'Make captain'}: ${esc(p.name)}">${isCap ? '★ Captain ×1.5' : 'Captain +1★'}</button></div></div></li>`
+      : `<li class="leg open"><span></span><div class="leg-top"><span class="ptag dim">${slot}</span><span>${SLOT_HINT[slot]}</span><span></span></div></li>`;
+  }).join('');
+  const proj = lu.reduce((a, id) => a + (id ? (m.get(id)?.avg || 0) * (id === ui.draftCap ? CAPTAIN_X : 1) : 0), 0);
+  const entered = entries.has(ui.sel);
+  const info = open ? `Fill all six slots to enter. ${open} open · ${left}★ left to spend.`
+    : !ui.draftCap ? (left >= CAPTAIN_EXTRA ? 'Entered. Pick a captain to score his points 1.5×. It costs one extra star.' : 'Entered. A captain costs one extra star, and you have none left.')
+    : `Entered for ${dayLabel(ui.sel)}. At ${timeLabel(day.lockAt)} you’ll join a group of 10 ${TIERS[tierOf(profile?.rp)]} players.`;
+  const cta = open ? `<button class="cta" data-action="auto">Auto-fill ${open} open slot${open > 1 ? 's' : ''}</button>`
+    : ui.save === 'pending' ? '<button class="cta" disabled>Saving…</button>'
+    : ui.save === 'err' ? '<button class="cta err" disabled>Couldn’t save. Make any change to retry.</button>'
+    : entered ? `<button class="cta ok" disabled>✓ Entered · edit until ${timeLabel(day.lockAt)}</button>` : '<button class="cta" disabled>Saving…</button>';
+  $('#lineup').innerHTML = `
+    <div class="slip-head"><span class="count">${6 - open}</span><h3>Lineup</h3></div>
+    <div class="seg"><span class="on">${esc(profile.name)}</span><span>${TIERS[tierOf(profile.rp)]} group</span></div>
+    <ul class="legs">${legs}</ul>
+    <div class="slip-foot">
+      <div class="capbar"><i style="--w:${Math.min(100, s / CAP * 100)}%"></i></div>
+      <dl class="totals"><div><dt>Stars used</dt><dd>${s} of ${CAP}★</dd></div><div><dt>Stars left</dt><dd>${left}★</dd></div><div><dt>Projected</dt><dd>${f1(proj)} pts</dd></div></dl>
+      <div class="info">${info}</div>
+      <div class="ctarow"><button class="trash" data-action="clear" aria-label="Clear lineup" ${lu.some(Boolean) ? '' : 'disabled'}>${TRASH}</button>${cta}</div>
+    </div>`;
+}
+
+/* ---------- Group results ---------- */
+function groupRows(day) {
+  const res = new Map((group.results || []).map(r => [r.key, r]));
+  const rows = group.members.map(mb => {
+    const rows = scoreRows(mb.ids, mb.captain, day);
+    return { ...mb, rows, total: total(rows), best: Math.max(0, ...rows.map(r => r.fp)), res: res.get(mb.key) };
+  });
+  if (group.scored) rows.sort((a, b) => (a.res?.finish || 99) - (b.res?.finish || 99));
+  else rows.sort((a, b) => b.total - a.total || b.best - a.best || (a.at ?? Infinity) - (b.at ?? Infinity));
+  return rows;
+}
+
+function lineupDetail(mb, day) {
+  return mb.rows.map(r => {
+    const l = r.line;
+    const stat = l ? `${l[1]} PTS · ${l[2]} REB · ${l[3]} AST · ${l[4]} STL · ${l[5]} BLK · ${l[6]} TO · ${l[0]} MIN` : day.final ? 'Did not play' : 'Not started';
+    return `<div class="runner sub">${jersey(r.p.team)}
+      <div><div class="r-name"><span class="ptag">${r.slot}</span>${esc(r.p.name)}${r.cap ? '<span class="ctag">★ Captain</span>' : ''}</div><div class="r-sub">${esc(r.p.team)}<span class="sep">|</span>${stat}</div></div>
+      <div class="r-act"><span class="sc ${l ? '' : 'zero'} ${r.cap ? 'capsc' : ''}">${l ? f1(r.fp) : '—'}</span><span class="r-trail">${r.cap && l ? `${f1(r.base)} × 1.5` : starsHtml(r.p.stars)}</span></div></div>`;
+  }).join('');
+}
+
+function groupView(day) {
+  const rows = groupRows(day);
+  const mine = rows.findIndex(r => r.uid === me.id);
+  const my = rows[mine];
+  if (ui.open == null) ui.open = me.id;
+  const board = rows.map((r, i) => {
+    const d = r.res?.rpDelta;
+    const delta = group.scored ? (r.bot ? '' : `<span class="badge ${d >= 0 ? 'won' : 'lost'}">${d >= 0 ? '+' : ''}${d} RP</span>`)
+      : (r.bot ? '' : `<span class="badge">${RP_BY_FINISH[i] >= 0 ? '+' : ''}${RP_BY_FINISH[i]} if final</span>`);
+    const isOpen = ui.open === r.key;
+    return `<div class="gboard-row ${r.uid === me.id ? 'me' : ''}">
+      <button class="grow" data-action="toggle-row" data-k="${esc(r.key)}" aria-expanded="${isOpen}">
+        <span class="gpos">${i + 1}</span>
+        <span class="gname">${esc(r.name)}${r.bot ? '<span class="bot">Computer</span>' : ''}${r.uid === me.id ? '<span class="you">You</span>' : ''}</span>
+        ${delta}
+        <span class="sc">${f1(r.total)}</span>
+      </button>
+      ${isOpen ? `<div class="gdetail">${lineupDetail(r, day)}</div>` : ''}
+    </div>`;
+  }).join('');
+  const head = group.scored
+    ? `You finished ${ordinal(mine + 1)} of ${rows.length}`
+    : day.final ? 'Final scores are in. Ranks update on the next sync.'
+    : `You’re ${ordinal(mine + 1)} of ${rows.length} right now`;
+  const updated = day.updatedAt ? `Stats as of ${new Date(day.updatedAt).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}.` : '';
+  return `<section class="panel">
+    <div class="list-head"><div><div class="eyebrow">${tierBadge(group.tier)} Group ${esc(group.gid.split('-').pop())} · ${dayLabel(day.date)}</div><h2>${head}</h2>
+      <p class="sub">${group.scored ? '' : 'Scores update every 30 minutes while games are on. '}${updated} Tap a row to see that lineup.</p></div>
+      ${my ? `<span class="sc big">${f1(my.total)}</span>` : ''}</div>
+    <div class="gboard">${board}</div>
+  </section>`;
+}
+
+/* ---------- Leaderboard and history ---------- */
+function leadersView() {
+  const myRow = leaders.findIndex(u => u.id === me.id);
+  const rows = leaders.map((u, i) => `<tr class="${u.id === me.id ? 'me' : ''}"><td class="num">${i + 1}</td><td><b>${esc(u.name || 'Player')}</b>${u.id === me.id ? ' <span class="you">You</span>' : ''}</td><td>${tierBadge(tierOf(u.rp))}</td><td class="r num">${fmt(u.rp || 0)}</td><td class="r num hide-sm">${u.nights || 0}</td><td class="r num hide-sm">${u.wins || 0}</td></tr>`).join('');
+  return `<section class="panel"><div class="list-head"><div><h2>Leaderboard</h2><p class="sub">Top ${leaders.length || 50} players by rank points. Updated after every night is scored.</p></div></div>
+    ${leaders.length ? `<div class="tablewrap"><table class="lb"><thead><tr><th>#</th><th>Player</th><th>Tier</th><th class="r">RP</th><th class="r hide-sm">Nights</th><th class="r hide-sm">Group wins</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p class="empty">No one has finished a night yet. Enter tonight to be first on the board.</p>'}
+    ${leaders.length && myRow < 0 ? `<p class="hint" style="padding:0 22px 18px">You’re not in the top ${leaders.length} yet. You have ${fmt(profile?.rp || 0)} RP.</p>` : ''}
+  </section>`;
+}
+
+function historyView() {
+  const list = [...entries.values()].sort((a, b) => a.date < b.date ? 1 : -1);
+  const rows = list.map(e => {
+    const st = e.invalid ? `<span class="badge lost">Invalid: ${esc(e.invalid)}</span>`
+      : e.finish ? `<span class="badge ${e.rpDelta >= 0 ? 'won' : 'lost'}">${e.rpDelta >= 0 ? '+' : ''}${e.rpDelta} RP</span>`
+      : e.group ? '<span class="badge live">In progress</span>' : '<span class="badge draft">Entered</span>';
+    const tag = days.has(e.date) ? `button class="runner hist" data-action="sel" data-d="${e.date}"` : 'div class="runner hist"';
+    return `<${tag}>
+      <span class="gnum">${dateOf(e.date).getDate()}</span>
+      <div><div class="r-name">${dayLabel(e.date)}</div><div class="r-sub">${e.finish ? `${ordinal(e.finish)} of ${e.of} · ${e.tierName}` : e.group ? 'Group formed' : 'Waiting for tip-off'}</div></div>
+      <div class="r-act">${e.score != null ? `<span class="sc">${f1(e.score)}</span>` : ''}${st}</div></${tag.split(' ')[0]}>`;
+  }).join('');
+  return `<section class="panel"><div class="list-head"><div><h2>My nights</h2><p class="sub">Every night you entered, newest first. Tap one of the last few nights to see your group.</p></div></div>
+    ${rows || '<p class="empty">You haven’t entered a night yet.</p>'}</section>`;
+}
+
+/* ---------- Right rail ---------- */
+function slipSummary() {
+  const rp = profile?.rp || 0, tier = tierOf(rp);
+  const e = entries.get(ui.sel);
+  let night = '';
+  if (ui.view === 'night' && e) {
+    night = e.finish
+      ? `<div class="series-row"><span>Finish</span><b>${ordinal(e.finish)}</b></div><div class="series-row"><span>Score</span><b>${f1(e.score)}</b></div><div class="series-row"><span>Rank points</span><b class="${e.rpDelta >= 0 ? 'up' : 'down'}">${e.rpDelta >= 0 ? '+' : ''}${e.rpDelta}</b></div>`
+      : `<div class="series-row"><span>Status</span><b class="small">${e.invalid ? 'Invalid' : e.group ? 'Live' : 'Locked'}</b></div>`;
+  }
+  return `<div class="slip-card">
+    <div class="slip-head"><span class="count">${tier + 1}</span><h3>${TIERS[tier]}</h3></div>
+    ${night}
+    <div class="series-row"><span>Rank points</span><b>${fmt(rp)}</b></div>
+    <div class="slip-foot"><div class="info">${tier === TIERS.length - 1 ? 'You’re in the top tier.' : `${100 - (rp - tier * 100)} more RP to reach ${TIERS[tier + 1]}.`} Finish top 3 in your group to climb fastest.</div></div>
+  </div>`;
+}
+
+/* ---------- Render ---------- */
+function nextOpenDate() {
+  return [...days.values()].sort((a, b) => a.date < b.date ? -1 : 1).find(d => !locked(d))?.date || null;
 }
 
 function render() {
   if (!loaded.auth) return;
-  if (!me.id || !seriesId) {
-    renderTop(null); $('#side').innerHTML = ''; $('#slip').innerHTML = '';
-    const sig = !me.id ? 'signin|' + ui.auth : 'home|' + mySeries.map(s => s.id + s.seats.join()).join() + '|' + [...days.keys()].join();
-    if (!me.id || loaded.days) { if (sig !== ui.sig) { ui.sig = sig; $('#main').innerHTML = !me.id ? signinView() : homeView(); } }
+  renderTop();
+  if (!me.id) {
+    $('#side').innerHTML = ''; $('#slip').innerHTML = '';
+    const sig = 'signin|' + ui.auth;
+    if (sig !== ui.sig) { ui.sig = sig; $('#main').innerHTML = signinView(); }
     return;
   }
-  if (!loaded.series) return;
-  if (!series) { renderTop(null); ui.sig = 'missing'; $('#main').innerHTML = notice('Not found', 'This series doesn’t exist', '<p>The link may be wrong, or the series was deleted.</p><div class="row"><button class="btn primary" data-action="home">Go to your series</button></div>'); return; }
+  if (!loaded.profile) return;
+  if (!profile?.name || ui.editName) {
+    $('#side').innerHTML = profile?.name ? '' : ''; $('#slip').innerHTML = '';
+    if (ui.sig !== 'name') { ui.sig = 'name'; $('#main').innerHTML = nameView(); }
+    return;
+  }
   if (!loaded.days) return;
-  const st = series ? seriesState() : null;
-  if (st && (!ui.sel || !st.games.some(g => g.date === ui.sel))) {
-    const cur = st.games.find(g => g.state !== 'final') || st.games[st.games.length - 1];
-    ui.sel = cur?.date || null;
+  if (!ui.sel || !days.has(ui.sel)) {
+    const sorted = [...days.keys()].sort();
+    ui.sel = nextOpenDate() || sorted.filter(d => entries.has(d)).pop() || sorted.pop() || null;
   }
-  const seat = mySeat();
-  const g = st?.games.find(x => x.date === ui.sel);
-  const idx = st ? st.games.indexOf(g) : -1;
-  const day = g && days.get(g.date);
-  let view;
-  if (!series.seats[1] && seat < 0) view = 'join';
-  else if (!g) view = 'noslate';
-  else if (g.state === 'open') view = seat >= 0 ? 'build' : 'hidden';
-  else view = 'scored';
-  renderTop(st);
-  renderSide(st, view);
-  const sig = [view, ui.sel, seat, series?.seats.join(), series?.start].join('|');
-  if (view === 'build') {
-    if (ui.draftFor !== ui.sel) { ui.draft = (savedLineup(seat, ui.sel) || SLOTS.map(() => null)).slice(); ui.draftCap = savedCaptain(seat, ui.sel); ui.draftFor = ui.sel; ui.save = ''; }
-    if (sig === ui.sig) { renderPool(); renderLineup(); refreshSlate(g, day, idx); return; }
-  }
-  if ((view === 'setup' || view === 'join') && sig === ui.sig) return; // keep what the viewer is typing
-  ui.sig = sig;
-  $('#slip').innerHTML = '';
-  renderSlip(st, view);
+  watchGroup();
+  renderSide();
   const m = $('#main');
-  if (view === 'setup') m.innerHTML = setupView();
-  else if (view === 'wait') m.innerHTML = notice('Best of 7', 'No series running', '<p>The page owner hasn’t started a series yet. Check back soon.</p>');
-  else if (view === 'join') m.innerHTML = joinView();
-  else if (view === 'noslate') m.innerHTML = notice('Series', 'Waiting for the next slate', '<p>The next NBA game day hasn’t been posted yet. The sync posts slates and results each morning and afternoon.</p>');
-  else if (view === 'hidden') m.innerHTML = heroCard(g, day, idx, false) + notice('Lineups hidden', 'Revealed at tip-off', `<p>Both lineups stay hidden until ${timeLabel(day.lockAt)}, when the first game tips off.</p>`);
-  else if (view === 'build') { m.innerHTML = `${!series.seats[1] && seat === 0 ? `<div id="invite">${inviteCard()}</div>` : ''}${heroCard(g, day, idx, true)}${builderView(day)}${legend}`; renderPool(); renderLineup(); }
-  else m.innerHTML = `${heroCard(g, day, idx, false)}${scoredView(g, day, idx, st)}${legend}`;
+  if (ui.view === 'leaders') { ui.sig = 'leaders'; m.innerHTML = leadersView(); $('#slip').innerHTML = slipSummary(); return; }
+  if (ui.view === 'history') { ui.sig = 'history'; m.innerHTML = historyView(); $('#slip').innerHTML = slipSummary(); return; }
+  const day = days.get(ui.sel);
+  if (!day) { ui.sig = 'noslate'; m.innerHTML = notice('Tonight', 'Waiting for the next slate', '<p>The next NBA game day hasn’t been posted yet. The sync posts slates a day ahead.</p>'); $('#slip').innerHTML = slipSummary(); return; }
+  const e = entries.get(ui.sel);
+  if (!locked(day)) {
+    const sig = 'build|' + ui.sel;
+    if (ui.draftFor !== ui.sel) { ui.draft = (e?.ids || SLOTS.map(() => null)).slice(); ui.draftCap = e?.captain ?? null; ui.draftFor = ui.sel; ui.save = ''; }
+    if (sig === ui.sig && $('#poolrows')) { renderPool(); renderLineup(); const el = $('#slate'); if (el) el.innerHTML = slateCard(day); return; }
+    ui.sig = sig;
+    $('#slip').innerHTML = '<div class="slip-card" id="lineup"></div>';
+    m.innerHTML = `${heroCard(day, true)}<section class="panel"><div class="list-head"><div><h2>${dayLabel(ui.sel)} player pool</h2><p class="sub">Tap a rating to add a player. Fit six under ${CAP}★, with one 5★ at most. The captain costs +1★.</p></div></div><div id="poolrows"></div><div id="poolmore"></div></section>${legend}`;
+    renderPool(); renderLineup();
+    return;
+  }
+  ui.sig = 'night|' + ui.sel;
+  $('#slip').innerHTML = slipSummary();
+  let body;
+  const next = nextOpenDate();
+  const nextBtn = next ? `<div class="row"><button class="btn primary" data-action="sel" data-d="${next}">Enter ${dayLabel(next)}</button></div>` : '';
+  if (!e) body = notice('Not entered', 'You sat this night out', `<p>That's fine: skipping a night costs nothing.</p>${nextBtn}`);
+  else if (e.invalid) body = notice('Entry not counted', 'This lineup was invalid', `<p>The lineup was rejected (${esc(e.invalid)}), so it wasn’t placed in a group. Nothing changed on your rank.</p>${nextBtn}`);
+  else if (!e.group || !group || group.date !== ui.sel) body = notice('Locked in', 'Forming groups', `<p>Lineups locked at ${timeLabel(day.lockAt)}. Groups of 10 are formed on the next sync, within 30 minutes of tip-off.</p>`);
+  else body = groupView(day);
+  m.innerHTML = `${heroCard(day, false)}${body}${legend}`;
 }
 
-document.addEventListener('click', e => {
-  const t = e.target.closest('[data-goto]');
-  if (t) document.getElementById(t.dataset.goto)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-});
-
-function refreshSlate(g, day, idx) { const el = $('#slate'); if (el) el.innerHTML = slateCard(g, day, idx); }
-
+/* ---------- Edits ---------- */
 let toastTimer;
 function toast(msg) {
   const t = $('#toast');
@@ -765,23 +762,24 @@ function toast(msg) {
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-/* ---------- Lineup edits (saved automatically) ---------- */
 let saveTimer = null, saving = false, saveAgain = false;
 function changed() {
-  ui.save = 'pending'; renderPool(); renderLineup();
+  ui.save = 'pending'; renderPool(); renderLineup(); renderSide();
   clearTimeout(saveTimer);
   saveTimer = setTimeout(flush, 700);
 }
+// An entry exists only while the lineup is complete; emptying a slot withdraws it.
 async function flush() {
   if (saving) { saveAgain = true; return; }
   const date = ui.draftFor, day = days.get(date), ids = ui.draft.slice(), captain = ids.includes(ui.draftCap) ? ui.draftCap : null;
   if (!day || locked(day)) { ui.save = 'err'; toast('Lineups are locked for this slate.'); render(); return; }
   saving = true;
+  const ref = db.doc(`entries/${date}_${me.id}`);
   try {
-    await db.doc(`series/${seriesId}/lineups/${date}_${me.id}`).set({ ids, captain, at: Date.now(), date, uid: me.id });
-    if (complete(ids)) await ensureCpuLineup(date);
+    if (complete(ids)) await ref.set({ uid: me.id, date, ids, captain, at: Date.now() });
+    else if (entries.has(date)) await ref.delete();
     ui.save = 'ok';
-  } catch (e) { ui.save = 'err'; }
+  } catch (err) { ui.save = 'err'; }
   saving = false;
   if (saveAgain) { saveAgain = false; return flush(); }
   if (ui.draftFor === date && $('#lineup')) renderLineup();
@@ -793,37 +791,42 @@ function addPlayer(id) {
   let i = SLOTS.findIndex((s, k) => s === p.pos && !lu[k]);
   if (i < 0 && !lu[5]) i = 5;
   if (i < 0) return toast(`Your ${p.pos} slots and UTIL are full. Remove someone first.`);
-  const over = spent(lu, day) + p.sal - series.cap;
-  if (over > 0) return toast(`${p.name} puts you ${fmt(over)} credits over the cap.`);
+  if (p.stars === 5 && fiveStars(lu, day) >= MAX_FIVE) return toast('You can only have one 5★ player. Remove your other 5★ first.');
+  const over = cost(lu, ui.draftCap, day) + p.stars - CAP;
+  if (over > 0) return toast(`${p.name} is ${p.stars}★. You’d be ${over}★ over your ${CAP}★ budget.`);
   if (isOut(p)) toast(`${p.name} is listed as out. Out players score 0.`);
   lu[i] = id; changed();
+}
+
+function setCaptain(id) {
+  const day = days.get(ui.sel);
+  if (ui.draftCap === id) { ui.draftCap = null; return changed(); }
+  const over = cost(ui.draft, id, day) - CAP;
+  if (over > 0) return toast(`A captain costs one extra star, and you have no stars left. Swap someone for a cheaper player first.`);
+  ui.draftCap = id; changed();
 }
 
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-action]');
   if (!b || b.disabled) return;
   const a = b.dataset.action;
-  if (a === 'sel') { ui.sel = b.dataset.d; ui.setup = false; ui.limit = 80; render(); }
-  else if (a === 'home') openSeries(null);
-  else if (a === 'open') openSeries(b.dataset.id);
+  if (a === 'sel') { ui.view = 'night'; ui.sel = b.dataset.d; ui.limit = 80; ui.open = null; ui.sig = ''; render(); window.scrollTo({ top: 0 }); }
+  else if (a === 'view') { ui.view = b.dataset.v; if (ui.view === 'leaders') watchLeaders(); ui.sig = ''; render(); window.scrollTo({ top: 0 }); }
   else if (a === 'signout') auth.signOut();
   else if (a === 'auth-reset') { ui.auth = ''; render(); }
-  else if (a === 'copy-link') {
-    navigator.clipboard.writeText(inviteUrl()).then(() => toast('Link copied. Send it to your friend.'),
-      () => { const i = $('#invite-link'); i.focus(); i.select(); toast('Press Ctrl+C to copy the selected link.'); });
-  }
-  else if (!ui.draft || days.get(ui.sel) == null) return;
+  else if (a === 'edit-name') { ui.editName = true; ui.sig = ''; render(); }
+  else if (a === 'name-cancel') { ui.editName = false; ui.sig = ''; render(); }
+  else if (a === 'toggle-row') { ui.open = ui.open === b.dataset.k ? '' : b.dataset.k; ui.sig = ''; render(); }
+  else if (!ui.draft || !days.get(ui.sel) || locked(days.get(ui.sel))) return;
   else if (a === 'add') addPlayer(b.dataset.id);
   else if (a === 'drop') { ui.draft[ui.draft.indexOf(b.dataset.id)] = null; if (ui.draftCap === b.dataset.id) ui.draftCap = null; changed(); }
   else if (a === 'remove') { if (ui.draftCap === ui.draft[+b.dataset.i]) ui.draftCap = null; ui.draft[+b.dataset.i] = null; changed(); }
   else if (a === 'clear') { ui.draft = SLOTS.map(() => null); ui.draftCap = null; changed(); }
-  else if (a === 'captain') { ui.draftCap = ui.draftCap === b.dataset.id ? null : b.dataset.id; changed(); }
+  else if (a === 'captain') setCaptain(b.dataset.id);
   else if (a === 'auto') {
-    const r = buildLineup(ui.draft, days.get(ui.sel), series.cap, Math.random, 0.05);
-    if (!r) return toast('No way to fill the open slots under the cap. Swap out a pricey player.');
-    ui.draft = r;
-    if (!ui.draftCap) ui.draftCap = bestAvg(r, days.get(ui.sel));
-    changed();
+    const r = buildLineup(days.get(ui.sel).players, { base: ui.draft, captain: ui.draftCap, noise: 0.05 });
+    if (!r) return toast('No way to fill the open slots within your star budget. Swap out a high-rated player.');
+    ui.draft = r.ids; ui.draftCap = r.captain; changed();
   }
   else if (a === 'more') { ui.limit += 80; renderPool(); }
   else if (a === 'pos') { ui.pos = b.dataset.v; ui.limit = 80; document.querySelectorAll('[data-action=pos]').forEach(x => x.setAttribute('aria-pressed', x.dataset.v === ui.pos)); renderPool(); }
@@ -837,43 +840,37 @@ document.addEventListener('submit', async e => {
     const f = e.target.id;
     if (f === 'signin-form') {
       const email = $('#signin-email').value.trim();
-      await auth.sendSignInLinkToEmail(email, { url: location.origin + location.pathname + (seriesId ? `?s=${encodeURIComponent(seriesId)}` : ''), handleCodeInApp: true });
+      await auth.sendSignInLinkToEmail(email, { url: location.origin + location.pathname, handleCodeInApp: true });
       try { localStorage.setItem(EMAIL_KEY, email); } catch (err) {}
       ui.auth = 'sent'; ui.authEmail = email; render();
     } else if (f === 'confirm-form') {
       await finishSignIn($('#confirm-email').value.trim());
-    } else if (f === 'setup-form') {
-      const cpu = $('#setup-mode-cpu').checked;
-      const ref = await db.collection('series').add({
-        owner: me.id, members: [me.id],
-        start: $('#setup-start').value, cap: +$('#setup-cap').value,
-        seats: [me.id, cpu ? 'cpu' : null],
-        teams: [$('#setup-a').value.trim() || 'My Squad', cpu ? 'The Computer' : ''],
-        createdAt: Date.now(),
-      });
-      openSeries(ref.id);
-    } else if (f === 'join-form') {
-      const ref = db.doc('series/' + seriesId), name = $('#join-name').value.trim() || 'The Rival';
-      await db.runTransaction(async tx => {
-        const cur = (await tx.get(ref)).data();
-        if (cur.seats[1]) throw new Error('taken');
-        tx.update(ref, { seats: [cur.seats[0], me.id], teams: [cur.teams[0], name], members: firebase.firestore.FieldValue.arrayUnion(me.id) });
-      });
+    } else if (f === 'name-form') {
+      const name = $('#name-input').value.trim().replace(/\s+/g, ' '), err = $('#name-err');
+      if (!/^[A-Za-z0-9_ .-]{3,16}$/.test(name)) { err.textContent = 'Use 3–16 letters, numbers, spaces, dots, dashes or underscores.'; return; }
+      const taken = await db.collection('users').where('nameLower', '==', name.toLowerCase()).limit(1).get();
+      if (taken.docs.some(d => d.id !== me.id)) { err.textContent = 'That name is taken. Try another.'; return; }
+      const ref = db.doc('users/' + me.id);
+      if (profile) await ref.update({ name, nameLower: name.toLowerCase() });
+      else await ref.set({ name, nameLower: name.toLowerCase(), createdAt: Date.now() });
+      ui.editName = false; ui.sig = '';
     }
   } catch (err) {
-    toast(err.message === 'taken' ? 'Someone already took that seat.'
-      : err.code === 'auth/invalid-email' ? 'That email address doesn’t look right.'
+    toast(err.code === 'auth/invalid-email' ? 'That email address doesn’t look right.'
       : err.code === 'auth/operation-not-allowed' ? 'Email sign-in isn’t switched on in Firebase yet. See README step 2.'
       : 'That didn’t save. Check your connection and try again.');
   } finally { btn.disabled = false; }
 });
 
-document.addEventListener('input', e => { if (e.target.id === 'q') { ui.q = e.target.value; ui.limit = 80; renderPool(); } });
+document.addEventListener('input', e => {
+  if (e.target.id === 'q') { ui.q = e.target.value; ui.limit = 80; renderPool(); }
+  if (e.target.id === 'name-input') $('#name-err').textContent = '';
+});
 document.addEventListener('change', e => { if (e.target.id === 'sort') { ui.sort = e.target.value; renderPool(); } });
 
 /* ---------- Boot (Firebase) ---------- */
 const EMAIL_KEY = 'bo7-signin-email';
-let unsubSeries = null, unsubLineups = null, unsubDays = null, unsubMine = null;
+let unsubGroup = null, groupKey = '', unsubLeaders = null;
 
 // US Eastern calendar date, offset by whole days, as YYYYMMDD (NBA game days are Eastern dates).
 function etDay(offset = 0) {
@@ -888,39 +885,26 @@ function fail(err) {
     : '<p>Reload the page to try again.</p>');
 }
 
-function subscribeDays(from) {
-  if (ui.daysFrom === from) return;
-  ui.daysFrom = from;
-  unsubDays?.();
-  loaded.days = false;
-  unsubDays = db.collection('days').where(firebase.firestore.FieldPath.documentId(), '>=', from).limit(14)
+function watchGroup() {
+  const e = entries.get(ui.sel), key = e?.group ? `${ui.sel}/${e.group}` : '';
+  if (key === groupKey) return;
+  groupKey = key; unsubGroup?.(); group = null;
+  if (!key) return;
+  unsubGroup = db.doc(`days/${ui.sel}/groups/${e.group}`).onSnapshot(s => { group = s.exists ? s.data() : null; ui.sig = ''; render(); }, () => {});
+}
+
+function watchLeaders() {
+  if (unsubLeaders) return;
+  unsubLeaders = db.collection('users').orderBy('rp', 'desc').limit(50)
+    .onSnapshot(s => { leaders = s.docs.map(d => ({ id: d.id, ...d.data() })); if (ui.view === 'leaders') { ui.sig = ''; render(); } }, () => {});
+}
+
+function startData() {
+  db.doc('users/' + me.id).onSnapshot(s => { profile = s.exists ? s.data() : null; loaded.profile = true; ui.sig = ''; render(); }, fail);
+  db.collection('days').where(firebase.firestore.FieldPath.documentId(), '>=', etDay(-3)).limit(6)
     .onSnapshot(s => { days = new Map(s.docs.map(x => [x.id, x.data()])); loaded.days = true; render(); }, fail);
-}
-
-function watchSeries() {
-  unsubSeries?.(); unsubLineups?.();
-  series = null; luDocs = new Map(); loaded.series = false;
-  ui.sel = null; ui.draftFor = null; ui.sig = ''; ui.q = ''; ui.pos = 'ALL';
-  if (!seriesId) { subscribeDays(etDay(-1)); render(); return; }
-  unsubSeries = db.doc('series/' + seriesId).onSnapshot(s => {
-    series = s.exists ? s.data() : null;
-    me.isOwner = !!series && series.owner === me.id;
-    loaded.series = true;
-    if (series) subscribeDays(series.start);
-    render();
-  }, fail);
-  unsubLineups = db.collection(`series/${seriesId}/lineups`).onSnapshot(s => {
-    luDocs = new Map(s.docs.map(x => [x.id, x.data()]));
-    render();
-  }, () => {});
-}
-
-function watchMine() {
-  unsubMine?.();
-  unsubMine = db.collection('series').where('members', 'array-contains', me.id).onSnapshot(s => {
-    mySeries = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => b.createdAt - a.createdAt);
-    render();
-  }, () => {});
+  db.collection('entries').where('uid', '==', me.id)
+    .onSnapshot(s => { entries = new Map(s.docs.map(x => [x.data().date, x.data()])); render(); }, () => {});
 }
 
 async function finishSignIn(email) {
@@ -931,7 +915,7 @@ async function finishSignIn(email) {
     toast('That sign-in link has expired or was already used. Request a new one.');
   }
   ui.auth = '';
-  history.replaceState({}, '', location.pathname + (seriesId ? `?s=${encodeURIComponent(seriesId)}` : ''));
+  history.replaceState({}, '', location.pathname);
 }
 
 async function boot() {
@@ -950,15 +934,14 @@ async function boot() {
   }
   auth.onAuthStateChanged(u => {
     if (!u && me.id) { location.reload(); return; }
-    me = { id: u ? u.uid : null, email: u?.email || '', isOwner: false };
+    me = { id: u ? u.uid : null, email: u?.email || '' };
     loaded.auth = true;
     ui.sig = '';
-    if (u) { watchMine(); watchSeries(); }
+    if (u) startData();
     render();
   });
-  window.addEventListener('popstate', () => { seriesId = new URLSearchParams(location.search).get('s'); watchSeries(); });
   // Re-render each minute so countdowns tick and slates lock on time.
-  setInterval(render, 60000);
+  setInterval(() => { if (ui.sig.startsWith('build|') && days.get(ui.sel) && locked(days.get(ui.sel))) ui.sig = ''; render(); }, 60000);
 }
 boot();
 </script>

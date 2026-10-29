@@ -1,0 +1,5 @@
+node_modules/
+sync/out/
+# Never commit the Firebase service-account key. It goes in a GitHub secret.
+*serviceAccount*.json
+*-firebase-adminsdk-*.json

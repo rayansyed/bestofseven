@@ -1,6 +1,7 @@
 // Best of 7 (NBA) data sync.
 // Pulls ESPN's public NBA scoreboard, rosters and box scores and writes one Firestore document per
-// game day to `days/<YYYYMMDD>`, plus running season averages to `meta/averages`.
+// game day to `days/<YYYYMMDD>`, plus running season averages to `meta/averages`. After a slate
+// locks it forms the ranked groups; once every game is final it scores them and updates ranks.
 // Runs from GitHub Actions (see .github/workflows/nba-sync.yml).
 //
 // Env:
@@ -11,6 +12,8 @@ import https from 'node:https';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { starsOf } from './game.mjs';
+import { groupNight, scoreNight } from './ranked.mjs';
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const API = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba';
@@ -30,8 +33,6 @@ const get = url => new Promise((resolve, reject) => {
 
 const etDate = (ms = Date.now()) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(ms)).replace(/-/g, '');
 const fp = s => s[1] + 1.2 * s[2] + 1.5 * s[3] + 3 * s[4] + 3 * s[5] - s[6];
-// Salary is proportional to fantasy points per game (about 4.5 pts per 1,000 credits at every price).
-const salary = avg => Math.round(Math.min(12000, Math.max(3000, avg * 222)) / 100) * 100;
 const normPos = a => { a = (a || 'F').toUpperCase(); return a.startsWith('C') ? 'C' : a.includes('G') ? 'G' : 'F'; };
 
 /* ---------- Storage: Firestore, or local files in dry-run mode ---------- */
@@ -40,10 +41,19 @@ async function store() {
   if (DRY) {
     const out = path.join(DIR, 'out');
     fs.mkdirSync(out, { recursive: true });
-    const file = p => path.join(out, p.replace('/', '__') + '.json');
+    const file = p => path.join(out, p.split('/').join('__') + '.json');
+    const read = async p => fs.existsSync(file(p)) ? JSON.parse(fs.readFileSync(file(p), 'utf8')) : null;
+    const write = async (p, data, merge) => fs.writeFileSync(file(p), JSON.stringify(merge ? { ...(await read(p)), ...data } : data));
+    // Documents directly inside a collection path.
+    const list = async coll => {
+      const prefix = coll.split('/').join('__') + '__', depth = coll.split('/').length + 1;
+      return fs.readdirSync(out).filter(f => f.startsWith(prefix) && f.slice(0, -5).split('__').length === depth)
+        .map(f => ({ id: f.slice(prefix.length, -5), data: JSON.parse(fs.readFileSync(path.join(out, f), 'utf8')) }));
+    };
     return {
-      read: async p => fs.existsSync(file(p)) ? JSON.parse(fs.readFileSync(file(p), 'utf8')) : null,
-      write: async (p, data) => fs.writeFileSync(file(p), JSON.stringify(data)),
+      read, write, list,
+      query: async (coll, field, value) => (await list(coll)).filter(d => d.data[field] === value),
+      batch: async writes => { for (const w of writes) await write(w.path, w.data, w.merge); },
     };
   }
   const { initializeApp, cert } = await import('firebase-admin/app');
@@ -51,9 +61,20 @@ async function store() {
   if (!process.env.FIREBASE_SERVICE_ACCOUNT) throw new Error('FIREBASE_SERVICE_ACCOUNT is not set');
   initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)) });
   fsdb = getFirestore();
+  const docs = s => s.docs.map(d => ({ id: d.id, data: d.data() }));
   return {
     read: async p => { const s = await fsdb.doc(p).get(); return s.exists ? s.data() : null; },
     write: async (p, data) => fsdb.doc(p).set(data),
+    list: async coll => docs(await fsdb.collection(coll).get()),
+    query: async (coll, field, value) => docs(await fsdb.collection(coll).where(field, '==', value).get()),
+    // Firestore batches hold at most 500 writes.
+    batch: async writes => {
+      for (let i = 0; i < writes.length; i += 400) {
+        const b = fsdb.batch();
+        for (const w of writes.slice(i, i + 400)) b.set(fsdb.doc(w.path), w.data, { merge: !!w.merge });
+        await b.commit();
+      }
+    },
   };
 }
 
@@ -114,7 +135,7 @@ async function buildDay(db, date, agg) {
   const lockAt = games.map(g => g.tip).sort()[0];
   const lockMs = Date.parse(lockAt);
 
-  // The player pool and salaries freeze at lock so lineups keep the prices they were built with.
+  // The player pool and star ratings freeze at lock so lineups keep the costs they were built with.
   let players;
   if (Date.now() >= lockMs && prev?.players) players = prev.players;
   else {
@@ -125,7 +146,7 @@ async function buildDay(db, date, agg) {
         for (const a of ro.athletes || []) {
           const s = agg.p[a.id];
           const av = s ? Math.round(s[1] / s[0] * 10) / 10 : 0;
-          players.push({ id: a.id, name: a.displayName, team, opp: (home ? 'vs ' : '@ ') + opp, pos: normPos(a.position?.abbreviation), avg: av, gp: s ? s[0] : 0, sal: salary(av), status: a.injuries?.[0]?.status || '' });
+          players.push({ id: a.id, name: a.displayName, team, opp: (home ? 'vs ' : '@ ') + opp, pos: normPos(a.position?.abbreviation), avg: av, gp: s ? s[0] : 0, stars: starsOf(av), status: a.injuries?.[0]?.status || '' });
         }
       }
     }
@@ -136,7 +157,9 @@ async function buildDay(db, date, agg) {
     if (g.status === 'STATUS_SCHEDULED') continue;
     Object.assign(results, boxLines(await get(`${API}/summary?event=${g.id}`)));
   }
-  const doc = { date, lockAt, lockMs, final: games.every(g => DONE.has(g.status)), games: games.map(({ awayId, homeId, ...g }) => g), players, results, updatedAt: new Date().toISOString() };
+  const doc = { date, lockAt, lockMs, final: games.every(g => DONE.has(g.status)), games: games.map(({ awayId, homeId, ...g }) => g), players, results, updatedAt: new Date().toISOString(),
+    // Ranked progress, written by groupNight/scoreNight; carried across rewrites.
+    grouped: !!prev?.grouped, scored: !!prev?.scored, groups: prev?.groups || 0, entrants: prev?.entrants || 0 };
   await db.write('days/' + date, doc);
   return doc;
 }
@@ -151,5 +174,14 @@ for (const date of dates) {
   if (!doc) { console.log(`${date}: no NBA games`); continue; }
   const live = doc.games.filter(g => g.status !== 'STATUS_SCHEDULED').length;
   console.log(`${date}: ${doc.games.length} games, ${doc.players.length} players, ${live} started, final=${doc.final}`);
+  if (Date.now() >= doc.lockMs && !doc.grouped) {
+    const g = await groupNight(db, doc);
+    doc.grouped = true;
+    console.log(`${date}: grouped ${g.entrants} entries into ${g.groups} groups`);
+  }
+  if (doc.final && doc.grouped && !doc.scored) {
+    const s = await scoreNight(db, doc);
+    console.log(`${date}: scored ${s.scored} groups`);
+  }
 }
 process.exit(0);

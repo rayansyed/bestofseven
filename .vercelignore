@@ -1,0 +1,4 @@
+sync/
+.github/
+firestore.rules
+README.md

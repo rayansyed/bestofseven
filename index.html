@@ -542,11 +542,13 @@ function until(iso) {
 
 function renderTop() {
   const rp = profile?.rp || 0, tier = tierOf(rp);
-  const open = [...days.values()].sort((a, b) => a.date < b.date ? -1 : 1).find(d => !locked(d));
+  // Today's slate, or the next open one on a day with no NBA games.
+  const today = days.has(etDay()) ? etDay() : nextOpenDate();
+  const onToday = ui.view === 'night' && ui.sel === today;
   const nav = (view, label, extra = '') => `<button class="navlink ${ui.view === view ? 'on' : ''}" data-action="view" data-v="${view}" ${ui.view === view ? 'aria-current="page"' : ''} ${extra}>${label}</button>`;
   $('#topbar').innerHTML = `
     <div class="brand">BEST OF <span class="seven">7</span></div>
-    ${me.id && profile?.name ? `<nav class="topnav" aria-label="Sections">${open ? `<button class="navlink ${ui.view === 'night' && ui.sel === open.date ? 'on' : ''}" data-action="sel" data-d="${open.date}" ${ui.view === 'night' && ui.sel === open.date ? 'aria-current="page"' : ''}>Enter ${dayLabel(open.date).split(',')[0]}</button>` : ''}${nav('leaders', 'Leaderboard')}${nav('history', 'My nights')}</nav>` : ''}
+    ${me.id && profile?.name ? `<nav class="topnav" aria-label="Sections">${today ? `<button class="navlink ${onToday ? 'on' : ''}" data-action="sel" data-d="${today}" ${onToday ? 'aria-current="page"' : ''}>Today</button>` : ''}${nav('leaders', 'Leaderboard')}${nav('history', 'My nights')}</nav>` : ''}
     <div class="top-right">
       <span class="tchip">NBA · 2026–27</span>
       ${profile?.name ? `<span class="tchip">${tierBadge(tier)}<span>${esc(profile.name)} · ${fmt(rp)} RP</span></span>` : ''}

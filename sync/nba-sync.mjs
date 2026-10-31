@@ -79,7 +79,7 @@ async function store() {
 }
 
 /* ---------- ESPN parsing ---------- */
-// Box score lines: { athleteId: [min, pts, reb, ast, stl, blk, to] }
+// Box score lines: { athleteId: [min, pts, reb, ast, stl, blk, to, threes] }
 function boxLines(box) {
   const out = {};
   for (const t of box.boxscore?.players || []) {
@@ -89,7 +89,7 @@ function boxLines(box) {
     for (const a of st.athletes || []) {
       if (a.didNotPlay || !a.stats || !a.stats.length) continue;
       const n = k => { const v = parseFloat(a.stats[L.indexOf(k)]); return isNaN(v) ? 0 : v; };
-      out[a.athlete.id] = [n('MIN'), n('PTS'), n('REB'), n('AST'), n('STL'), n('BLK'), n('TO')];
+      out[a.athlete.id] = [n('MIN'), n('PTS'), n('REB'), n('AST'), n('STL'), n('BLK'), n('TO'), n('3PT')];
     }
   }
   return out;

@@ -115,6 +115,42 @@ export function buildLineup(players, { base = SLOTS.map(() => null), captain = n
   return best;
 }
 
+// "NBA moment" badges: earned when a real box score matches a lineup. Players are matched by ESPN id,
+// so trades and name changes don't break them. index.html lists the same ids with names and icons.
+const NBA = { lebron: '1966', curry: '3975', klay: '6475', kawhi: '6450', giannis: '3032977', jokic: '3112335', luka: '3945274', wemby: '5104157', dame: '6606', kd: '3202', harden: '3992', embiid: '3059318', ant: '4594268', jimmy: '6430' };
+const tripleDouble = l => [l[1], l[2], l[3], l[4], l[5]].filter(v => v >= 10).length >= 3;
+
+// Ids of the moment badges this lineup earned tonight. A line is [min, pts, reb, ast, stl, blk, to, threes].
+export function momentBadges(ids, captain, day) {
+  const results = day.results || {}, pool = new Map(day.players.map(p => [p.id, p]));
+  const line = id => (ids.includes(id) ? results[id] : null);
+  const threes = l => l?.[7] || 0;
+  const lines = ids.map(id => results[id]).filter(Boolean);
+  const finalGame = team => day.games?.some(g => (g.away === team || g.home === team) && g.status === 'STATUS_FINAL');
+  const has = (id, test) => { const l = line(id); return !!l && test(l); };
+  const earned = [];
+  const add = (badge, ok) => { if (ok) earned.push(badge); };
+  add('blocked_by_james', has(NBA.lebron, l => l[5] >= 1));
+  add('splash_brothers', !!line(NBA.curry) && !!line(NBA.klay) && threes(line(NBA.curry)) + threes(line(NBA.klay)) >= 6);
+  add('night_night', captain === NBA.curry && has(NBA.curry, l => threes(l) >= 6));
+  add('the_klaw', has(NBA.kawhi, l => l[4] >= 3));
+  add('greek_freak', has(NBA.giannis, l => l[1] >= 30 && l[2] >= 10));
+  add('the_joker', has(NBA.jokic, tripleDouble));
+  add('luka_magic', captain === NBA.luka && has(NBA.luka, l => l[1] >= 40));
+  add('alien_invasion', has(NBA.wemby, l => l[5] >= 5));
+  add('dame_time', has(NBA.dame, l => l[1] >= 30));
+  add('easy_money', has(NBA.kd, l => l[1] >= 35));
+  add('fear_the_beard', has(NBA.harden, l => l[1] >= 25 && l[3] >= 10));
+  add('trust_the_process', has(NBA.embiid, l => l[1] >= 35));
+  add('ant_man', has(NBA.ant, l => l[1] >= 40));
+  add('playoff_jimmy', has(NBA.jimmy, l => l[1] >= 30));
+  add('mamba_mentality', lines.some(l => l[1] >= 60));
+  add('shaqtin', lines.some(l => l[6] >= 8));
+  add('load_management', !!captain && ids.includes(captain) && !results[captain] && finalGame(pool.get(captain)?.team));
+  add('sixth_man', ids.some(id => pool.get(id)?.stars === 1 && results[id] && fpOf(results[id]) >= 30));
+  return earned;
+}
+
 const BOT_NAMES = ['Bot Rookie', 'Bot Sixth Man', 'Bot Glue Guy', 'Bot Sharpshooter', 'Bot Rim Runner', 'Bot Floor General', 'Bot Stretch Four', 'Bot Iron Man', 'Bot Spark Plug', 'Bot Closer'];
 export const botName = i => BOT_NAMES[i % BOT_NAMES.length];
 // Computer lineups get sharper as tiers rise.

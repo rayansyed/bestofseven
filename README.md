@@ -19,7 +19,7 @@ Ranked NBA fantasy you can play any night. Draft six real players (2 G, 2 F, 1 C
 | Streak Saver | used automatically on your next skip: no RP lost, and the streak holds. |
 
 ## Profiles
-The Profile tab holds a player's picture, stats and badges. Pictures are center-cropped in the browser to 128×128 and saved on the player's own record, which keeps the site on Firebase's free plan and removes photo metadata such as location. Badges are worked out from stats only the sync can write, so they can't be self-awarded. **Pictures aren't moderated**, and they're public.
+The Profile tab holds a player's picture, stats and badges. Pictures are center-cropped in the browser to 128×128 and saved on the player's own record, which keeps the site on Firebase's free plan and removes photo metadata such as location. Badges are worked out from stats only the sync can write, so they can't be self-awarded. **NBA moment** badges (such as Blocked by James: LeBron records a block in your lineup) are checked against each night's real box scores when it's scored, in `momentBadges` in `sync/game.mjs`. **Pictures aren't moderated**, and they're public.
 
 ## How it fits together
 

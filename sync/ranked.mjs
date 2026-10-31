@@ -1,6 +1,6 @@
 // Ranked nights: at lock, entries are split into groups of 10 by tier (empty seats get computer
 // lineups); once every game is final, each group is scored and rank points are applied.
-import { CAP, BONUS_STAR, GROUP_SIZE, RP_BY_FINISH, SKIP_PENALTY, TIERS, tierOf, invalidReason, lineupCost, rewardFor, scoreLineup, buildLineup, seeded, botName, botNoise } from './game.mjs';
+import { CAP, BONUS_STAR, GROUP_SIZE, RP_BY_FINISH, SKIP_PENALTY, TIERS, tierOf, invalidReason, lineupCost, rewardFor, momentBadges, scoreLineup, buildLineup, seeded, botName, botNoise } from './game.mjs';
 
 export async function groupNight(db, day) {
   const date = day.date;
@@ -87,7 +87,10 @@ export async function scoreNight(db, day) {
         after += reward?.rp || 0;
         const promoted = tierOf(after) > tierBefore;
         r.rpDelta = delta; r.rpAfter = after;
+        // Moment badges earned tonight that the player didn't already have.
+        const fresh = momentBadges(m.ids, m.captain, day).filter(id => !user.moments?.[id]);
         writes.push({ path: 'users/' + m.uid, data: {
+          ...(fresh.length ? { moments: { ...user.moments, ...Object.fromEntries(fresh.map(id => [id, date])) }, lastMoments: { date, ids: fresh } } : {}),
           rp: after, tier: tierOf(after), shield: promoted ? 1 : 0,
           nights: (user.nights || 0) + 1, wins: (user.wins || 0) + (i === 0 ? 1 : 0),
           bestFinish: Math.min(user.bestFinish || 99, i + 1), lastNight: date,

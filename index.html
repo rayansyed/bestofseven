@@ -509,6 +509,28 @@ const BADGES = [
   { id: 'streak30', icon: '🛡️', name: 'Iron Player', how: 'Reach a 30-night streak', on: u => !!u.badge || (u.bestStreak || 0) >= 30 },
   ...TIERS.slice(1).map((t, i) => ({ id: 'tier' + (i + 1), icon: ['🥈', '🌟', '💠', '💎', '👑'][i], name: t, how: `Reach ${t}`, on: u => bestTierOf(u) >= i + 1 })),
 ];
+// NBA moment badges: the sync awards them from real box scores (see momentBadges in sync/game.mjs).
+const MOMENTS = [
+  {id: "blocked_by_james",icon: "🖐️",name: "Blocked by James",how: "LeBron James records a block for you"},
+  {id: "splash_brothers",icon: "💦",name: "Splash Brothers",how: "Curry and Klay combine for 6+ threes in your lineup"},
+  {id: "night_night",icon: "😴",name: "Night Night",how: "Captain Curry and he hits 6+ threes"},
+  {id: "the_klaw",icon: "🦞",name: "The Klaw",how: "Kawhi Leonard gets 3+ steals for you"},
+  {id: "greek_freak",icon: "🦌",name: "Greek Freak",how: "Giannis goes for 30+ points and 10+ rebounds"},
+  {id: "the_joker",icon: "🃏",name: "The Joker",how: "Jokic posts a triple-double for you"},
+  {id: "luka_magic",icon: "✨",name: "Luka Magic",how: "Captain Luka and he scores 40+"},
+  {id: "alien_invasion",icon: "👽",name: "Alien Invasion",how: "Wembanyama gets 5+ blocks for you"},
+  {id: "dame_time",icon: "⌚",name: "Dame Time",how: "Damian Lillard scores 30+ for you"},
+  {id: "easy_money",icon: "💰",name: "Easy Money",how: "Kevin Durant scores 35+ for you"},
+  {id: "fear_the_beard",icon: "🧔",name: "Fear the Beard",how: "Harden gets 25+ points and 10+ assists"},
+  {id: "trust_the_process",icon: "🔔",name: "Trust the Process",how: "Joel Embiid scores 35+ for you"},
+  {id: "ant_man",icon: "🐜",name: "Ant-Man",how: "Anthony Edwards scores 40+ for you"},
+  {id: "playoff_jimmy",icon: "😤",name: "Playoff Jimmy",how: "Jimmy Butler scores 30+ for you"},
+  {id: "mamba_mentality",icon: "🐍",name: "Mamba Mentality",how: "Anyone in your lineup scores 60+"},
+  {id: "shaqtin",icon: "🤡",name: "Shaqtin’ a Fool",how: "Someone in your lineup has 8+ turnovers"},
+  {id: "load_management",icon: "🛋️",name: "Load Management",how: "Your captain sits out a game his team played"},
+  {id: "sixth_man",icon: "🪑",name: "Sixth Man of the Year",how: "A 1★ player scores 30+ fantasy points for you"},
+];
+for (const m of MOMENTS) { m.moment = true; m.on = u => !!u.moments?.[m.id]; BADGES.push(m); }
 const earnedBadges = u => BADGES.filter(b => b.on(u || {}));
 // The badge a player chose to show by their name (only if earned), else the 30-night flame.
 function badgeMark(u) {
@@ -704,6 +726,8 @@ function streakBanner() {
     : `Enter ${night} to ${streak ? `reach ${streak + 1} nights` : 'start your streak'}. ${away} nights to ${reward}.`;
   const last = profile.lastReward;
   const earned = last && last.date === profile.lastNight ? `<span class="st-chip won">Earned ${dayLabel(last.date).split(',')[0]}: ${rewardText(last)}</span>` : '';
+  const momentNames = profile.lastMoments?.date === profile.lastNight ? (profile.lastMoments.ids || []).map(id => MOMENTS.find(m => m.id === id)).filter(Boolean) : [];
+  const moments = momentNames.map(m => `<span class="st-chip won">New badge: ${m.icon} ${esc(m.name)}</span>`).join('');
   const stars = profile.bonusStars ? `<span class="st-chip tag">★ Bonus Star ready: ${budget()}★ budget</span>` : '';
   const savers = profile.savers ? `<span class="st-chip">Streak Saver × ${profile.savers}</span>` : '';
   // The last reward reached, the next few, and the 30-night badge while it's still ahead.
@@ -714,7 +738,7 @@ function streakBanner() {
   const ladderStops = [...new Set(shown)].sort((a, b) => a - b);
   const ladder = ladderStops.map(n => `<li class="${streak >= n ? 'done' : n === next ? 'next' : ''}"><b>${n}</b><span>${rewardText(rewardFor(n)).replace(/^a /, '').replace(' + a ', ' + ').replace('the streak badge', 'Badge')}</span></li>`).join('');
   return `<div class="st-top"><div><div class="st-title">${title}</div><p class="st-line">${line}</p></div>
-      <div class="st-chips">${earned}${stars}${savers}</div></div>
+      <div class="st-chips">${earned}${moments}${stars}${savers}</div></div>
     <ol class="st-ladder" aria-label="Streak rewards">${ladder}</ol>`;
 }
 
@@ -988,6 +1012,8 @@ async function uploadAvatar(file) {
 function profileView() {
   const u = profile, rp = u.rp || 0, tier = tierOf(rp), hasPic = AVATAR_RE.test(u.avatar || '');
   const earned = earnedBadges(u), featured = u.featuredBadge;
+  const list = moment => [...BADGES].filter(b => !!b.moment === moment).sort((a, b) => b.on(u) - a.on(u)).map(badge).join('');
+  const momentsEarned = MOMENTS.filter(m => m.on(u)).length;
   const stats = [['Rank points', fmt(rp)], ['Nights played', u.nights || 0], ['Group wins', u.wins || 0], ['Best finish', u.bestFinish ? ordinal(u.bestFinish) : '—'], ['Best score', u.bestScore ? f1(u.bestScore) : '—'], ['Best streak', u.bestStreak || 0]];
   const badge = b => {
     const on = b.on(u), isFeatured = featured === b.id;
@@ -1008,8 +1034,11 @@ function profileView() {
       </div>
     </section>
     <section class="panel pf-stats">${stats.map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join('')}</section>
-    <section class="panel"><div class="list-head"><div><h2>Badges</h2><p class="sub">${earned.length} of ${BADGES.length} earned. Pick one to show next to your name.</p></div></div>
-      <ul class="bdg-grid">${[...BADGES].sort((a, b) => b.on(u) - a.on(u)).map(badge).join('')}</ul>
+    <section class="panel"><div class="list-head"><div><h2>Badges</h2><p class="sub">${earned.length - momentsEarned} of ${BADGES.length - MOMENTS.length} earned. Pick any earned badge to show next to your name.</p></div></div>
+      <ul class="bdg-grid">${list(false)}</ul>
+    </section>
+    <section class="panel"><div class="list-head"><div><h2>NBA moments</h2><p class="sub">${momentsEarned} of ${MOMENTS.length} earned. Unlocked when a real box score matches your lineup.</p></div></div>
+      <ul class="bdg-grid">${list(true)}</ul>
     </section>`;
 }
 
@@ -1341,7 +1370,7 @@ const ESPN = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba';
 const live = new Map(), boxCache = new Map();
 let rawDays = new Map(), liveBusy = false, liveSel = null;
 
-// Mirrors boxLines in sync/nba-sync.mjs: { athleteId: [min, pts, reb, ast, stl, blk, to] }
+// Mirrors boxLines in sync/nba-sync.mjs: { athleteId: [min, pts, reb, ast, stl, blk, to, threes] }
 function boxLines(box) {
   const out = {};
   for (const t of box.boxscore?.players || []) {
@@ -1351,7 +1380,7 @@ function boxLines(box) {
     for (const a of st.athletes || []) {
       if (a.didNotPlay || !a.stats || !a.stats.length) continue;
       const n = k => { const v = parseFloat(a.stats[L.indexOf(k)]); return isNaN(v) ? 0 : v; };
-      out[a.athlete.id] = [n('MIN'), n('PTS'), n('REB'), n('AST'), n('STL'), n('BLK'), n('TO')];
+      out[a.athlete.id] = [n('MIN'), n('PTS'), n('REB'), n('AST'), n('STL'), n('BLK'), n('TO'), n('3PT')];
     }
   }
   return out;

@@ -666,7 +666,7 @@ function renderPodium() {
   const el = $('#podium'), night = bestNight(), top = night?.top3 || [];
   el.hidden = !top.length;
   el.innerHTML = `<span class="pod-label">Best squads · ${top.length ? dayLabel(night.date) : ''}</span>` + top.map((u, i) => {
-    const attrs = `class="pod p${i + 1} ${u.uid === me.id ? 'me' : ''}"`, who = peer(u.uid), inner = `<span class="pod-who">${avatarHtml(who || u, 'sm')}<b>${esc(u.name || 'Player')}${badgeMark(who)}</b>${tierBadge(u.tier || 0)}</span>
+    const attrs = `class="pod p${i + 1} ${u.uid === me.id ? 'me' : ''}"`, who = peer(u.uid), inner = `<span class="pod-who">${avatarHtml(who || u, 'sm')}<b>${esc(u.name || 'Player')}${badgeMark(who)}</b></span>
       <span class="pod-step"><span class="pod-sr">${ordinal(i + 1)} place: </span><span class="pod-rp">${f1(u.total)}<small>PTS</small></span></span>`;
     return `<button ${attrs} data-action="squad" data-i="${i}" aria-label="${esc(u.name || 'Player')}, ${ordinal(i + 1)} place with ${f1(u.total)} points. View squad">${inner}</button>`;
   }).join('');

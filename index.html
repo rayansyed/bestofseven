@@ -333,8 +333,11 @@ main { display: grid; gap: 16px; min-width: 0; }
 .st-ladder li.done b::before { content: "✓ "; color: var(--good); }
 .st-ladder li.next { border-color: var(--live); }
 .st-ladder li.next span { color: var(--live); font-weight: 700; }
-.podium { grid-column: 1 / -1; display: grid; grid-template-columns: auto repeat(3, minmax(0, 1fr)); gap: 8px; align-items: stretch; }
-.pod-label { align-self: center; font-size: 12px; font-weight: 700; color: var(--muted); white-space: nowrap; padding-right: 6px; }
+.podium { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-items: stretch; }
+.pod-label { grid-column: 1 / -1; font-size: 12px; font-weight: 700; color: var(--muted); }
+.hero-card { grid-template-columns: minmax(0, 1fr); }
+#slate { display: grid; gap: 12px; min-width: 0; }
+.races { scrollbar-width: thin; scrollbar-color: var(--chip-2) transparent; padding-bottom: 8px; }
 .pod { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 14px; border-radius: 12px; border: 1px solid transparent; background: var(--panel); color: var(--ink); text-align: left; min-width: 0; }
 button.pod:hover { background: var(--panel-2); }
 .pod.me { border-color: var(--accent); }
@@ -345,8 +348,6 @@ button.pod:hover { background: var(--panel-2); }
 .pod-rp { font-weight: 800; font-size: 16px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .pod-rp small { font-size: 11px; font-weight: 600; color: var(--muted); margin-left: 3px; }
 @media (max-width: 860px) {
-  .podium { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .pod-label { grid-column: 1 / -1; }
   .pod { grid-template-columns: auto minmax(0, 1fr); padding: 10px; gap: 8px; }
   .pod-rp { grid-column: 2; }
   .pod .tier { display: none; }
@@ -669,7 +670,15 @@ function slateCard(day) {
     const started = x.status !== 'STATUS_SCHEDULED', done = LIVE_DONE.has(x.status);
     return `<div class="race ${done ? 'done' : started ? 'in' : ''}"><b>${started ? `${x.awayScore}–${x.homeScore}` : timeLabel(x.tip)}</b><span>${esc(x.away)} @ ${esc(x.home)}</span>${started ? `<small>${esc(x.detail)}</small>` : ''}</div>`;
   }).join('');
-  return `<div class="lockline"><span class="lock ${locked(day) ? 'locked' : ''}">${lockTxt}</span><span class="teal">⇆ Budget ${budget()}★ · one 5★ max · captain +1★</span></div><div class="races">${races}</div>`;
+  return `<div class="lockline"><span class="lock ${locked(day) ? 'locked' : ''}">${lockTxt}</span><span class="teal">⇆ Budget ${budget()}★ · one 5★ max · captain +1★</span></div><div class="races" data-day="${day.date}">${races}</div>`;
+}
+
+// Redraws keep the schedule where the player scrolled it, on the same night.
+function keepRacesScroll(redraw) {
+  const old = $('.races'), day = old?.dataset.day, x = old?.scrollLeft || 0;
+  redraw();
+  const now = $('.races');
+  if (now && now.dataset.day === day) now.scrollLeft = x;
 }
 
 function heroCard(day, tools) {
@@ -900,7 +909,7 @@ function render() {
   if (!locked(day)) {
     const sig = 'build|' + ui.sel;
     if (ui.draftFor !== ui.sel) { ui.draft = (e?.ids || SLOTS.map(() => null)).slice(); ui.draftCap = e?.captain ?? null; ui.draftFor = ui.sel; ui.save = ''; }
-    if (sig === ui.sig && $('#poolrows')) { renderPool(); renderLineup(); const el = $('#slate'); if (el) el.innerHTML = slateCard(day); const st = $('#streak'); if (st) st.innerHTML = streakBanner(); return; }
+    if (sig === ui.sig && $('#poolrows')) { renderPool(); renderLineup(); const el = $('#slate'); if (el) keepRacesScroll(() => { el.innerHTML = slateCard(day); }); const st = $('#streak'); if (st) st.innerHTML = streakBanner(); return; }
     ui.sig = sig;
     $('#slip').innerHTML = '<div class="slip-card" id="lineup"></div>';
     m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day, true)}<section class="panel"><div class="list-head"><div><h2>${dayLabel(ui.sel)} player pool</h2><p class="sub">Tap a rating to add a player. Fit six within ${budget()}★, with one 5★ at most. The captain costs +1★.</p></div></div><div id="poolrows"></div><div id="poolmore"></div></section>${legend}`;
@@ -916,7 +925,7 @@ function render() {
   else if (e.invalid) body = notice('Entry not counted', 'This lineup was invalid', `<p>The lineup was rejected (${esc(e.invalid)}), so it wasn’t placed in a group. Nothing changed on your rank.</p>${nextBtn}`);
   else if (!e.group || !group || group.date !== ui.sel) body = notice('Locked in', 'Forming groups', `<p>Lineups locked at ${timeLabel(day.lockAt)}. Groups of 10 are formed on the next sync, within 30 minutes of tip-off.</p>`);
   else body = groupView(day);
-  m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day, false)}${body}${legend}`;
+  keepRacesScroll(() => { m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day, false)}${body}${legend}`; });
 }
 
 /* ---------- Edits ---------- */

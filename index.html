@@ -85,12 +85,7 @@ p { max-width: 65ch; }
 main { display: grid; gap: 16px; min-width: 0; }
 .panel { background: var(--panel); border-radius: 16px; min-width: 0; }
 .hero-card { position: relative; overflow: hidden; padding: 24px 22px 18px; display: grid; gap: 16px; background: var(--panel); border-radius: 16px; isolation: isolate; }
-.hero-card::before { content: ""; position: absolute; inset: 0 0 0 38%; z-index: -1; opacity: .9;
-  background:
-    linear-gradient(90deg, var(--panel) 0%, transparent 45%),
-    linear-gradient(118deg, transparent 0 30%, rgba(29,155,240,.55) 30% 34%, transparent 34% 44%, rgba(251,146,60,.45) 44% 47%, transparent 47% 60%, rgba(52,211,189,.35) 60% 62%, transparent 62%),
-    radial-gradient(60% 90% at 80% 30%, rgba(29,155,240,.35), transparent 70%),
-    radial-gradient(40% 70% at 95% 90%, rgba(251,146,60,.3), transparent 70%); filter: blur(6px); }
+.hero-card::before { content: ""; position: absolute; inset: 0; z-index: -1; background-image: radial-gradient(rgba(255,255,255,.055) 1px, transparent 1.4px); background-size: 14px 14px; -webkit-mask-image: linear-gradient(to right, transparent 25%, #000); mask-image: linear-gradient(to right, transparent 25%, #000); }
 .hero-sub { color: var(--muted); font-size: 13.5px; margin-top: 6px; }
 .tabs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
 .tab { border: 0; background: transparent; padding: 9px 14px; border-radius: 10px; font-weight: 600; font-size: 14px; color: var(--ink); }
@@ -415,14 +410,13 @@ button.pod:hover .pod-step { filter: brightness(1.08); }
   .dk-info b { font-size: 13px; font-weight: 800; }
   .dk-info b.ok { color: var(--good); }
   .dk-info small { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .dk-up { font-size: 18px; color: var(--muted); line-height: 1; }
+  .dk-up { width: 18px; height: 18px; color: var(--ink); }
   #lineup { display: none; }
   body.has-dock .app { padding-bottom: 84px; }
   body.has-dock #toast { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
   body.sheet-open { overflow: hidden; }
   body.sheet-open .sheet-bg { display: block; position: fixed; inset: 0; z-index: 16; background: rgba(5,6,8,.65); }
   body.sheet-open #lineup { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 17; max-height: 85vh; max-height: 85dvh; overflow-y: auto; border-radius: 16px 16px 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
-  body.sheet-open .dk-up { transform: rotate(180deg); }
   .sheet-x { display: grid; place-items: center; margin-left: auto; width: 30px; height: 30px; border: 0; border-radius: 50%; background: var(--chip); }
 }
 .gdetail { padding: 0 0 8px 34px; }
@@ -889,7 +883,7 @@ function renderDock(lu, s, open, day) {
     return p ? `<span class="dk-slot ${p.id === ui.draftCap ? 'cap' : ''}">${face(p)}</span>` : `<span class="dk-slot free">${slot === 'UTIL' ? 'U' : slot}</span>`;
   }).join('')}</span>
     <span class="dk-info"><b class="${!open && entries.has(ui.sel) ? 'ok' : ''}">${open ? `${6 - open} of 6` : entries.has(ui.sel) ? '✓ Entered' : 'Saving…'}</b><small>${s} of ${budget()}★</small></span>
-    <span class="dk-up" aria-hidden="true">⌃</span>`;
+    <svg class="dk-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 10l7-7M15 3h6v6M10 14l-7 7M3 15v6h6"/></svg>`;
 }
 
 function setSheet(open) {

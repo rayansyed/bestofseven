@@ -287,6 +287,34 @@ main { display: grid; gap: 16px; min-width: 0; }
 .gpos { width: 28px; height: 28px; border-radius: 8px; background: var(--chip); display: grid; place-items: center; font-weight: 800; font-size: 13px; }
 .gboard-row:nth-child(1) .gpos { background: var(--tag); color: var(--tag-ink); }
 .gname { font-weight: 700; font-size: 15px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plink { border: 0; background: transparent; padding: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.plink:hover { color: var(--accent-2); text-decoration: underline; }
+[data-pid] { cursor: pointer; }
+#pcard { width: min(680px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow-y: auto; background: var(--panel); color: var(--ink); border: 1px solid var(--chip-2); border-radius: 16px; padding: 24px; }
+#pcard::backdrop { background: rgba(5,6,8,.72); }
+.pc-x { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border: 0; border-radius: 50%; background: var(--chip); }
+.pc-x:hover { background: var(--chip-2); }
+.pc-head { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 18px; align-items: center; padding-right: 30px; }
+.pc-photo { width: 120px; height: 88px; border-radius: 12px; background: var(--panel-2); overflow: hidden; display: grid; place-items: end center; }
+.pc-photo img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.pc-photo .jersey { width: 64px; height: 64px; margin-bottom: 12px; }
+.pc-title { display: grid; gap: 6px; min-width: 0; }
+.pc-title h2 { font-size: 24px; }
+.pc-meta { color: var(--muted); font-size: 13px; }
+.pc-tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.pc-tags .stars { color: var(--tag); font-size: 15px; }
+.pc-bio { margin: 16px 0; color: #C9D0D8; font-size: 14px; line-height: 1.6; }
+#pcard h3 { font-size: 15px; margin-bottom: 8px; }
+.pc-games { width: 100%; border-collapse: collapse; font-size: 13px; }
+.pc-games th { font-size: 11px; font-weight: 600; color: var(--muted); padding: 6px 7px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+.pc-games td { padding: 8px 7px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.pc-games .r { text-align: right; }
+.pc-games tfoot td { font-weight: 700; border-bottom: 0; }
+.pc-dim { color: var(--muted); font-weight: 500; }
+.pc-res.w { color: var(--good); font-weight: 700; } .pc-res.l { color: var(--bad); font-weight: 700; }
+.pc-foot { margin-top: 16px; display: flex; justify-content: flex-end; }
+.pc-src { margin-top: 12px; font-size: 11px; color: var(--dim); }
+@media (max-width: 520px) { .pc-head { grid-template-columns: 84px minmax(0, 1fr); gap: 12px; } .pc-photo { width: 84px; height: 62px; } .pc-title h2 { font-size: 20px; } #pcard { padding: 18px; } }
 .gdetail { padding: 0 0 8px 34px; }
 .gprog { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
 .pstate { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 5px; white-space: nowrap; background: var(--chip); color: var(--muted); }
@@ -324,6 +352,7 @@ main { display: grid; gap: 16px; min-width: 0; }
   </main>
   <aside class="slip" id="slip" aria-label="Lineup"></aside>
 </div>
+<dialog id="pcard" aria-labelledby="pc-name"></dialog>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -447,6 +476,8 @@ const notice = (eyebrow, title, body) => `<div class="card notice"><div class="e
 const TRASH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
 const legend = `<p class="legend">Scoring: point 1 · rebound 1.2 · assist 1.5 · steal 3 · block 3 · turnover −1. Every player is rated 1–5★ from his fantasy points per game (45+ = 5★, 35+ = 4★, 25+ = 3★, 15+ = 2★). Your six players must fit a ${CAP}★ budget, with at most one 5★ player. Your captain scores 1.5× and costs one extra star. Lineups lock at the night's first tip-off. Then you're placed in a group of 10 at your rank, with computer lineups filling empty seats. Finish 1st: +30 rank points · 2nd–3rd: +20 · 4th–5th: +5 · 6th–7th: −5 · 8th–10th: −15. Every 100 points is a new tier, and you can't drop out of a tier the night after reaching it. Data: ESPN public NBA feed.</p>`;
 
+const plink = p => `<button class="plink" data-action="player" data-id="${esc(p.id)}" aria-label="View ${esc(p.name)}’s profile">${esc(p.name)}</button>`;
+
 function until(iso) {
   const ms = Date.parse(iso) - Date.now();
   if (ms <= 0) return 'now';
@@ -561,9 +592,9 @@ function renderPool() {
   $('#poolrows').innerHTML = shown.length ? shown.map(p => {
     const inLu = lu.includes(p.id), fiveFull = !inLu && p.stars === 5 && fiveStars(lu, day) >= MAX_FIVE, cant = !inLu && (p.stars > left || fiveFull);
     const tag = isOut(p) ? '<span class="inj out">Out</span>' : isGtd(p) ? `<span class="inj gtd" title="${esc(p.status)}">GTD</span>` : '';
-    return `<div class="runner ${inLu ? 'in' : ''} ${cant ? 'cant' : ''}">
+    return `<div class="runner ${inLu ? 'in' : ''} ${cant ? 'cant' : ''}" data-pid="${esc(p.id)}">
       ${jersey(p.team)}
-      <div><div class="r-name">${esc(p.name)}${tag}</div>
+      <div><div class="r-name">${plink(p)}${tag}</div>
         <div class="r-sub">${esc(p.team)} ${esc(p.opp)}<span class="sep">|</span>${POS_NAME[p.pos]}</div>
         <div class="r-chips"><span class="chip">FPPG: ${p.gp ? f1(p.avg) : '—'}</span><span class="chip">GP: ${p.gp}</span><span class="chip hide-sm">Pts per ★: ${p.gp ? f1(p.avg / p.stars) : '—'}</span></div></div>
       <div class="r-act">
@@ -582,7 +613,7 @@ function renderLineup() {
     const p = lu[i] && m.get(lu[i]);
     const isCap = !!p && ui.draftCap === p.id;
     return p ? `<li class="leg ${isCap ? 'cap' : ''}"><button class="x" data-action="remove" data-i="${i}" aria-label="Remove ${esc(p.name)}">✕</button><div>
-        <div class="leg-top"><span class="ptag">${slot}</span><b>${esc(p.name)}</b><span class="leg-sal">${starsHtml(p.stars)}${isCap ? ' +1' : ''}</span></div>
+        <div class="leg-top"><span class="ptag">${slot}</span><b>${plink(p)}</b><span class="leg-sal">${starsHtml(p.stars)}${isCap ? ' +1' : ''}</span></div>
         <div class="leg-sub"><span>${esc(p.team)} ${esc(p.opp)} · FPPG ${f1(p.avg)}${isCap ? ` → <b>${f1(p.avg * CAPTAIN_X)}</b>` : ''}${isOut(p) ? ' · <span class="inj out">Out</span>' : ''}</span>
           <button class="capbtn ${isCap ? 'on' : ''}" data-action="captain" data-id="${esc(p.id)}" aria-pressed="${isCap}" aria-label="${isCap ? 'Remove captain' : 'Make captain'}: ${esc(p.name)}">${isCap ? '★ Captain ×1.5' : 'Captain +1★'}</button></div></div></li>`
       : `<li class="leg open"><span></span><div class="leg-top"><span class="ptag dim">${slot}</span><span>${SLOT_HINT[slot]}</span><span></span></div></li>`;
@@ -643,8 +674,8 @@ function lineupDetail(mb, day) {
   return mb.rows.map(r => {
     const l = r.line, st = playerState(r, day);
     const stat = l ? `<span class="sep">|</span>${l[1]} PTS · ${l[2]} REB · ${l[3]} AST · ${l[4]} STL · ${l[5]} BLK · ${l[6]} TO · ${l[0]} MIN` : '';
-    return `<div class="runner sub">${jersey(r.p.team)}
-      <div><div class="r-name"><span class="ptag">${r.slot}</span>${esc(r.p.name)}${r.cap ? '<span class="ctag">★ Captain</span>' : ''}<span class="pstate ${st.kind}">${esc(st.text)}</span></div><div class="r-sub">${esc(r.p.team)} ${esc(r.p.opp)}${stat}</div></div>
+    return `<div class="runner sub" data-pid="${esc(r.p.id)}">${jersey(r.p.team)}
+      <div><div class="r-name"><span class="ptag">${r.slot}</span>${plink(r.p)}${r.cap ? '<span class="ctag">★ Captain</span>' : ''}<span class="pstate ${st.kind}">${esc(st.text)}</span></div><div class="r-sub">${esc(r.p.team)} ${esc(r.p.opp)}${stat}</div></div>
       <div class="r-act"><span class="sc ${l ? '' : 'zero'} ${r.cap ? 'capsc' : ''}">${l ? f1(r.fp) : '—'}</span><span class="r-trail">${r.cap && l ? `${f1(r.base)} × 1.5` : starsHtml(r.p.stars)}</span></div></div>`;
   }).join('');
 }
@@ -840,6 +871,8 @@ document.addEventListener('click', e => {
   const a = b.dataset.action;
   if (a === 'sel') { ui.view = 'night'; ui.sel = b.dataset.d; ui.limit = 80; ui.open = null; ui.sig = ''; render(); window.scrollTo({ top: 0 }); }
   else if (a === 'view') { ui.view = b.dataset.v; if (ui.view === 'leaders') watchLeaders(); ui.sig = ''; render(); window.scrollTo({ top: 0 }); }
+  else if (a === 'player') openPlayer(b.dataset.id);
+  else if (a === 'pclose') $('#pcard').close();
   else if (a === 'signout') auth.signOut();
   else if (a === 'auth-reset') { ui.auth = ''; render(); }
   else if (a === 'edit-name') { ui.editName = true; ui.sig = ''; render(); }
@@ -926,6 +959,97 @@ function watchLeaders() {
   unsubLeaders = db.collection('users').orderBy('rp', 'desc').limit(50)
     .onSnapshot(s => { leaders = s.docs.map(d => ({ id: d.id, ...d.data() })); if (ui.view === 'leaders') { ui.sig = ''; render(); } }, () => {});
 }
+
+/* ---------- Player profile ---------- */
+const ESPN_ATHLETE = 'https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/athletes';
+const profiles = new Map();
+let pcardFor = null;
+
+function fetchProfile(id) {
+  if (!profiles.has(id)) {
+    const json = u => fetch(u).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
+    profiles.set(id, Promise.all([json(`${ESPN_ATHLETE}/${id}`), json(`${ESPN_ATHLETE}/${id}/gamelog`)])
+      .catch(err => { profiles.delete(id); throw err; }));
+  }
+  return profiles.get(id);
+}
+
+// The player's latest regular-season and playoff games, newest first.
+function lastGames(log, n = 5) {
+  const L = log.labels || [], rows = [];
+  for (const st of log.seasonTypes || []) {
+    if (/preseason/i.test(st.displayName || '')) continue;
+    for (const c of st.categories || []) {
+      for (const ev of c.events || []) {
+        const info = log.events?.[ev.eventId];
+        if (!info) continue;
+        const num = k => parseFloat(ev.stats[L.indexOf(k)]) || 0;
+        const line = [num('MIN'), num('PTS'), num('REB'), num('AST'), num('STL'), num('BLK'), num('TO')];
+        rows.push({ date: info.gameDate, opp: `${info.atVs || ''} ${info.opponent?.abbreviation || ''}`.trim(), result: info.gameResult || '', score: info.score || '', line, fp: fpOf(line) });
+      }
+    }
+  }
+  return rows.sort((a, b) => Date.parse(b.date) - Date.parse(a.date)).slice(0, n);
+}
+
+function describe(a, p) {
+  const pos = (a.position?.displayName || POS_NAME[p?.pos] || 'player').toLowerCase();
+  const team = a.team?.displayName || p?.team;
+  const lines = [`${a.displayName} is a ${a.age ? a.age + '-year-old ' : ''}${pos}${team ? ` for the ${team}` : ''}${a.displayExperience ? `, in his ${a.displayExperience.toLowerCase()}` : ''}.`];
+  if (a.displayDraft) lines.push(`Drafted ${a.displayDraft}.`);
+  if (a.displayBirthPlace) lines.push(`Born in ${a.displayBirthPlace}.`);
+  return lines.join(' ');
+}
+
+function gamesTable(games) {
+  if (!games.length) return '<p class="empty">No regular-season games yet this season.</p>';
+  const cols = ['MIN', 'PTS', 'REB', 'AST', 'STL', 'BLK', 'TO'];
+  const avg = i => f1(games.reduce((s, g) => s + g.line[i], 0) / games.length);
+  return `<div class="tablewrap"><table class="pc-games">
+    <thead><tr><th>Game</th><th>Result</th>${cols.map(c => `<th class="r">${c}</th>`).join('')}<th class="r">FP</th></tr></thead>
+    <tbody>${games.map(g => `<tr><td><b>${new Date(g.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</b> <span class="pc-dim">${esc(g.opp)}</span></td>
+      <td class="pc-res ${g.result === 'W' ? 'w' : g.result === 'L' ? 'l' : ''}">${esc(g.result)} <span class="pc-dim">${esc(g.score)}</span></td>
+      ${g.line.map(v => `<td class="r num">${v}</td>`).join('')}<td class="r num"><b>${f1(g.fp)}</b></td></tr>`).join('')}</tbody>
+    <tfoot><tr><td colspan="2">Average</td>${cols.map((_, i) => `<td class="r num">${avg(i)}</td>`).join('')}<td class="r num">${f1(games.reduce((s, g) => s + g.fp, 0) / games.length)}</td></tr></tfoot>
+  </table></div>`;
+}
+
+function renderPlayer(id, p, data, failed) {
+  const a = data?.[0]?.athlete, name = a?.displayName || p?.name || 'Player';
+  const day = days.get(ui.sel);
+  const canEdit = ui.view === 'night' && ui.draft && day && !locked(day) && p;
+  const inLu = canEdit && ui.draft.includes(id);
+  const meta = a ? [a.displayJersey, a.position?.displayName, a.team?.displayName, a.displayHeight, a.displayWeight].filter(Boolean).join(' · ') : p ? `${p.team} · ${POS_NAME[p.pos] || ''}` : '';
+  $('#pcard').innerHTML = `
+    <button class="pc-x" data-action="pclose" aria-label="Close">✕</button>
+    <div class="pc-head">
+      <div class="pc-photo"><img src="https://a.espncdn.com/i/headshots/nba/players/full/${encodeURIComponent(id)}.png" alt="" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>${jersey(p?.team || '')}</span></div>
+      <div class="pc-title"><h2 id="pc-name">${esc(name)}</h2><p class="pc-meta">${esc(meta)}</p>
+        ${p ? `<div class="pc-tags">${starsHtml(p.stars)}${p.gp ? `<span class="chip">FPPG ${f1(p.avg)}</span>` : ''}${isOut(p) ? '<span class="inj out">Out</span>' : isGtd(p) ? `<span class="inj gtd">${esc(p.status)}</span>` : ''}${p.opp ? `<span class="chip">${esc(p.opp)}</span>` : ''}</div>` : ''}
+      </div>
+    </div>
+    ${failed ? '<p class="empty">Couldn’t load this player’s profile from ESPN. Close this and tap the player to try again.</p>'
+      : !data ? '<p class="empty">Loading profile…</p>'
+      : `<p class="pc-bio">${esc(describe(a, p))}</p><h3>Last 5 games</h3>${gamesTable(lastGames(data[1]))}`}
+    ${canEdit ? `<div class="pc-foot"><button class="btn ${inLu ? '' : 'primary'}" data-action="${inLu ? 'drop' : 'add'}" data-id="${esc(id)}" data-pclose>${inLu ? 'Remove from lineup' : `Add to lineup · ${p.stars}★`}</button></div>` : ''}
+    <p class="pc-src">Photo and stats: ESPN</p>`;
+}
+
+function openPlayer(id) {
+  const dlg = $('#pcard'), p = pmap(days.get(ui.sel) || { players: [] }).get(id);
+  pcardFor = id;
+  renderPlayer(id, p);
+  if (!dlg.open) dlg.showModal();
+  fetchProfile(id).then(d => { if (pcardFor === id) renderPlayer(id, p, d); }, () => { if (pcardFor === id) renderPlayer(id, p, null, true); });
+}
+
+document.addEventListener('click', e => {
+  const dlg = $('#pcard');
+  if (e.target === dlg || e.target.closest('[data-pclose]')) { dlg.close(); return; }
+  if (e.target.closest('button, a, input, select')) return;
+  const row = e.target.closest('[data-pid]');
+  if (row) openPlayer(row.dataset.pid);
+});
 
 /* ---------- Live scores ---------- */
 // GitHub can run the scheduled sync hours late, so an open page reads game scores straight from ESPN.

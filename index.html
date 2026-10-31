@@ -495,7 +495,7 @@ const elig = (slot, p) => slot === 'UTIL' || p.pos === slot;
 
 let db = null, auth = null, me = { id: null, email: '' };
 let profile = null, days = new Map(), entries = new Map(), group = null, leaders = [];
-const loaded = { auth: false, profile: false, days: false };
+const loaded = { auth: false, profile: false, days: false, entries: false };
 const ui = { view: 'night', sel: null, pos: 'ALL', q: '', sort: 'stars', limit: 80, draft: null, draftCap: null, draftFor: null, save: '', sig: '', auth: '', authEmail: '', open: null, editName: false };
 
 // Entry streak rewards (mirrors rewardFor in sync/game.mjs). Rewards can stack on one night.
@@ -1142,7 +1142,8 @@ function render() {
     if (ui.sig !== 'name') { ui.sig = 'name'; $('#main').innerHTML = nameView(); }
     return;
   }
-  if (!loaded.days) return;
+  // A night's draft starts from the saved entry, so wait for entries as well as days.
+  if (!loaded.days || !loaded.entries) return;
   if (!ui.sel || !days.has(ui.sel)) {
     const sorted = [...days.keys()].sort();
     ui.sel = (days.has(etDay()) ? etDay() : nextOpenDate()) || sorted.filter(d => entries.has(d)).pop() || sorted.pop() || null;
@@ -1488,7 +1489,7 @@ async function pollLive() {
 function startData() {
   db.doc('users/' + me.id).onSnapshot(s => { profile = s.exists ? s.data() : null; loaded.profile = true; ui.sig = ''; render(); }, fail);
   db.collection('entries').where('uid', '==', me.id)
-    .onSnapshot(s => { entries = new Map(s.docs.map(x => [x.data().date, x.data()])); render(); }, () => {});
+    .onSnapshot(s => { entries = new Map(s.docs.map(x => [x.data().date, x.data()])); loaded.entries = true; render(); }, () => { loaded.entries = true; render(); });
 }
 
 async function finishSignIn(email) {

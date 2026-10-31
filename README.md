@@ -37,8 +37,8 @@ Firestore collections:
 1. **Day before:** the sync posts the slate with star ratings.
 2. **Until tip-off:** players draft. A complete lineup is an entry, and emptying a slot withdraws it.
 3. **First tip-off:** Firestore refuses lineup edits. On the next sync (within 30 minutes), entries are checked. Legal ones are grouped by tier in tens, sorted by RP, and computer lineups fill the empty seats. An illegal lineup (over the star budget, two 5★ players, wrong positions) is marked invalid and doesn't count.
-4. **During games:** every 30 minutes the sync posts box scores, and the group board updates live.
-5. **All games final:** the sync ranks each group and writes everyone's finish, rank-point change and new tier.
+4. **During games:** an open page reads live scores straight from ESPN every minute, so the group board stays current even when the sync is late. These numbers are for display only.
+5. **All games final:** on its next run, the sync ranks each group and writes everyone's finish, rank-point change and new tier.
 
 ## Setup (about 15 minutes)
 
@@ -66,6 +66,7 @@ Import the repo with **Framework preset: Other** and no build command. Open the 
 
 ## Notes
 - **First leaderboard query:** the leaderboard sorts `users` by `rp`. Firestore indexes single fields automatically, so no setup is needed. If the browser console ever shows a "requires an index" link, click it once.
+- **Late schedules:** GitHub treats cron times as best effort and can run them hours late or skip them, especially on free accounts. That delays forming groups and applying rank points, but never changes the results. **Run workflow** catches up immediately.
 - **Paused schedules:** GitHub pauses scheduled workflows after 60 days without repo activity. A commit, or **Run workflow**, turns them back on.
 - **Testing without Firebase:** `cd sync && DRY_RUN=1 node nba-sync.mjs` writes JSON to `sync/out/`.
 - **Data source:** NBA data comes from ESPN's public, unofficial API. If ESPN changes it, the sync may need updating.

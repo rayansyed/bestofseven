@@ -649,7 +649,7 @@ function groupView(day) {
   const updated = day.updatedAt ? `Stats as of ${new Date(day.updatedAt).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}.` : '';
   return `<section class="panel">
     <div class="list-head"><div><div class="eyebrow">${tierBadge(group.tier)} Group ${esc(group.gid.split('-').pop())} · ${dayLabel(day.date)}</div><h2>${head}</h2>
-      <p class="sub">${group.scored ? '' : 'Scores update every 30 minutes while games are on. '}${updated} Tap a row to see that lineup.</p></div>
+      <p class="sub">${group.scored ? '' : 'Live scores refresh every minute. '}${updated} Tap a row to see that lineup.</p></div>
       ${my ? `<span class="sc big">${f1(my.total)}</span>` : ''}</div>
     <div class="gboard">${board}</div>
   </section>`;
@@ -725,6 +725,7 @@ function render() {
     ui.sel = nextOpenDate() || sorted.filter(d => entries.has(d)).pop() || sorted.pop() || null;
   }
   watchGroup();
+  if (ui.view === 'night' && liveSel !== ui.sel) { liveSel = ui.sel; pollLive(); }
   renderSide();
   const m = $('#main');
   if (ui.view === 'leaders') { ui.sig = 'leaders'; m.innerHTML = leadersView(); $('#slip').innerHTML = slipSummary(); return; }
@@ -899,10 +900,68 @@ function watchLeaders() {
     .onSnapshot(s => { leaders = s.docs.map(d => ({ id: d.id, ...d.data() })); if (ui.view === 'leaders') { ui.sig = ''; render(); } }, () => {});
 }
 
+/* ---------- Live scores ---------- */
+// GitHub can run the scheduled sync hours late, so an open page reads game scores straight from ESPN.
+// This only changes what's shown: official finishes and rank points still come from the sync.
+const ESPN = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba';
+const live = new Map(), boxCache = new Map();
+let rawDays = new Map(), liveBusy = false, liveSel = null;
+
+// Mirrors boxLines in sync/nba-sync.mjs: { athleteId: [min, pts, reb, ast, stl, blk, to] }
+function boxLines(box) {
+  const out = {};
+  for (const t of box.boxscore?.players || []) {
+    const st = t.statistics?.[0];
+    if (!st) continue;
+    const L = st.labels || st.names;
+    for (const a of st.athletes || []) {
+      if (a.didNotPlay || !a.stats || !a.stats.length) continue;
+      const n = k => { const v = parseFloat(a.stats[L.indexOf(k)]); return isNaN(v) ? 0 : v; };
+      out[a.athlete.id] = [n('MIN'), n('PTS'), n('REB'), n('AST'), n('STL'), n('BLK'), n('TO')];
+    }
+  }
+  return out;
+}
+
+function withLive(doc) {
+  const l = live.get(doc.date);
+  return !l || doc.final ? doc : { ...doc, games: l.games, results: { ...doc.results, ...l.results }, final: l.final, updatedAt: l.at };
+}
+const applyLive = () => { days = new Map([...rawDays].map(([k, d]) => [k, withLive(d)])); };
+
+async function pollLive() {
+  const doc = rawDays.get(ui.sel);
+  if (liveBusy || document.hidden || ui.view !== 'night' || !doc || doc.final || !locked(doc)) return;
+  liveBusy = true;
+  try {
+    const sb = await (await fetch(`${ESPN}/scoreboard?dates=${doc.date}`)).json();
+    const events = new Map(sb.events.map(e => [e.id, e]));
+    const results = {};
+    const games = await Promise.all(doc.games.map(async g => {
+      const e = events.get(g.id);
+      if (!e) return g;
+      const c = e.competitions[0], status = e.status.type.name;
+      const score = side => +c.competitors.find(x => x.homeAway === side).score || 0;
+      if (status !== 'STATUS_SCHEDULED') {
+        let lines = boxCache.get(g.id);
+        if (!lines) {
+          lines = boxLines(await (await fetch(`${ESPN}/summary?event=${g.id}`)).json());
+          if (LIVE_DONE.has(status)) boxCache.set(g.id, lines);
+        }
+        Object.assign(results, lines);
+      }
+      return { ...g, status, detail: e.status.type.shortDetail, awayScore: score('away'), homeScore: score('home') };
+    }));
+    live.set(doc.date, { games, results, final: games.every(g => LIVE_DONE.has(g.status)), at: new Date().toISOString() });
+    applyLive();
+    render();
+  } catch (e) { /* keep showing the last synced numbers */ } finally { liveBusy = false; }
+}
+
 function startData() {
   db.doc('users/' + me.id).onSnapshot(s => { profile = s.exists ? s.data() : null; loaded.profile = true; ui.sig = ''; render(); }, fail);
   db.collection('days').where(firebase.firestore.FieldPath.documentId(), '>=', etDay(-3)).limit(6)
-    .onSnapshot(s => { days = new Map(s.docs.map(x => [x.id, x.data()])); loaded.days = true; render(); }, fail);
+    .onSnapshot(s => { rawDays = new Map(s.docs.map(x => [x.id, x.data()])); applyLive(); loaded.days = true; render(); }, fail);
   db.collection('entries').where('uid', '==', me.id)
     .onSnapshot(s => { entries = new Map(s.docs.map(x => [x.data().date, x.data()])); render(); }, () => {});
 }
@@ -941,7 +1000,8 @@ async function boot() {
     render();
   });
   // Re-render each minute so countdowns tick and slates lock on time.
-  setInterval(() => { if (ui.sig.startsWith('build|') && days.get(ui.sel) && locked(days.get(ui.sel))) ui.sig = ''; render(); }, 60000);
+  setInterval(() => { if (ui.sig.startsWith('build|') && days.get(ui.sel) && locked(days.get(ui.sel))) ui.sig = ''; render(); pollLive(); }, 60000);
+  document.addEventListener('visibilitychange', pollLive);
 }
 boot();
 </script>

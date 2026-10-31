@@ -726,7 +726,7 @@ function streakBanner() {
     : `Enter ${night} to ${streak ? `reach ${streak + 1} nights` : 'start your streak'}. ${away} nights to ${reward}.`;
   const last = profile.lastReward;
   const earned = last && last.date === profile.lastNight ? `<span class="st-chip won">Earned ${dayLabel(last.date).split(',')[0]}: ${rewardText(last)}</span>` : '';
-  const momentNames = profile.lastMoments?.date === profile.lastNight ? (profile.lastMoments.ids || []).map(id => MOMENTS.find(m => m.id === id)).filter(Boolean) : [];
+  const momentNames = profile.lastMoments && profile.lastMoments.date === profile.lastNight ? (profile.lastMoments.ids || []).map(id => MOMENTS.find(m => m.id === id)).filter(Boolean) : [];
   const moments = momentNames.map(m => `<span class="st-chip won">New badge: ${m.icon} ${esc(m.name)}</span>`).join('');
   const stars = profile.bonusStars ? `<span class="st-chip tag">★ Bonus Star ready: ${budget()}★ budget</span>` : '';
   const savers = profile.savers ? `<span class="st-chip">Streak Saver × ${profile.savers}</span>` : '';

@@ -345,6 +345,7 @@ main { display: grid; gap: 16px; min-width: 0; }
 button.pod:hover .pod-step { filter: brightness(1.08); }
 .pod.me .ava { box-shadow: 0 0 0 2px var(--accent); }
 .pod.me .pod-who b { color: var(--accent-2); }
+.pod-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .pod-rp { white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 700; }
 .pod-rp small { font-size: .75em; font-weight: 700; margin-left: 3px; }
 @media (max-width: 860px) {
@@ -636,7 +637,7 @@ function renderPodium() {
   const signedIn = me.id && profile?.name;
   el.innerHTML = `<span class="pod-label">Top players</span>` + top.map((u, i) => {
     const attrs = `class="pod p${i + 1} ${u.id === me.id ? 'me' : ''}"`, inner = `<span class="pod-who">${avatarHtml(u, 'sm')}<b>${esc(u.name || 'Player')}${badgeMark(u)}</b>${tierBadge(tierOf(u.rp))}</span>
-      <span class="pod-step"><span>${ordinal(i + 1)}</span><span class="pod-rp">${fmt(u.rp || 0)}<small>RP</small></span></span>`;
+      <span class="pod-step"><span class="pod-sr">${ordinal(i + 1)} place: </span><span class="pod-rp">${fmt(u.rp || 0)}<small>RP</small></span></span>`;
     return signedIn ? `<button ${attrs} data-action="view" data-v="leaders" aria-label="${esc(u.name || 'Player')}, rank ${i + 1}, ${fmt(u.rp || 0)} RP. Open the leaderboard">${inner}</button>` : `<div ${attrs}>${inner}</div>`;
   }).join('');
 }

@@ -333,6 +333,30 @@ main { display: grid; gap: 16px; min-width: 0; }
 .st-ladder li.done b::before { content: "✓ "; color: var(--good); }
 .st-ladder li.next { border-color: var(--live); }
 .st-ladder li.next span { color: var(--live); font-weight: 700; }
+.podium { grid-column: 1 / -1; display: grid; grid-template-columns: auto repeat(3, minmax(0, 1fr)); gap: 8px; align-items: stretch; }
+.pod-label { align-self: center; font-size: 12px; font-weight: 700; color: var(--muted); white-space: nowrap; padding-right: 6px; }
+.pod { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 14px; border-radius: 12px; border: 1px solid transparent; background: var(--panel); color: var(--ink); text-align: left; min-width: 0; }
+button.pod:hover { background: var(--panel-2); }
+.pod.me { border-color: var(--accent); }
+.pod-pos { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #16181C; background: var(--chip-2); }
+.pod.p1 .pod-pos { background: #E8B931; } .pod.p2 .pod-pos { background: #C3CCD6; } .pod.p3 .pod-pos { background: #C8875A; }
+.pod-who { display: flex; gap: 8px; align-items: center; min-width: 0; flex-wrap: wrap; }
+.pod-who b { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.pod-rp { font-weight: 800; font-size: 16px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pod-rp small { font-size: 11px; font-weight: 600; color: var(--muted); margin-left: 3px; }
+@media (max-width: 860px) {
+  .podium { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .pod-label { grid-column: 1 / -1; }
+  .pod { grid-template-columns: auto minmax(0, 1fr); padding: 10px; gap: 8px; }
+  .pod-rp { grid-column: 2; }
+  .pod .tier { display: none; }
+}
+@media (max-width: 520px) {
+  .podium { grid-template-columns: minmax(0, 1fr); }
+  .pod { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .pod-rp { grid-column: auto; }
+  .pod .tier { display: inline-flex; }
+}
 .gdetail { padding: 0 0 8px 34px; }
 .gprog { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
 .pstate { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 5px; white-space: nowrap; background: var(--chip); color: var(--muted); }
@@ -364,6 +388,7 @@ main { display: grid; gap: 16px; min-width: 0; }
 
 <div class="app">
   <header class="topbar" id="topbar"><div class="brand">BEST OF <span class="seven">7</span></div></header>
+  <section class="podium" id="podium" aria-label="Top players" hidden></section>
   <aside class="side" id="side" aria-label="Series games"></aside>
   <main id="main">
     <div class="card notice"><div class="eyebrow">Loading</div><h2>Connecting to the league office</h2><p>Fetching tonight's NBA slate and the current series.</p></div>
@@ -530,6 +555,19 @@ function renderTop() {
       ${profile?.name ? `<span class="tchip">${tierBadge(tier)}<span>${esc(profile.name)} · ${fmt(rp)} RP</span></span>` : ''}
       ${me.id ? `<button class="btn" data-action="signout" title="Signed in as ${esc(me.email)}">Sign out</button>` : ''}
     </div>`;
+}
+
+// Top 3 on the global table. Computer lineups have no profile, so they can never appear here.
+function renderPodium() {
+  const el = $('#podium'), top = leaders.slice(0, 3);
+  el.hidden = !top.length;
+  const signedIn = me.id && profile?.name;
+  el.innerHTML = `<span class="pod-label">Top players</span>` + top.map((u, i) => {
+    const attrs = `class="pod p${i + 1} ${u.id === me.id ? 'me' : ''}"`, inner = `<span class="pod-pos">${i + 1}</span>
+      <span class="pod-who"><b>${esc(u.name || 'Player')}${u.badge ? ' 🔥' : ''}</b>${tierBadge(tierOf(u.rp))}</span>
+      <span class="pod-rp">${fmt(u.rp || 0)}<small>RP</small></span>`;
+    return signedIn ? `<button ${attrs} data-action="view" data-v="leaders" aria-label="${esc(u.name || 'Player')}, rank ${i + 1}, ${fmt(u.rp || 0)} RP. Open the leaderboard">${inner}</button>` : `<div ${attrs}>${inner}</div>`;
+  }).join('');
 }
 
 function rankCard() {
@@ -832,6 +870,7 @@ function nextOpenDate() {
 function render() {
   if (!loaded.auth) return;
   renderTop();
+  renderPodium();
   if (!me.id) {
     $('#side').innerHTML = ''; $('#slip').innerHTML = '';
     const sig = 'signin|' + ui.auth;
@@ -1024,7 +1063,7 @@ function watchGroup() {
 function watchLeaders() {
   if (unsubLeaders) return;
   unsubLeaders = db.collection('users').orderBy('rp', 'desc').limit(50)
-    .onSnapshot(s => { leaders = s.docs.map(d => ({ id: d.id, ...d.data() })); if (ui.view === 'leaders') { ui.sig = ''; render(); } }, () => {});
+    .onSnapshot(s => { leaders = s.docs.map(d => ({ id: d.id, ...d.data() })); renderPodium(); if (ui.view === 'leaders') { ui.sig = ''; render(); } }, () => {});
 }
 
 /* ---------- Player profile ---------- */
@@ -1204,6 +1243,7 @@ async function boot() {
   firebase.initializeApp(cfg);
   auth = firebase.auth();
   db = firebase.firestore();
+  watchLeaders();
   if (auth.isSignInWithEmailLink(location.href)) {
     let email = null;
     try { email = localStorage.getItem(EMAIL_KEY); } catch (e) {}

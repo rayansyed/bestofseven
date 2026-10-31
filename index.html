@@ -329,37 +329,41 @@ main { display: grid; gap: 16px; min-width: 0; }
 .st-ladder li.done b::before { content: "✓ "; color: var(--good); }
 .st-ladder li.next { border-color: var(--live); }
 .st-ladder li.next span { color: var(--live); font-weight: 700; }
-.podium { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-items: stretch; }
+.podium { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 8px; align-items: end; border-bottom: 2px solid var(--chip-2); }
 .pod-label { grid-column: 1 / -1; font-size: 12px; font-weight: 700; color: var(--muted); }
 .hero-card { grid-template-columns: minmax(0, 1fr); }
 #slate { display: grid; gap: 12px; min-width: 0; }
 .races { scrollbar-width: thin; scrollbar-color: var(--chip-2) transparent; padding-bottom: 8px; }
-.pod { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 14px; border-radius: 12px; border: 1px solid transparent; background: var(--panel); color: var(--ink); text-align: left; min-width: 0; }
-button.pod:hover { background: var(--panel-2); }
-.pod.me { border-color: var(--accent); }
-.pod-pos { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #16181C; background: var(--chip-2); }
-.pod.p1 .pod-pos { background: #E8B931; } .pod.p2 .pod-pos { background: #C3CCD6; } .pod.p3 .pod-pos { background: #C8875A; }
-.pod-who { display: flex; gap: 8px; align-items: center; min-width: 0; flex-wrap: wrap; }
-.pod-who b { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-.pod-rp { font-weight: 800; font-size: 16px; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.pod-rp small { font-size: 11px; font-weight: 600; color: var(--muted); margin-left: 3px; }
+.pod { display: grid; justify-items: center; gap: 8px; width: 100%; min-width: 0; padding: 0; border: 0; background: transparent; color: var(--ink); text-align: center; }
+.pod.p1 { grid-column: 2; grid-row: 2; } .pod.p2 { grid-column: 1; grid-row: 2; } .pod.p3 { grid-column: 3; grid-row: 2; }
+.pod-who { display: flex; gap: 8px; align-items: center; justify-content: center; min-width: 0; max-width: 100%; padding: 0 6px; }
+.pod-who b { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.pod-step { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 10px 10px 0 0; color: #16181C; font-weight: 800; }
+.pod.p1 .pod-step { height: 64px; background: #E8B931; font-size: 18px; }
+.pod.p2 .pod-step { height: 46px; background: #C3CCD6; font-size: 15px; }
+.pod.p3 .pod-step { height: 32px; background: #C8875A; font-size: 14px; }
+button.pod:hover .pod-step { filter: brightness(1.08); }
+.pod.me .ava { box-shadow: 0 0 0 2px var(--accent); }
+.pod.me .pod-who b { color: var(--accent-2); }
+.pod-rp { white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 700; }
+.pod-rp small { font-size: .75em; font-weight: 700; margin-left: 3px; }
 @media (max-width: 860px) {
-  .pod { grid-template-columns: auto minmax(0, 1fr); padding: 10px; gap: 8px; }
-  .pod-rp { grid-column: 2; }
+  .pod-who { flex-direction: column; gap: 4px; }
+  .pod-who b { max-width: 100%; }
   .pod .tier { display: none; }
+  .pod-step { gap: 6px; }
 }
 @media (max-width: 520px) {
-  .podium { grid-template-columns: minmax(0, 1fr); }
-  .pod { grid-template-columns: auto minmax(0, 1fr) auto; }
-  .pod-rp { grid-column: auto; }
-  .pod .tier { display: inline-flex; }
+  .pod-step { flex-direction: column; gap: 0; line-height: 1.15; }
+  .pod.p1 .pod-step { height: 68px; font-size: 16px; }
+  .pod.p2 .pod-step { height: 52px; font-size: 14px; }
+  .pod.p3 .pod-step { height: 42px; font-size: 13px; }
 }
 .ava { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--chip-2); color: var(--ink); font-weight: 800; font-size: 15px; flex: 0 0 auto; }
 .ava.sm { width: 26px; height: 26px; font-size: 11px; }
 .ava.lg { width: 96px; height: 96px; font-size: 36px; }
 .lb-who { display: inline-flex; align-items: center; gap: 10px; }
 .grow { grid-template-columns: 34px auto minmax(0, 1fr) auto auto; }
-.pod { grid-template-columns: auto auto minmax(0, 1fr) auto; }
 .pf-head { padding: 22px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: start; }
 .pf-info { display: grid; gap: 10px; min-width: 0; }
 .pf-name { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -376,10 +380,7 @@ button.pod:hover { background: var(--panel-2); }
 .bdg.locked b { color: var(--muted); }
 .bdg.featured { border-color: var(--tag); }
 .bdg .linkbtn { margin-top: 3px; }
-@media (max-width: 860px) { .pod { grid-template-columns: auto auto minmax(0, 1fr); } .pod-rp { grid-column: 3; } }
 @media (max-width: 520px) {
-  .pod { grid-template-columns: auto auto minmax(0, 1fr) auto; }
-  .pod-rp { grid-column: auto; }
   .pf-head { grid-template-columns: minmax(0, 1fr); justify-items: start; }
   .ava.lg { width: 80px; height: 80px; }
 }
@@ -634,9 +635,8 @@ function renderPodium() {
   el.hidden = !top.length;
   const signedIn = me.id && profile?.name;
   el.innerHTML = `<span class="pod-label">Top players</span>` + top.map((u, i) => {
-    const attrs = `class="pod p${i + 1} ${u.id === me.id ? 'me' : ''}"`, inner = `<span class="pod-pos">${i + 1}</span>
-      ${avatarHtml(u, 'sm')}<span class="pod-who"><b>${esc(u.name || 'Player')}${badgeMark(u)}</b>${tierBadge(tierOf(u.rp))}</span>
-      <span class="pod-rp">${fmt(u.rp || 0)}<small>RP</small></span>`;
+    const attrs = `class="pod p${i + 1} ${u.id === me.id ? 'me' : ''}"`, inner = `<span class="pod-who">${avatarHtml(u, 'sm')}<b>${esc(u.name || 'Player')}${badgeMark(u)}</b>${tierBadge(tierOf(u.rp))}</span>
+      <span class="pod-step"><span>${ordinal(i + 1)}</span><span class="pod-rp">${fmt(u.rp || 0)}<small>RP</small></span></span>`;
     return signedIn ? `<button ${attrs} data-action="view" data-v="leaders" aria-label="${esc(u.name || 'Player')}, rank ${i + 1}, ${fmt(u.rp || 0)} RP. Open the leaderboard">${inner}</button>` : `<div ${attrs}>${inner}</div>`;
   }).join('');
 }

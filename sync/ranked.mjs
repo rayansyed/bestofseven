@@ -1,6 +1,6 @@
 // Ranked nights: at lock, entries are split into groups of 10 by tier (empty seats get computer
 // lineups); once every game is final, each group is scored and rank points are applied.
-import { CAP, GROUP_SIZE, RP_BY_FINISH, SKIP_PENALTY, TIERS, tierOf, invalidReason, scoreLineup, buildLineup, seeded, botName, botNoise } from './game.mjs';
+import { CAP, BONUS_STAR, GROUP_SIZE, RP_BY_FINISH, SKIP_PENALTY, TIERS, tierOf, invalidReason, lineupCost, rewardFor, scoreLineup, buildLineup, seeded, botName, botNoise } from './game.mjs';
 
 export async function groupNight(db, day) {
   const date = day.date;
@@ -8,9 +8,15 @@ export async function groupNight(db, day) {
   const entries = await db.query('entries', 'date', date);
   const humans = [], writes = [];
   for (const { id, data: e } of entries) {
-    const bad = invalidReason(e, pmap);
-    if (bad) { writes.push({ path: 'entries/' + id, data: { invalid: bad }, merge: true }); continue; }
     const user = (await db.read('users/' + e.uid)) || {};
+    // A Bonus Star lifts the budget by one, and is spent only if the lineup needs it.
+    const hasBonus = (user.bonusStars || 0) > 0;
+    const bad = invalidReason(e, pmap, CAP + (hasBonus ? BONUS_STAR : 0));
+    if (bad) { writes.push({ path: 'entries/' + id, data: { invalid: bad }, merge: true }); continue; }
+    if (lineupCost(e.ids, e.captain ?? null, pmap) > CAP) {
+      writes.push({ path: 'users/' + e.uid, data: { bonusStars: user.bonusStars - 1 }, merge: true });
+      writes.push({ path: 'entries/' + id, data: { usedBonusStar: true }, merge: true });
+    }
     humans.push({ entryId: id, uid: e.uid, name: user.name || 'Player', rp: user.rp || 0, ids: e.ids, captain: e.captain ?? null, at: e.at || 0 });
   }
 
@@ -63,28 +69,38 @@ export async function scoreNight(db, day) {
         // A player can't drop out of a tier on the first night after reaching it.
         if (user.shield && tierOf(after) < tierBefore) after = tierBefore * 100;
         delta = after - before;
+        // The streak grows on every scored entry, whatever the finish.
+        const streak = (user.streak || 0) + 1, reward = rewardFor(streak);
+        after += reward?.rp || 0;
         const promoted = tierOf(after) > tierBefore;
         r.rpDelta = delta; r.rpAfter = after;
         writes.push({ path: 'users/' + m.uid, data: {
           rp: after, tier: tierOf(after), shield: promoted ? 1 : 0,
           nights: (user.nights || 0) + 1, wins: (user.wins || 0) + (i === 0 ? 1 : 0),
           bestFinish: Math.min(user.bestFinish || 99, i + 1), lastNight: date,
+          streak, bestStreak: Math.max(user.bestStreak || 0, streak), lastStreak: 0,
+          ...(reward ? {
+            bonusStars: (user.bonusStars || 0) + reward.star, savers: (user.savers || 0) + reward.saver,
+            badge: !!user.badge || reward.badge, lastReward: { date, streak, ...reward },
+          } : {}),
         }, merge: true });
-        writes.push({ path: `entries/${date}_${m.uid}`, data: { score: m.total, finish: i + 1, of: ranked.length, rpDelta: delta, rpAfter: after, tierName: TIERS[g.tier] }, merge: true });
+        writes.push({ path: `entries/${date}_${m.uid}`, data: { score: m.total, finish: i + 1, of: ranked.length, rpDelta: delta, rpAfter: after, tierName: TIERS[g.tier], streak, reward: reward || null }, merge: true });
       }
       results.push(r);
     }
     writes.push({ path: `days/${date}/groups/${gid}`, data: { scored: true, results }, merge: true });
     scored++;
   }
-  // Returning players who didn't enter lose a little RP, but never their tier. An invalid entry counts as entering.
+  // Returning players who didn't enter lose a little RP (never their tier) and their streak, unless a
+  // Streak Saver covers the night. An invalid entry counts as entering: no penalty, and the streak holds.
   const entered = new Set((await db.query('entries', 'date', date)).map(e => e.data.uid));
   let skipped = 0;
   for (const { id, data: u } of await db.list('users')) {
     if (!u.nights || entered.has(id) || (u.lastNight || '') >= date) continue;
-    const rp = u.rp || 0, after = Math.max(tierOf(rp) * 100, rp - SKIP_PENALTY);
-    writes.push({ path: 'users/' + id, data: { rp: after, lastSkip: date, lastSkipRp: after - rp }, merge: true });
     skipped++;
+    if ((u.savers || 0) > 0) { writes.push({ path: 'users/' + id, data: { savers: u.savers - 1, lastSaved: date }, merge: true }); continue; }
+    const rp = u.rp || 0, after = Math.max(tierOf(rp) * 100, rp - SKIP_PENALTY);
+    writes.push({ path: 'users/' + id, data: { rp: after, lastSkip: date, lastSkipRp: after - rp, streak: 0, lastStreak: u.streak || 0 }, merge: true });
   }
   writes.push({ path: 'days/' + date, data: { scored: true }, merge: true });
   await db.batch(writes);

@@ -9,7 +9,19 @@ export const GROUP_SIZE = 10;
 export const TIERS = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Elite'];
 // Rank points by finish in a group of 10 (index 0 = 1st place).
 export const RP_BY_FINISH = [30, 20, 20, 5, 5, -5, -5, -15, -15, -15];
+export const BONUS_STAR = 1; // extra budget a Bonus Star gives for one night
 export const SKIP_PENALTY = 3; // RP lost for skipping a game night; never drops a player out of their tier
+
+// Entry streak rewards, paid when a night is scored. Rewards can stack on one night.
+export function rewardFor(streak) {
+  const r = { rp: 0, star: 0, saver: 0, badge: false };
+  if (streak === 3) r.rp = 3;
+  if (streak === 5) r.rp = 5;
+  if (streak % 7 === 0) r.star = 1;   // one night with a 17★ budget
+  if (streak % 14 === 0) r.saver = 1; // forgives one skipped night
+  if (streak === 30) r.badge = true;
+  return r.rp || r.star || r.saver || r.badge ? r : null;
+}
 
 export const fpOf = l => l[1] + 1.2 * l[2] + 1.5 * l[3] + 3 * l[4] + 3 * l[5] - l[6];
 // Star rating from fantasy points per game: 45+ = 5★, 35+ = 4★, 25+ = 3★, 15+ = 2★, else 1★.
@@ -24,7 +36,7 @@ export function lineupCost(ids, captain, pmap) {
 export const fiveStars = (ids, pmap) => ids.filter(id => id && pmap.get(id).stars === 5).length;
 
 // Null when the entry is a legal lineup for this pool, otherwise the reason.
-export function invalidReason(e, pmap) {
+export function invalidReason(e, pmap, cap = CAP) {
   if (!Array.isArray(e.ids) || e.ids.length !== 6) return 'needs six players';
   if (new Set(e.ids).size !== 6) return 'duplicate player';
   for (let i = 0; i < 6; i++) {
@@ -34,7 +46,7 @@ export function invalidReason(e, pmap) {
   }
   if (e.captain != null && !e.ids.includes(e.captain)) return 'captain not in lineup';
   if (fiveStars(e.ids, pmap) > MAX_FIVE) return 'more than one 5★ player';
-  if (lineupCost(e.ids, e.captain, pmap) > CAP) return 'over the star budget';
+  if (lineupCost(e.ids, e.captain, pmap) > cap) return 'over the star budget';
   return null;
 }
 

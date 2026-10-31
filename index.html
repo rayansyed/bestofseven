@@ -316,6 +316,23 @@ main { display: grid; gap: 16px; min-width: 0; }
 .pc-foot { margin-top: 16px; display: flex; justify-content: flex-end; }
 .pc-src { margin-top: 12px; font-size: 11px; color: var(--dim); }
 @media (max-width: 520px) { .pc-head { grid-template-columns: 84px minmax(0, 1fr); gap: 12px; } .pc-photo { width: 84px; height: 62px; } .pc-title h2 { font-size: 20px; } #pcard { padding: 18px; } }
+.streak { background: var(--panel); border: 1px solid rgba(251,191,36,.28); border-radius: 16px; padding: 16px 20px; display: grid; gap: 14px; }
+.st-top { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+.st-title { font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+.st-line { color: #C9D0D8; font-size: 13.5px; margin-top: 2px; }
+.st-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.st-chip { font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: 7px; background: var(--chip); color: #C9D0D8; white-space: nowrap; }
+.st-chip.won { background: rgba(74,222,128,.14); color: var(--good); }
+.st-chip.tag { background: rgba(227,239,91,.16); color: var(--tag); }
+.st-ladder { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 6px; }
+.st-ladder li { background: var(--panel-2); border-radius: 10px; padding: 8px 10px; display: grid; gap: 1px; border: 1px solid transparent; }
+.st-ladder b { font-size: 15px; font-weight: 800; }
+.st-ladder b::after { content: " nights"; font-size: 11px; font-weight: 600; color: var(--muted); }
+.st-ladder span { font-size: 12px; color: var(--muted); }
+.st-ladder li.done { opacity: .5; }
+.st-ladder li.done b::before { content: "✓ "; color: var(--good); }
+.st-ladder li.next { border-color: var(--live); }
+.st-ladder li.next span { color: var(--live); font-weight: 700; }
 .gdetail { padding: 0 0 8px 34px; }
 .gprog { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
 .pstate { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 5px; white-space: nowrap; background: var(--chip); color: var(--muted); }
@@ -370,6 +387,7 @@ const CAPTAIN_EXTRA = 1; // …and costs one extra star
 const MAX_FIVE = 1;      // at most one 5★ player per lineup
 const TIERS = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Elite'];
 const RP_BY_FINISH = [30, 20, 20, 5, 5, -5, -5, -15, -15, -15];
+const BONUS_STAR = 1; // extra budget a Bonus Star gives for one night
 const SKIP_PENALTY = 3; // RP lost for skipping a game night; never drops a player out of their tier
 const LIVE_DONE = new Set(['STATUS_FINAL', 'STATUS_POSTPONED', 'STATUS_CANCELED', 'STATUS_FORFEIT']);
 // Box score line from the sync job: [min, pts, reb, ast, stl, blk, to]
@@ -391,6 +409,19 @@ let db = null, auth = null, me = { id: null, email: '' };
 let profile = null, days = new Map(), entries = new Map(), group = null, leaders = [];
 const loaded = { auth: false, profile: false, days: false };
 const ui = { view: 'night', sel: null, pos: 'ALL', q: '', sort: 'stars', limit: 80, draft: null, draftCap: null, draftFor: null, save: '', sig: '', auth: '', authEmail: '', open: null, editName: false };
+
+// Entry streak rewards (mirrors rewardFor in sync/game.mjs). Rewards can stack on one night.
+function rewardFor(streak) {
+  const r = { rp: 0, star: 0, saver: 0, badge: false };
+  if (streak === 3) r.rp = 3;
+  if (streak === 5) r.rp = 5;
+  if (streak % 7 === 0) r.star = 1;
+  if (streak % 14 === 0) r.saver = 1;
+  if (streak === 30) r.badge = true;
+  return r.rp || r.star || r.saver || r.badge ? r : null;
+}
+const rewardText = r => [r.rp && `+${r.rp} RP`, r.star && 'a Bonus Star', r.saver && 'a Streak Saver', r.badge && 'the streak badge'].filter(Boolean).join(' + ');
+const budget = () => CAP + ((profile?.bonusStars || 0) > 0 ? BONUS_STAR : 0);
 
 /* ---------- Data helpers ---------- */
 const poolCache = new WeakMap();
@@ -420,7 +451,7 @@ const total = rows => Math.round(rows.reduce((a, r) => a + r.fp, 0) * 10) / 10;
 const nightState = day => day.final ? 'final' : locked(day) ? 'live' : 'open';
 
 // Random legal lineups, then greedy upgrades, keeping the best. Mirrors buildLineup in sync/game.mjs.
-function buildLineup(players, { base = SLOTS.map(() => null), captain = null, rnd = Math.random, noise = 0, tries = 120 } = {}) {
+function buildLineup(players, { base = SLOTS.map(() => null), captain = null, rnd = Math.random, noise = 0, tries = 120, cap: limit = CAP } = {}) {
   const m = new Map(players.map(p => [p.id, p]));
   const pl = players.filter(p => p.gp > 0 && !isOut(p));
   if (!pl.length) return null;
@@ -431,8 +462,8 @@ function buildLineup(players, { base = SLOTS.map(() => null), captain = null, rn
   const v = id => val.get(id) ?? m.get(id)?.avg ?? 0;
   const free = SLOTS.map((_, i) => i).filter(i => !base[i]);
   const fixedCap = captain && base.includes(captain) ? captain : null;
-  const pickCaptain = lu => fixedCap || (lc(lu, null) + CAPTAIN_EXTRA <= CAP ? lu.slice().sort((x, y) => v(y) - v(x))[0] : null);
-  const legal = (lu, c) => lc(lu, c) <= CAP && fives(lu) <= MAX_FIVE;
+  const pickCaptain = lu => fixedCap || (lc(lu, null) + CAPTAIN_EXTRA <= limit ? lu.slice().sort((x, y) => v(y) - v(x))[0] : null);
+  const legal = (lu, c) => lc(lu, c) <= limit && fives(lu) <= MAX_FIVE;
   const score = (lu, c) => lu.reduce((s, id) => s + v(id), 0) + (c ? v(c) * (CAPTAIN_X - 1) : 0);
   let best = null, bestV = -Infinity;
   for (let t = 0; t < tries; t++) {
@@ -440,8 +471,8 @@ function buildLineup(players, { base = SLOTS.map(() => null), captain = null, rn
     let ok = true;
     const order = free.slice().sort(() => rnd() - .5).sort((x, y) => (x === 5) - (y === 5));
     for (let k = 0; k < order.length; k++) {
-      const i = order[k], budget = CAP - lc(lu, fixedCap) - (order.length - k - 1), fiveOk = fives(lu) < MAX_FIVE;
-      const c = pl.filter(p => elig(SLOTS[i], p) && !lu.includes(p.id) && p.stars <= budget && (fiveOk || p.stars < 5));
+      const i = order[k], room = limit - lc(lu, fixedCap) - (order.length - k - 1), fiveOk = fives(lu) < MAX_FIVE;
+      const c = pl.filter(p => elig(SLOTS[i], p) && !lu.includes(p.id) && p.stars <= room && (fiveOk || p.stars < 5));
       if (!c.length) { ok = false; break; }
       lu[i] = c[Math.floor(rnd() * c.length)].id;
     }
@@ -476,7 +507,7 @@ function jersey(team) {
 const tierBadge = tier => `<span class="tier t${tier}">${TIERS[tier]}</span>`;
 const notice = (eyebrow, title, body) => `<div class="card notice"><div class="eyebrow">${eyebrow}</div><h2>${title}</h2>${body}</div>`;
 const TRASH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
-const legend = `<p class="legend">Scoring: point 1 · rebound 1.2 · assist 1.5 · steal 3 · block 3 · turnover −1. Every player is rated 1–5★ from his fantasy points per game (45+ = 5★, 35+ = 4★, 25+ = 3★, 15+ = 2★). Your six players must fit a ${CAP}★ budget, with at most one 5★ player. Your captain scores 1.5× and costs one extra star. Lineups lock at the night's first tip-off. Then you're placed in a group of 10 at your rank, with computer lineups filling empty seats. Finish 1st: +30 rank points · 2nd–3rd: +20 · 4th–5th: +5 · 6th–7th: −5 · 8th–10th: −15. Every 100 points is a new tier, and you can't drop out of a tier the night after reaching it. Once you've played, skipping a game night costs ${SKIP_PENALTY} RP, but never your tier. Data: ESPN public NBA feed.</p>`;
+const legend = `<p class="legend">Scoring: point 1 · rebound 1.2 · assist 1.5 · steal 3 · block 3 · turnover −1. Every player is rated 1–5★ from his fantasy points per game (45+ = 5★, 35+ = 4★, 25+ = 3★, 15+ = 2★). Your six players must fit a ${CAP}★ budget, with at most one 5★ player. Your captain scores 1.5× and costs one extra star. Lineups lock at the night's first tip-off. Then you're placed in a group of 10 at your rank, with computer lineups filling empty seats. Finish 1st: +30 rank points · 2nd–3rd: +20 · 4th–5th: +5 · 6th–7th: −5 · 8th–10th: −15. Every 100 points is a new tier, and you can't drop out of a tier the night after reaching it. Once you've played, skipping a game night costs ${SKIP_PENALTY} RP and your streak, but never your tier. Entering every game night builds a streak: 3 nights +3 RP, 5 nights +5 RP, every 7 a Bonus Star (one night with an extra star, used only if your lineup needs it), every 14 a Streak Saver (covers one skip), 30 a badge on the leaderboard. Data: ESPN public NBA feed.</p>`;
 
 const plink = p => `<button class="plink" data-action="player" data-id="${esc(p.id)}" aria-label="View ${esc(p.name)}’s profile">${esc(p.name)}</button>`;
 
@@ -510,8 +541,41 @@ function rankCard() {
     <div class="capbar"><i style="--w:${top ? 100 : into}%"></i></div>
     <div class="rank-sub">${top ? 'Top tier. Keep climbing the leaderboard.' : `${100 - into} RP to ${TIERS[tier + 1]}`}</div>
     ${profile?.lastSkipRp < 0 && profile.lastSkip > (profile.lastNight || '') ? `<div class="rank-skip">Skipped ${dayLabel(profile.lastSkip)}: ${profile.lastSkipRp} RP</div>` : ''}
-    <div class="rank-stats"><span><b>${profile?.nights || 0}</b> nights</span><span><b>${profile?.wins || 0}</b> group wins</span></div>
+    <div class="rank-stats"><span><b>🔥 ${profile?.streak || 0}</b> streak</span><span><b>${profile?.nights || 0}</b> nights</span><span><b>${profile?.wins || 0}</b> wins</span></div>
   </div>`;
+}
+
+function streakBanner() {
+  const scored = profile.streak || 0;
+  const open = nextOpenDate();
+  const inTonight = !!(open && entries.has(open));
+  // Entered nights the sync hasn't scored yet count toward the streak you're on.
+  const pending = [...entries.values()].filter(e => !e.finish && !e.invalid && days.has(e.date)).length;
+  const streak = scored + pending;
+  let next = streak + 1;
+  while (!rewardFor(next)) next++;
+  const away = next - streak, reward = rewardText(rewardFor(next));
+  const lost = !streak && profile.lastStreak;
+  const title = streak ? `🔥 ${streak}-night streak` : lost ? `Your ${profile.lastStreak}-night streak ended` : 'Start a streak';
+  const night = open ? dayLabel(open).split(',')[0] : '';
+  const line = !open ? `Next reward at ${next} nights: ${reward}. Enter the next slate when it’s posted.`
+    : inTonight ? `You’re in for ${night}.${rewardFor(streak) ? ` That earns you ${rewardText(rewardFor(streak))} when the night is scored.` : ''} Next reward at ${next} nights: ${reward}.`
+    : away === 1 ? `Enter ${night} to earn ${reward}.`
+    : `Enter ${night} to ${streak ? `reach ${streak + 1} nights` : 'start your streak'}. ${away} nights to ${reward}.`;
+  const last = profile.lastReward;
+  const earned = last && last.date === profile.lastNight ? `<span class="st-chip won">Earned ${dayLabel(last.date).split(',')[0]}: ${rewardText(last)}</span>` : '';
+  const stars = profile.bonusStars ? `<span class="st-chip tag">★ Bonus Star ready: ${budget()}★ budget</span>` : '';
+  const savers = profile.savers ? `<span class="st-chip">Streak Saver × ${profile.savers}</span>` : '';
+  // The last reward reached, the next few, and the 30-night badge while it's still ahead.
+  const stops = [];
+  for (let n = 1; stops.filter(x => x > streak).length < 3; n++) if (rewardFor(n)) stops.push(n);
+  const passed = stops.filter(x => x <= streak).pop();
+  const shown = [...stops.filter(x => x > streak), ...(passed ? [passed] : []), ...(streak < 30 ? [30] : [])];
+  const ladderStops = [...new Set(shown)].sort((a, b) => a - b);
+  const ladder = ladderStops.map(n => `<li class="${streak >= n ? 'done' : n === next ? 'next' : ''}"><b>${n}</b><span>${rewardText(rewardFor(n)).replace(/^a /, '').replace(' + a ', ' + ').replace('the streak badge', 'Badge')}</span></li>`).join('');
+  return `<div class="st-top"><div><div class="st-title">${title}</div><p class="st-line">${line}</p></div>
+      <div class="st-chips">${earned}${stars}${savers}</div></div>
+    <ol class="st-ladder" aria-label="Streak rewards">${ladder}</ol>`;
 }
 
 function renderSide() {
@@ -567,7 +631,7 @@ function slateCard(day) {
     const started = x.status !== 'STATUS_SCHEDULED', done = LIVE_DONE.has(x.status);
     return `<div class="race ${done ? 'done' : started ? 'in' : ''}"><b>${started ? `${x.awayScore}–${x.homeScore}` : timeLabel(x.tip)}</b><span>${esc(x.away)} @ ${esc(x.home)}</span>${started ? `<small>${esc(x.detail)}</small>` : ''}</div>`;
   }).join('');
-  return `<div class="lockline"><span class="lock ${locked(day) ? 'locked' : ''}">${lockTxt}</span><span class="teal">⇆ Budget ${CAP}★ · one 5★ max · captain +1★</span></div><div class="races">${races}</div>`;
+  return `<div class="lockline"><span class="lock ${locked(day) ? 'locked' : ''}">${lockTxt}</span><span class="teal">⇆ Budget ${budget()}★ · one 5★ max · captain +1★</span></div><div class="races">${races}</div>`;
 }
 
 function heroCard(day, tools) {
@@ -586,7 +650,7 @@ function heroCard(day, tools) {
 
 function renderPool() {
   const day = days.get(ui.sel), lu = ui.draft;
-  const left = CAP - cost(lu, ui.draftCap, day);
+  const left = budget() - cost(lu, ui.draftCap, day);
   const q = ui.q.trim().toLowerCase();
   const rows = day.players.filter(p => (ui.pos === 'ALL' || p.pos === ui.pos) && (!q || p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q)));
   const key = { stars: p => p.stars + p.avg / 100, avg: p => p.avg, value: p => p.avg / p.stars }[ui.sort];
@@ -611,7 +675,7 @@ function renderPool() {
 
 function renderLineup() {
   const day = days.get(ui.sel), lu = ui.draft, m = pmap(day);
-  const s = cost(lu, ui.draftCap, day), left = CAP - s, open = lu.filter(x => !x).length;
+  const s = cost(lu, ui.draftCap, day), left = budget() - s, open = lu.filter(x => !x).length;
   const legs = SLOTS.map((slot, i) => {
     const p = lu[i] && m.get(lu[i]);
     const isCap = !!p && ui.draftCap === p.id;
@@ -623,7 +687,7 @@ function renderLineup() {
   }).join('');
   const proj = lu.reduce((a, id) => a + (id ? (m.get(id)?.avg || 0) * (id === ui.draftCap ? CAPTAIN_X : 1) : 0), 0);
   const entered = entries.has(ui.sel);
-  const info = open ? `Fill all six slots to enter. ${open} open · ${left}★ left to spend.${!entered && profile.nights ? ` Skipping tonight costs ${SKIP_PENALTY} RP.` : ""}`
+  const info = open ? `Fill all six slots to enter. ${open} open · ${left}★ left to spend.${!entered && profile.nights ? ` ${profile.savers ? 'Skipping tonight uses your Streak Saver.' : `Skipping tonight costs ${SKIP_PENALTY} RP and your streak.`}` : ""}`
     : !ui.draftCap ? (left >= CAPTAIN_EXTRA ? 'Entered. Pick a captain to score his points 1.5×. It costs one extra star.' : 'Entered. A captain costs one extra star, and you have none left.')
     : `Entered for ${dayLabel(ui.sel)}. At ${timeLabel(day.lockAt)} you’ll join a group of 10 ${TIERS[tierOf(profile?.rp)]} players.`;
   const cta = open ? `<button class="cta" data-action="auto">Auto-fill ${open} open slot${open > 1 ? 's' : ''}</button>`
@@ -635,8 +699,8 @@ function renderLineup() {
     <div class="seg"><span class="on">${esc(profile.name)}</span><span>${TIERS[tierOf(profile.rp)]} group</span></div>
     <ul class="legs">${legs}</ul>
     <div class="slip-foot">
-      <div class="capbar"><i style="--w:${Math.min(100, s / CAP * 100)}%"></i></div>
-      <dl class="totals"><div><dt>Stars used</dt><dd>${s} of ${CAP}★</dd></div><div><dt>Stars left</dt><dd>${left}★</dd></div><div><dt>Projected</dt><dd>${f1(proj)} pts</dd></div></dl>
+      <div class="capbar"><i style="--w:${Math.min(100, s / budget() * 100)}%"></i></div>
+      <dl class="totals"><div><dt>Stars used</dt><dd>${s} of ${budget()}★</dd></div><div><dt>Stars left</dt><dd>${left}★</dd></div><div><dt>Projected</dt><dd>${f1(proj)} pts</dd></div></dl>
       <div class="info">${info}</div>
       <div class="ctarow"><button class="trash" data-action="clear" aria-label="Clear lineup" ${lu.some(Boolean) ? '' : 'disabled'}>${TRASH}</button>${cta}</div>
     </div>`;
@@ -719,7 +783,7 @@ function groupView(day) {
 /* ---------- Leaderboard and history ---------- */
 function leadersView() {
   const myRow = leaders.findIndex(u => u.id === me.id);
-  const rows = leaders.map((u, i) => `<tr class="${u.id === me.id ? 'me' : ''}"><td class="num">${i + 1}</td><td><b>${esc(u.name || 'Player')}</b>${u.id === me.id ? ' <span class="you">You</span>' : ''}</td><td>${tierBadge(tierOf(u.rp))}</td><td class="r num">${fmt(u.rp || 0)}</td><td class="r num hide-sm">${u.nights || 0}</td><td class="r num hide-sm">${u.wins || 0}</td></tr>`).join('');
+  const rows = leaders.map((u, i) => `<tr class="${u.id === me.id ? 'me' : ''}"><td class="num">${i + 1}</td><td><b>${esc(u.name || 'Player')}</b>${u.badge ? ' <span title="Reached a 30-night streak">🔥</span>' : ''}${u.id === me.id ? ' <span class="you">You</span>' : ''}</td><td>${tierBadge(tierOf(u.rp))}</td><td class="r num">${fmt(u.rp || 0)}</td><td class="r num hide-sm">${u.nights || 0}</td><td class="r num hide-sm">${u.wins || 0}</td></tr>`).join('');
   return `<section class="panel"><div class="list-head"><div><h2>Leaderboard</h2><p class="sub">Top ${leaders.length || 50} players by rank points. Updated after every night is scored.</p></div></div>
     ${leaders.length ? `<div class="tablewrap"><table class="lb"><thead><tr><th>#</th><th>Player</th><th>Tier</th><th class="r">RP</th><th class="r hide-sm">Nights</th><th class="r hide-sm">Group wins</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p class="empty">No one has finished a night yet. Enter tonight to be first on the board.</p>'}
     ${leaders.length && myRow < 0 ? `<p class="hint" style="padding:0 22px 18px">You’re not in the top ${leaders.length} yet. You have ${fmt(profile?.rp || 0)} RP.</p>` : ''}
@@ -735,7 +799,7 @@ function historyView() {
     const tag = days.has(e.date) ? `button class="runner hist" data-action="sel" data-d="${e.date}"` : 'div class="runner hist"';
     return `<${tag}>
       <span class="gnum">${dateOf(e.date).getDate()}</span>
-      <div><div class="r-name">${dayLabel(e.date)}</div><div class="r-sub">${e.finish ? `${ordinal(e.finish)} of ${e.of} · ${e.tierName}` : e.group ? 'Group formed' : 'Waiting for tip-off'}</div></div>
+      <div><div class="r-name">${dayLabel(e.date)}</div><div class="r-sub">${e.finish ? `${ordinal(e.finish)} of ${e.of} · ${e.tierName}${e.reward ? ` · 🔥 ${e.streak} nights: ${rewardText(e.reward)}` : ''}` : e.group ? 'Group formed' : 'Waiting for tip-off'}</div></div>
       <div class="r-act">${e.score != null ? `<span class="sc">${f1(e.score)}</span>` : ''}${st}</div></${tag.split(' ')[0]}>`;
   }).join('');
   return `<section class="panel"><div class="list-head"><div><h2>My nights</h2><p class="sub">Every night you entered, newest first. Tap one of the last few nights to see your group.</p></div></div>
@@ -797,10 +861,10 @@ function render() {
   if (!locked(day)) {
     const sig = 'build|' + ui.sel;
     if (ui.draftFor !== ui.sel) { ui.draft = (e?.ids || SLOTS.map(() => null)).slice(); ui.draftCap = e?.captain ?? null; ui.draftFor = ui.sel; ui.save = ''; }
-    if (sig === ui.sig && $('#poolrows')) { renderPool(); renderLineup(); const el = $('#slate'); if (el) el.innerHTML = slateCard(day); return; }
+    if (sig === ui.sig && $('#poolrows')) { renderPool(); renderLineup(); const el = $('#slate'); if (el) el.innerHTML = slateCard(day); const st = $('#streak'); if (st) st.innerHTML = streakBanner(); return; }
     ui.sig = sig;
     $('#slip').innerHTML = '<div class="slip-card" id="lineup"></div>';
-    m.innerHTML = `${heroCard(day, true)}<section class="panel"><div class="list-head"><div><h2>${dayLabel(ui.sel)} player pool</h2><p class="sub">Tap a rating to add a player. Fit six under ${CAP}★, with one 5★ at most. The captain costs +1★.</p></div></div><div id="poolrows"></div><div id="poolmore"></div></section>${legend}`;
+    m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day, true)}<section class="panel"><div class="list-head"><div><h2>${dayLabel(ui.sel)} player pool</h2><p class="sub">Tap a rating to add a player. Fit six within ${budget()}★, with one 5★ at most. The captain costs +1★.</p></div></div><div id="poolrows"></div><div id="poolmore"></div></section>${legend}`;
     renderPool(); renderLineup();
     return;
   }
@@ -809,11 +873,11 @@ function render() {
   let body;
   const next = nextOpenDate();
   const nextBtn = next ? `<div class="row"><button class="btn primary" data-action="sel" data-d="${next}">Enter ${dayLabel(next)}</button></div>` : '';
-  if (!e) body = notice('Not entered', 'You sat this night out', `<p>${profile.nights ? `Skipping a game night costs ${SKIP_PENALTY} RP, but it can’t drop you out of your tier.` : 'Enter a night to get on the board.'}</p>${nextBtn}`);
+  if (!e) body = notice('Not entered', 'You sat this night out', `<p>${profile.nights ? `${profile.lastSaved === ui.sel ? 'Your Streak Saver covered this night, so your streak and RP are safe.' : `Skipping a game night costs ${SKIP_PENALTY} RP and your streak, but it can’t drop you out of your tier.`}` : 'Enter a night to get on the board.'}</p>${nextBtn}`);
   else if (e.invalid) body = notice('Entry not counted', 'This lineup was invalid', `<p>The lineup was rejected (${esc(e.invalid)}), so it wasn’t placed in a group. Nothing changed on your rank.</p>${nextBtn}`);
   else if (!e.group || !group || group.date !== ui.sel) body = notice('Locked in', 'Forming groups', `<p>Lineups locked at ${timeLabel(day.lockAt)}. Groups of 10 are formed on the next sync, within 30 minutes of tip-off.</p>`);
   else body = groupView(day);
-  m.innerHTML = `${heroCard(day, false)}${body}${legend}`;
+  m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day, false)}${body}${legend}`;
 }
 
 /* ---------- Edits ---------- */
@@ -854,8 +918,8 @@ function addPlayer(id) {
   if (i < 0 && !lu[5]) i = 5;
   if (i < 0) return toast(`Your ${p.pos} slots and UTIL are full. Remove someone first.`);
   if (p.stars === 5 && fiveStars(lu, day) >= MAX_FIVE) return toast('You can only have one 5★ player. Remove your other 5★ first.');
-  const over = cost(lu, ui.draftCap, day) + p.stars - CAP;
-  if (over > 0) return toast(`${p.name} is ${p.stars}★. You’d be ${over}★ over your ${CAP}★ budget.`);
+  const over = cost(lu, ui.draftCap, day) + p.stars - budget();
+  if (over > 0) return toast(`${p.name} is ${p.stars}★. You’d be ${over}★ over your ${budget()}★ budget.`);
   if (isOut(p)) toast(`${p.name} is listed as out. Out players score 0.`);
   lu[i] = id; changed();
 }
@@ -863,7 +927,7 @@ function addPlayer(id) {
 function setCaptain(id) {
   const day = days.get(ui.sel);
   if (ui.draftCap === id) { ui.draftCap = null; return changed(); }
-  const over = cost(ui.draft, id, day) - CAP;
+  const over = cost(ui.draft, id, day) - budget();
   if (over > 0) return toast(`A captain costs one extra star, and you have no stars left. Swap someone for a cheaper player first.`);
   ui.draftCap = id; changed();
 }
@@ -888,7 +952,7 @@ document.addEventListener('click', e => {
   else if (a === 'clear') { ui.draft = SLOTS.map(() => null); ui.draftCap = null; changed(); }
   else if (a === 'captain') setCaptain(b.dataset.id);
   else if (a === 'auto') {
-    const r = buildLineup(days.get(ui.sel).players, { base: ui.draft, captain: ui.draftCap, noise: 0.05 });
+    const r = buildLineup(days.get(ui.sel).players, { base: ui.draft, captain: ui.draftCap, noise: 0.05, cap: budget() });
     if (!r) return toast('No way to fill the open slots within your star budget. Swap out a high-rated player.');
     ui.draft = r.ids; ui.draftCap = r.captain; changed();
   }

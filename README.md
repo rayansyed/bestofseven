@@ -12,7 +12,11 @@ Ranked NBA fantasy you can play any night. Draft six real players (2 G, 2 F, 1 C
 | Rank points | 1st +30 · 2nd–3rd +20 · 4th–5th +5 · 6th–7th −5 · 8th–10th −15 |
 | Tiers | 100 RP each. You can't drop out of a tier the night after reaching it. RP never goes below 0. |
 | Ties | best single player score, then whoever entered first |
-| Skipping | once you have played a night, each game night you skip costs **3 RP**. It can never drop you out of your tier, and nights with no NBA games don't count. |
+| Skipping | once you have played a night, each game night you skip costs **3 RP** and resets your streak. It can never drop you out of your tier, and nights with no NBA games don't count. |
+| Entry streak | enter every game night to build a streak, whatever your finish. Nights with no NBA games don't break it, and an invalid entry neither grows nor breaks it. |
+| Streak rewards | 3 nights: +3 RP · 5 nights: +5 RP · every 7 nights: a **Bonus Star** · every 14 nights: a **Streak Saver** · 30 nights: a leaderboard badge. Paid when the night is scored. |
+| Bonus Star | your budget is 17★ while you hold one. It's used up only by a lineup that actually costs 17★. |
+| Streak Saver | used automatically on your next skip: no RP lost, and the streak holds. |
 
 ## How it fits together
 

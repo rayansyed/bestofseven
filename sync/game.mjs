@@ -9,6 +9,7 @@ export const GROUP_SIZE = 10;
 export const TIERS = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Elite'];
 // Rank points by finish in a group of 10 (index 0 = 1st place).
 export const RP_BY_FINISH = [30, 20, 20, 5, 5, -5, -5, -15, -15, -15];
+export const SKIP_PENALTY = 3; // RP lost for skipping a game night; never drops a player out of their tier
 
 export const fpOf = l => l[1] + 1.2 * l[2] + 1.5 * l[3] + 3 * l[4] + 3 * l[5] - l[6];
 // Star rating from fantasy points per game: 45+ = 5★, 35+ = 4★, 25+ = 3★, 15+ = 2★, else 1★.

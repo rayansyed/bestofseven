@@ -181,7 +181,7 @@ for (const date of dates) {
   }
   if (doc.final && doc.grouped && !doc.scored) {
     const s = await scoreNight(db, doc);
-    console.log(`${date}: scored ${s.scored} groups`);
+    console.log(`${date}: scored ${s.scored} groups, ${s.skipped} players skipped`);
   }
 }
 process.exit(0);

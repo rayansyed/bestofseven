@@ -1,6 +1,6 @@
 // Ranked nights: at lock, entries are split into groups of 10 by tier (empty seats get computer
 // lineups); once every game is final, each group is scored and rank points are applied.
-import { CAP, GROUP_SIZE, RP_BY_FINISH, TIERS, tierOf, invalidReason, scoreLineup, buildLineup, seeded, botName, botNoise } from './game.mjs';
+import { CAP, GROUP_SIZE, RP_BY_FINISH, SKIP_PENALTY, TIERS, tierOf, invalidReason, scoreLineup, buildLineup, seeded, botName, botNoise } from './game.mjs';
 
 export async function groupNight(db, day) {
   const date = day.date;
@@ -77,7 +77,16 @@ export async function scoreNight(db, day) {
     writes.push({ path: `days/${date}/groups/${gid}`, data: { scored: true, results }, merge: true });
     scored++;
   }
+  // Returning players who didn't enter lose a little RP, but never their tier. An invalid entry counts as entering.
+  const entered = new Set((await db.query('entries', 'date', date)).map(e => e.data.uid));
+  let skipped = 0;
+  for (const { id, data: u } of await db.list('users')) {
+    if (!u.nights || entered.has(id) || (u.lastNight || '') >= date) continue;
+    const rp = u.rp || 0, after = Math.max(tierOf(rp) * 100, rp - SKIP_PENALTY);
+    writes.push({ path: 'users/' + id, data: { rp: after, lastSkip: date, lastSkipRp: after - rp }, merge: true });
+    skipped++;
+  }
   writes.push({ path: 'days/' + date, data: { scored: true }, merge: true });
   await db.batch(writes);
-  return { scored };
+  return { scored, skipped };
 }

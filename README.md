@@ -12,7 +12,7 @@ Ranked NBA fantasy you can play any night. Draft six real players (2 G, 2 F, 1 C
 | Rank points | 1st +30 · 2nd–3rd +20 · 4th–5th +5 · 6th–7th −5 · 8th–10th −15 |
 | Tiers | 100 RP each. You can't drop out of a tier the night after reaching it. RP never goes below 0. |
 | Ties | best single player score, then whoever entered first |
-| Skipping | free. Play only the nights you want. |
+| Skipping | once you have played a night, each game night you skip costs **3 RP**. It can never drop you out of your tier, and nights with no NBA games don't count. |
 
 ## How it fits together
 

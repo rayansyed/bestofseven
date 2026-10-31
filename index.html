@@ -271,6 +271,7 @@ main { display: grid; gap: 16px; min-width: 0; }
 .rank-rp { font-size: 13px; color: var(--muted); }
 .rank-rp b { font-size: 30px; font-weight: 800; color: var(--ink); letter-spacing: -.02em; margin-right: 4px; }
 .rank-sub { font-size: 12px; color: var(--muted); }
+.rank-skip { font-size: 12px; font-weight: 700; color: var(--bad); }
 .rank-stats { display: flex; gap: 14px; font-size: 12px; color: var(--muted); }
 .rank-stats b { color: var(--ink); }
 .linkbtn { border: 0; background: transparent; color: var(--accent-2); font-size: 12px; font-weight: 700; padding: 2px 0; }
@@ -369,6 +370,7 @@ const CAPTAIN_EXTRA = 1; // …and costs one extra star
 const MAX_FIVE = 1;      // at most one 5★ player per lineup
 const TIERS = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Elite'];
 const RP_BY_FINISH = [30, 20, 20, 5, 5, -5, -5, -15, -15, -15];
+const SKIP_PENALTY = 3; // RP lost for skipping a game night; never drops a player out of their tier
 const LIVE_DONE = new Set(['STATUS_FINAL', 'STATUS_POSTPONED', 'STATUS_CANCELED', 'STATUS_FORFEIT']);
 // Box score line from the sync job: [min, pts, reb, ast, stl, blk, to]
 const fpOf = l => l[1] + 1.2 * l[2] + 1.5 * l[3] + 3 * l[4] + 3 * l[5] - l[6];
@@ -474,7 +476,7 @@ function jersey(team) {
 const tierBadge = tier => `<span class="tier t${tier}">${TIERS[tier]}</span>`;
 const notice = (eyebrow, title, body) => `<div class="card notice"><div class="eyebrow">${eyebrow}</div><h2>${title}</h2>${body}</div>`;
 const TRASH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
-const legend = `<p class="legend">Scoring: point 1 · rebound 1.2 · assist 1.5 · steal 3 · block 3 · turnover −1. Every player is rated 1–5★ from his fantasy points per game (45+ = 5★, 35+ = 4★, 25+ = 3★, 15+ = 2★). Your six players must fit a ${CAP}★ budget, with at most one 5★ player. Your captain scores 1.5× and costs one extra star. Lineups lock at the night's first tip-off. Then you're placed in a group of 10 at your rank, with computer lineups filling empty seats. Finish 1st: +30 rank points · 2nd–3rd: +20 · 4th–5th: +5 · 6th–7th: −5 · 8th–10th: −15. Every 100 points is a new tier, and you can't drop out of a tier the night after reaching it. Data: ESPN public NBA feed.</p>`;
+const legend = `<p class="legend">Scoring: point 1 · rebound 1.2 · assist 1.5 · steal 3 · block 3 · turnover −1. Every player is rated 1–5★ from his fantasy points per game (45+ = 5★, 35+ = 4★, 25+ = 3★, 15+ = 2★). Your six players must fit a ${CAP}★ budget, with at most one 5★ player. Your captain scores 1.5× and costs one extra star. Lineups lock at the night's first tip-off. Then you're placed in a group of 10 at your rank, with computer lineups filling empty seats. Finish 1st: +30 rank points · 2nd–3rd: +20 · 4th–5th: +5 · 6th–7th: −5 · 8th–10th: −15. Every 100 points is a new tier, and you can't drop out of a tier the night after reaching it. Once you've played, skipping a game night costs ${SKIP_PENALTY} RP, but never your tier. Data: ESPN public NBA feed.</p>`;
 
 const plink = p => `<button class="plink" data-action="player" data-id="${esc(p.id)}" aria-label="View ${esc(p.name)}’s profile">${esc(p.name)}</button>`;
 
@@ -507,6 +509,7 @@ function rankCard() {
     <div class="rank-rp"><b>${fmt(rp)}</b> RP</div>
     <div class="capbar"><i style="--w:${top ? 100 : into}%"></i></div>
     <div class="rank-sub">${top ? 'Top tier. Keep climbing the leaderboard.' : `${100 - into} RP to ${TIERS[tier + 1]}`}</div>
+    ${profile?.lastSkipRp < 0 && profile.lastSkip > (profile.lastNight || '') ? `<div class="rank-skip">Skipped ${dayLabel(profile.lastSkip)}: ${profile.lastSkipRp} RP</div>` : ''}
     <div class="rank-stats"><span><b>${profile?.nights || 0}</b> nights</span><span><b>${profile?.wins || 0}</b> group wins</span></div>
   </div>`;
 }
@@ -516,7 +519,7 @@ function renderSide() {
   const list = [...days.values()].sort((a, b) => a.date < b.date ? -1 : 1).map(d => {
     const st = nightState(d), e = entries.get(d.date);
     const badge = st === 'open' ? (e ? '<span class="badge won">Entered</span>' : '<span class="badge draft">Open</span>')
-      : !e ? '<span class="badge">—</span>'
+      : !e ? (profile?.lastSkip === d.date && profile.lastSkipRp < 0 ? `<span class="badge lost">${profile.lastSkipRp} RP</span>` : '<span class="badge">—</span>')
       : st === 'live' ? '<span class="badge live">Live</span>'
       : e.finish ? `<span class="badge ${e.rpDelta >= 0 ? 'won' : 'lost'}">${ordinal(e.finish)}</span>` : '<span class="badge">Final</span>';
     return `<button class="nav-item" data-action="sel" data-d="${d.date}" aria-pressed="${ui.view === 'night' && ui.sel === d.date}"><span class="gnum">${dateOf(d.date).getDate()}</span><span>${dayLabel(d.date)}</span>${badge}</button>`;
@@ -620,7 +623,7 @@ function renderLineup() {
   }).join('');
   const proj = lu.reduce((a, id) => a + (id ? (m.get(id)?.avg || 0) * (id === ui.draftCap ? CAPTAIN_X : 1) : 0), 0);
   const entered = entries.has(ui.sel);
-  const info = open ? `Fill all six slots to enter. ${open} open · ${left}★ left to spend.`
+  const info = open ? `Fill all six slots to enter. ${open} open · ${left}★ left to spend.${!entered && profile.nights ? ` Skipping tonight costs ${SKIP_PENALTY} RP.` : ""}`
     : !ui.draftCap ? (left >= CAPTAIN_EXTRA ? 'Entered. Pick a captain to score his points 1.5×. It costs one extra star.' : 'Entered. A captain costs one extra star, and you have none left.')
     : `Entered for ${dayLabel(ui.sel)}. At ${timeLabel(day.lockAt)} you’ll join a group of 10 ${TIERS[tierOf(profile?.rp)]} players.`;
   const cta = open ? `<button class="cta" data-action="auto">Auto-fill ${open} open slot${open > 1 ? 's' : ''}</button>`
@@ -806,7 +809,7 @@ function render() {
   let body;
   const next = nextOpenDate();
   const nextBtn = next ? `<div class="row"><button class="btn primary" data-action="sel" data-d="${next}">Enter ${dayLabel(next)}</button></div>` : '';
-  if (!e) body = notice('Not entered', 'You sat this night out', `<p>That's fine: skipping a night costs nothing.</p>${nextBtn}`);
+  if (!e) body = notice('Not entered', 'You sat this night out', `<p>${profile.nights ? `Skipping a game night costs ${SKIP_PENALTY} RP, but it can’t drop you out of your tier.` : 'Enter a night to get on the board.'}</p>${nextBtn}`);
   else if (e.invalid) body = notice('Entry not counted', 'This lineup was invalid', `<p>The lineup was rejected (${esc(e.invalid)}), so it wasn’t placed in a group. Nothing changed on your rank.</p>${nextBtn}`);
   else if (!e.group || !group || group.date !== ui.sel) body = notice('Locked in', 'Forming groups', `<p>Lineups locked at ${timeLabel(day.lockAt)}. Groups of 10 are formed on the next sync, within 30 minutes of tip-off.</p>`);
   else body = groupView(day);

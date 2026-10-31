@@ -18,6 +18,9 @@ Ranked NBA fantasy you can play any night. Draft six real players (2 G, 2 F, 1 C
 | Bonus Star | your budget is 17★ while you hold one. It's used up only by a lineup that actually costs 17★. |
 | Streak Saver | used automatically on your next skip: no RP lost, and the streak holds. |
 
+## Profiles
+The Profile tab holds a player's picture, stats and badges. Pictures are center-cropped in the browser to 128×128 and saved on the player's own record, which keeps the site on Firebase's free plan and removes photo metadata such as location. Badges are worked out from stats only the sync can write, so they can't be self-awarded. **Pictures aren't moderated**, and they're public.
+
 ## How it fits together
 
 | Piece | What it does |
@@ -34,7 +37,7 @@ Firestore collections:
 - `days/<YYYYMMDD>`: a night's games, player pool, star ratings, injury tags and box scores (written by the sync)
 - `days/<YYYYMMDD>/groups/<tier>-<n>`: a group's ten lineups, and the final order (written by the sync)
 - `entries/<YYYYMMDD>_<uid>`: a player's lineup for a night (written by the player until tip-off). The sync adds the group, finish and rank-point change.
-- `users/<uid>`: display name (written by the player), plus RP, tier, nights and wins (written by the sync)
+- `users/<uid>`: display name, picture and featured badge (written by the player), plus RP, tier, nights, wins, streak and personal bests (written by the sync)
 - `meta/averages`: running season fantasy averages (written by the sync)
 
 ## A night, start to finish

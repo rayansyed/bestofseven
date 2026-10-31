@@ -79,6 +79,7 @@ export async function scoreNight(db, day) {
           nights: (user.nights || 0) + 1, wins: (user.wins || 0) + (i === 0 ? 1 : 0),
           bestFinish: Math.min(user.bestFinish || 99, i + 1), lastNight: date,
           streak, bestStreak: Math.max(user.bestStreak || 0, streak), lastStreak: 0,
+          bestTier: Math.max(user.bestTier || 0, tierOf(after)), bestScore: Math.max(user.bestScore || 0, m.total),
           ...(reward ? {
             bonusStars: (user.bonusStars || 0) + reward.star, savers: (user.savers || 0) + reward.saver,
             badge: !!user.badge || reward.badge, lastReward: { date, streak, ...reward },

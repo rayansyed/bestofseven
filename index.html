@@ -354,6 +354,35 @@ button.pod:hover { background: var(--panel-2); }
   .pod-rp { grid-column: auto; }
   .pod .tier { display: inline-flex; }
 }
+.ava { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--chip-2); color: var(--ink); font-weight: 800; font-size: 15px; flex: 0 0 auto; }
+.ava.sm { width: 26px; height: 26px; font-size: 11px; }
+.ava.lg { width: 96px; height: 96px; font-size: 36px; }
+.lb-who { display: inline-flex; align-items: center; gap: 10px; }
+.grow { grid-template-columns: 34px auto minmax(0, 1fr) auto auto; }
+.pod { grid-template-columns: auto auto minmax(0, 1fr) auto; }
+.pf-head { padding: 22px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: start; }
+.pf-info { display: grid; gap: 10px; min-width: 0; }
+.pf-name { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.pf-stats { padding: 18px 22px; display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 14px; }
+.pf-stats div { display: grid; gap: 2px; }
+.pf-stats span { font-size: 12px; color: var(--muted); }
+.pf-stats b { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.bdg-grid { list-style: none; margin: 0; padding: 6px 22px 22px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.bdg { background: var(--panel-2); border: 1px solid transparent; border-radius: 12px; padding: 14px; display: grid; gap: 3px; justify-items: start; align-content: start; }
+.bdg-icon { font-size: 26px; line-height: 1.2; }
+.bdg-how { font-size: 12px; color: var(--muted); }
+.bdg-lock { font-size: 12px; color: var(--dim); margin-top: 3px; }
+.bdg.locked .bdg-icon { filter: grayscale(1); opacity: .35; }
+.bdg.locked b { color: var(--muted); }
+.bdg.featured { border-color: var(--tag); }
+.bdg .linkbtn { margin-top: 3px; }
+@media (max-width: 860px) { .pod { grid-template-columns: auto auto minmax(0, 1fr); } .pod-rp { grid-column: 3; } }
+@media (max-width: 520px) {
+  .pod { grid-template-columns: auto auto minmax(0, 1fr) auto; }
+  .pod-rp { grid-column: auto; }
+  .pf-head { grid-template-columns: minmax(0, 1fr); justify-items: start; }
+  .ava.lg { width: 80px; height: 80px; }
+}
 .gdetail { padding: 0 0 8px 34px; }
 .gprog { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
 .pstate { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 5px; white-space: nowrap; background: var(--chip); color: var(--muted); }
@@ -379,7 +408,7 @@ button.pod:hover { background: var(--panel-2); }
 .series-row b.up { color: var(--good); } .series-row b.down { color: var(--bad); }
 .series-row b.small { font-size: 16px; }
 @media (max-width: 1180px) { .rank-card { flex: 0 0 auto; min-width: 220px; margin-bottom: 0; } }
-@media (max-width: 520px) { .grow { grid-template-columns: 28px minmax(0, 1fr) auto; padding: 12px 16px; } .grow .badge { display: none; } .gdetail { padding-left: 0; } }
+@media (max-width: 520px) { .grow { grid-template-columns: 28px auto minmax(0, 1fr) auto; padding: 12px 16px; } .grow .badge { display: none; } .gdetail { padding-left: 0; } }
 </style>
 </head>
 <body>
@@ -445,6 +474,48 @@ function rewardFor(streak) {
 }
 const rewardText = r => [r.rp && `+${r.rp} RP`, r.star && 'a Bonus Star', r.saver && 'a Streak Saver', r.badge && 'the streak badge'].filter(Boolean).join(' + ');
 const budget = () => CAP + ((profile?.bonusStars || 0) > 0 ? BONUS_STAR : 0);
+
+/* ---------- Pictures and badges ---------- */
+const AVATAR_RE = /^data:image\/(jpeg|webp);base64,[A-Za-z0-9+/=]+$/;
+const AVATAR_PX = 128, AVATAR_MAX = 30000;
+// Pictures are checked here as well as in the rules, so only inline images ever reach the page.
+const avatarHtml = (u, cls = '') => AVATAR_RE.test(u?.avatar || '')
+  ? `<img class="ava ${cls}" src="${u.avatar}" alt="">`
+  : `<span class="ava ${cls}" aria-hidden="true">${esc((u?.name || '?')[0].toUpperCase())}</span>`;
+
+// Earned from sync-written stats, so a player can't award themselves a badge.
+const bestTierOf = u => Math.max(u?.bestTier || 0, tierOf(u?.rp));
+const BADGES = [
+  { id: 'first', icon: '🏀', name: 'First Tip-Off', how: 'Finish your first night', on: u => (u.nights || 0) >= 1 },
+  { id: 'nights10', icon: '🎟️', name: 'Regular', how: 'Play 10 nights', on: u => (u.nights || 0) >= 10 },
+  { id: 'nights50', icon: '🎖️', name: 'Veteran', how: 'Play 50 nights', on: u => (u.nights || 0) >= 50 },
+  { id: 'win1', icon: '🥇', name: 'Group Winner', how: 'Finish 1st in a group', on: u => (u.wins || 0) >= 1 },
+  { id: 'win10', icon: '🏆', name: 'Champion', how: 'Win 10 groups', on: u => (u.wins || 0) >= 10 },
+  { id: 'score300', icon: '🎯', name: 'Big Night', how: 'Score 300+ in a night', on: u => (u.bestScore || 0) >= 300 },
+  { id: 'streak7', icon: '🔥', name: 'Hot Streak', how: 'Reach a 7-night streak', on: u => (u.bestStreak || 0) >= 7 },
+  { id: 'streak14', icon: '⚡', name: 'On Fire', how: 'Reach a 14-night streak', on: u => (u.bestStreak || 0) >= 14 },
+  { id: 'streak30', icon: '💎', name: 'Iron Player', how: 'Reach a 30-night streak', on: u => !!u.badge || (u.bestStreak || 0) >= 30 },
+  ...TIERS.slice(1).map((t, i) => ({ id: 'tier' + (i + 1), icon: ['🥈', '🥉', '💠', '🔷', '👑'][i], name: t, how: `Reach ${t}`, on: u => bestTierOf(u) >= i + 1 })),
+];
+const earnedBadges = u => BADGES.filter(b => b.on(u || {}));
+// The badge a player chose to show by their name (only if earned), else the 30-night flame.
+function badgeMark(u) {
+  const b = BADGES.find(x => x.id === u?.featuredBadge && x.on(u));
+  return b ? ` <span title="${esc(b.name)}">${b.icon}</span>` : u?.badge ? ' <span title="Reached a 30-night streak">🔥</span>' : '';
+}
+// Group members' pictures load once, on first sight.
+const peers = new Map();
+function peer(uid) {
+  if (!uid) return null;
+  if (uid === me.id) return profile;
+  const l = leaders.find(u => u.id === uid);
+  if (l) return l;
+  if (!peers.has(uid)) {
+    peers.set(uid, null);
+    db.doc('users/' + uid).get().then(s => { if (s.exists) { peers.set(uid, s.data()); render(); } }, () => {});
+  }
+  return peers.get(uid);
+}
 
 /* ---------- Data helpers ---------- */
 const poolCache = new WeakMap();
@@ -549,10 +620,10 @@ function renderTop() {
   const nav = (view, label, extra = '') => `<button class="navlink ${ui.view === view ? 'on' : ''}" data-action="view" data-v="${view}" ${ui.view === view ? 'aria-current="page"' : ''} ${extra}>${label}</button>`;
   $('#topbar').innerHTML = `
     <div class="brand">BEST OF <span class="seven">7</span></div>
-    ${me.id && profile?.name ? `<nav class="topnav" aria-label="Sections">${today ? `<button class="navlink ${onToday ? 'on' : ''}" data-action="sel" data-d="${today}" ${onToday ? 'aria-current="page"' : ''}>Today</button>` : ''}${nav('leaders', 'Leaderboard')}${nav('history', 'My nights')}</nav>` : ''}
+    ${me.id && profile?.name ? `<nav class="topnav" aria-label="Sections">${today ? `<button class="navlink ${onToday ? 'on' : ''}" data-action="sel" data-d="${today}" ${onToday ? 'aria-current="page"' : ''}>Today</button>` : ''}${nav('leaders', 'Leaderboard')}${nav('history', 'My nights')}${nav('profile', 'Profile')}</nav>` : ''}
     <div class="top-right">
       <span class="tchip">NBA · 2026–27</span>
-      ${profile?.name ? `<span class="tchip">${tierBadge(tier)}<span>${esc(profile.name)} · ${fmt(rp)} RP</span></span>` : ''}
+      ${profile?.name ? `<span class="tchip">${avatarHtml(profile, 'sm')}${tierBadge(tier)}<span>${esc(profile.name)} · ${fmt(rp)} RP</span></span>` : ''}
       ${me.id ? `<button class="btn" data-action="signout" title="Signed in as ${esc(me.email)}">Sign out</button>` : ''}
     </div>`;
 }
@@ -564,7 +635,7 @@ function renderPodium() {
   const signedIn = me.id && profile?.name;
   el.innerHTML = `<span class="pod-label">Top players</span>` + top.map((u, i) => {
     const attrs = `class="pod p${i + 1} ${u.id === me.id ? 'me' : ''}"`, inner = `<span class="pod-pos">${i + 1}</span>
-      <span class="pod-who"><b>${esc(u.name || 'Player')}${u.badge ? ' 🔥' : ''}</b>${tierBadge(tierOf(u.rp))}</span>
+      ${avatarHtml(u, 'sm')}<span class="pod-who"><b>${esc(u.name || 'Player')}${badgeMark(u)}</b>${tierBadge(tierOf(u.rp))}</span>
       <span class="pod-rp">${fmt(u.rp || 0)}<small>RP</small></span>`;
     return signedIn ? `<button ${attrs} data-action="view" data-v="leaders" aria-label="${esc(u.name || 'Player')}, rank ${i + 1}, ${fmt(u.rp || 0)} RP. Open the leaderboard">${inner}</button>` : `<div ${attrs}>${inner}</div>`;
   }).join('');
@@ -574,7 +645,7 @@ function rankCard() {
   const rp = profile?.rp || 0, tier = tierOf(rp), top = tier === TIERS.length - 1;
   const into = rp - tier * 100;
   return `<div class="rank-card">
-    <div class="rank-head">${tierBadge(tier)}<button class="linkbtn" data-action="edit-name">Edit name</button></div>
+    <div class="rank-head">${avatarHtml(profile, 'sm')}${tierBadge(tier)}<button class="linkbtn" data-action="edit-name">Edit name</button></div>
     <div class="rank-rp"><b>${fmt(rp)}</b> RP</div>
     <div class="capbar"><i style="--w:${top ? 100 : into}%"></i></div>
     <div class="rank-sub">${top ? 'Top tier. Keep climbing the leaderboard.' : `${100 - into} RP to ${TIERS[tier + 1]}`}</div>
@@ -806,7 +877,7 @@ function groupView(day) {
     return `<div class="gboard-row ${r.uid === me.id ? 'me' : ''}">
       <button class="grow" data-action="toggle-row" data-k="${esc(r.key)}" aria-expanded="${isOpen}">
         <span class="gpos">${i + 1}</span>
-        <span class="gname">${esc(r.name)}${r.bot ? '<span class="bot">Computer</span>' : ''}${r.uid === me.id ? '<span class="you">You</span>' : ''}<small class="gprog">${lineupProgress(r.rows, day)}</small></span>
+        ${avatarHtml(r.bot ? { name: '#' } : peer(r.uid) || { name: r.name }, 'sm')}<span class="gname">${esc(r.name)}${r.bot ? '' : badgeMark(peer(r.uid))}${r.bot ? '<span class="bot">Computer</span>' : ''}${r.uid === me.id ? '<span class="you">You</span>' : ''}<small class="gprog">${lineupProgress(r.rows, day)}</small></span>
         ${delta}
         <span class="sc">${f1(r.total)}</span>
       </button>
@@ -829,7 +900,7 @@ function groupView(day) {
 /* ---------- Leaderboard and history ---------- */
 function leadersView() {
   const myRow = leaders.findIndex(u => u.id === me.id);
-  const rows = leaders.map((u, i) => `<tr class="${u.id === me.id ? 'me' : ''}"><td class="num">${i + 1}</td><td><b>${esc(u.name || 'Player')}</b>${u.badge ? ' <span title="Reached a 30-night streak">🔥</span>' : ''}${u.id === me.id ? ' <span class="you">You</span>' : ''}</td><td>${tierBadge(tierOf(u.rp))}</td><td class="r num">${fmt(u.rp || 0)}</td><td class="r num hide-sm">${u.nights || 0}</td><td class="r num hide-sm">${u.wins || 0}</td></tr>`).join('');
+  const rows = leaders.map((u, i) => `<tr class="${u.id === me.id ? 'me' : ''}"><td class="num">${i + 1}</td><td><span class="lb-who">${avatarHtml(u, 'sm')}<b>${esc(u.name || 'Player')}${badgeMark(u)}</b></span>${u.id === me.id ? ' <span class="you">You</span>' : ''}</td><td>${tierBadge(tierOf(u.rp))}</td><td class="r num">${fmt(u.rp || 0)}</td><td class="r num hide-sm">${u.nights || 0}</td><td class="r num hide-sm">${u.wins || 0}</td></tr>`).join('');
   return `<section class="panel"><div class="list-head"><div><h2>Leaderboard</h2><p class="sub">Top ${leaders.length || 50} players by rank points. Updated after every night is scored.</p></div></div>
     ${leaders.length ? `<div class="tablewrap"><table class="lb"><thead><tr><th>#</th><th>Player</th><th>Tier</th><th class="r">RP</th><th class="r hide-sm">Nights</th><th class="r hide-sm">Group wins</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p class="empty">No one has finished a night yet. Enter tonight to be first on the board.</p>'}
     ${leaders.length && myRow < 0 ? `<p class="hint" style="padding:0 22px 18px">You’re not in the top ${leaders.length} yet. You have ${fmt(profile?.rp || 0)} RP.</p>` : ''}
@@ -850,6 +921,65 @@ function historyView() {
   }).join('');
   return `<section class="panel"><div class="list-head"><div><h2>My nights</h2><p class="sub">Every night you entered, newest first. Tap one of the last few nights to see your group.</p></div></div>
     ${rows || '<p class="empty">You haven’t entered a night yet.</p>'}</section>`;
+}
+
+/* ---------- Profile ---------- */
+async function saveProfile(fields, done) {
+  try {
+    await db.doc('users/' + me.id).update(fields);
+    if (done) toast(done);
+  } catch (err) {
+    toast(err.code === 'permission-denied' ? 'The database refused that. Publish the latest firestore.rules in Firebase.' : 'That didn’t save. Check your connection and try again.');
+  }
+}
+
+// Center-crops to a small square. Redrawing also drops photo metadata such as location.
+async function uploadAvatar(file) {
+  if (!file.type.startsWith('image/') || file.type === 'image/svg+xml') return toast('Choose a JPG, PNG or WebP image.');
+  if (file.size > 15 * 1024 * 1024) return toast('That image is over 15 MB. Choose a smaller one.');
+  let bmp;
+  try { bmp = await createImageBitmap(file); }
+  catch (err) { return toast('That image couldn’t be read. Try a JPG or PNG.'); }
+  const c = document.createElement('canvas');
+  c.width = c.height = AVATAR_PX;
+  const side = Math.min(bmp.width, bmp.height);
+  const g = c.getContext('2d');
+  g.fillStyle = '#161A20';
+  g.fillRect(0, 0, AVATAR_PX, AVATAR_PX);
+  g.drawImage(bmp, (bmp.width - side) / 2, (bmp.height - side) / 2, side, side, 0, 0, AVATAR_PX, AVATAR_PX);
+  bmp.close?.();
+  let url = '';
+  for (const q of [0.82, 0.7, 0.55, 0.4]) { url = c.toDataURL('image/jpeg', q); if (url.length <= AVATAR_MAX) break; }
+  if (url.length > AVATAR_MAX || !AVATAR_RE.test(url)) return toast('That image couldn’t be shrunk enough. Try a different one.');
+  saveProfile({ avatar: url }, 'Picture updated.');
+}
+
+function profileView() {
+  const u = profile, rp = u.rp || 0, tier = tierOf(rp), hasPic = AVATAR_RE.test(u.avatar || '');
+  const earned = earnedBadges(u), featured = u.featuredBadge;
+  const stats = [['Rank points', fmt(rp)], ['Nights played', u.nights || 0], ['Group wins', u.wins || 0], ['Best finish', u.bestFinish ? ordinal(u.bestFinish) : '—'], ['Best score', u.bestScore ? f1(u.bestScore) : '—'], ['Best streak', u.bestStreak || 0]];
+  const badge = b => {
+    const on = b.on(u), isFeatured = featured === b.id;
+    return `<li class="bdg ${on ? '' : 'locked'} ${isFeatured ? 'featured' : ''}"><span class="bdg-icon" aria-hidden="true">${b.icon}</span><b>${esc(b.name)}</b><span class="bdg-how">${esc(b.how)}</span>
+      ${on ? `<button class="linkbtn" data-action="feature" data-id="${b.id}" aria-pressed="${isFeatured}">${isFeatured ? '★ By your name' : 'Show by my name'}</button>` : '<span class="bdg-lock">Locked</span>'}</li>`;
+  };
+  return `<section class="panel pf-head">
+      <div class="pf-photo">${avatarHtml(u, 'lg')}</div>
+      <div class="pf-info"><div class="pf-name"><h1>${esc(u.name)}${badgeMark(u)}</h1>${tierBadge(tier)}</div>
+        <p class="sub">${me.email ? 'Signed in with your email. Only your name, picture, rank and badges are public.' : ''}</p>
+        <div class="row">
+          <button class="btn primary" data-action="avatar-pick">${hasPic ? 'Change picture' : 'Upload picture'}</button>
+          ${hasPic ? '<button class="btn" data-action="avatar-remove">Remove picture</button>' : ''}
+          <button class="btn" data-action="edit-name">Edit name</button>
+          <input type="file" id="avatar-file" accept="image/jpeg,image/png,image/webp" hidden>
+        </div>
+        <p class="hint">JPG, PNG or WebP. It’s cropped to a square and shown to everyone on the leaderboard and in your group.</p>
+      </div>
+    </section>
+    <section class="panel pf-stats">${stats.map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join('')}</section>
+    <section class="panel"><div class="list-head"><div><h2>Badges</h2><p class="sub">${earned.length} of ${BADGES.length} earned. Pick one to show next to your name.</p></div></div>
+      <ul class="bdg-grid">${[...BADGES].sort((a, b) => b.on(u) - a.on(u)).map(badge).join('')}</ul>
+    </section>`;
 }
 
 /* ---------- Right rail ---------- */
@@ -901,6 +1031,7 @@ function render() {
   renderSide();
   const m = $('#main');
   if (ui.view === 'leaders') { ui.sig = 'leaders'; m.innerHTML = leadersView(); $('#slip').innerHTML = slipSummary(); return; }
+  if (ui.view === 'profile') { ui.sig = 'profile'; m.innerHTML = profileView(); $('#slip').innerHTML = slipSummary(); return; }
   if (ui.view === 'history') { ui.sig = 'history'; m.innerHTML = historyView(); $('#slip').innerHTML = slipSummary(); return; }
   const day = days.get(ui.sel);
   if (!day) { ui.sig = 'noslate'; m.innerHTML = notice('Tonight', 'Waiting for the next slate', '<p>The next NBA game day hasn’t been posted yet. The sync posts slates a day ahead.</p>'); $('#slip').innerHTML = slipSummary(); return; }
@@ -986,6 +1117,9 @@ document.addEventListener('click', e => {
   if (a === 'sel') { ui.view = 'night'; ui.sel = b.dataset.d; ui.limit = 80; ui.open = null; ui.sig = ''; render(); window.scrollTo({ top: 0 }); }
   else if (a === 'view') { ui.view = b.dataset.v; if (ui.view === 'leaders') watchLeaders(); ui.sig = ''; render(); window.scrollTo({ top: 0 }); }
   else if (a === 'player') openPlayer(b.dataset.id);
+  else if (a === 'avatar-pick') $('#avatar-file').click();
+  else if (a === 'avatar-remove') saveProfile({ avatar: firebase.firestore.FieldValue.delete() }, 'Picture removed.');
+  else if (a === 'feature') saveProfile({ featuredBadge: b.dataset.id === profile.featuredBadge ? firebase.firestore.FieldValue.delete() : b.dataset.id });
   else if (a === 'pclose') $('#pcard').close();
   else if (a === 'signout') auth.signOut();
   else if (a === 'auth-reset') { ui.auth = ''; render(); }
@@ -1041,7 +1175,10 @@ document.addEventListener('input', e => {
   if (e.target.id === 'q') { ui.q = e.target.value; ui.limit = 80; renderPool(); }
   if (e.target.id === 'name-input') $('#name-err').textContent = '';
 });
-document.addEventListener('change', e => { if (e.target.id === 'sort') { ui.sort = e.target.value; renderPool(); } });
+document.addEventListener('change', e => {
+  if (e.target.id === 'sort') { ui.sort = e.target.value; renderPool(); }
+  if (e.target.id === 'avatar-file' && e.target.files[0]) uploadAvatar(e.target.files[0]);
+});
 
 /* ---------- Boot (Firebase) ---------- */
 const EMAIL_KEY = 'bo7-signin-email';

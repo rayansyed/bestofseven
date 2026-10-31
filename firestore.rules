@@ -3,6 +3,12 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
     function validName(n) { return n is string && n.size() >= 3 && n.size() <= 16 && n.matches('^[A-Za-z0-9_ .-]+$'); }
+    // A small square photo made by the page: inline JPEG or WebP only, never SVG or a link.
+    function validAvatar(d) {
+      return !('avatar' in d) || (d.avatar is string && d.avatar.size() <= 30000
+        && d.avatar.matches('^data:image/(jpeg|webp);base64,[A-Za-z0-9+/=]+$'));
+    }
+    function validFeatured(d) { return !('featuredBadge' in d) || (d.featuredBadge is string && d.featuredBadge.size() <= 20); }
     function lockMs(date) { return get(/databases/$(database)/documents/days/$(date)).data.lockMs; }
 
     // NBA data, groups and results. Only the sync writes these, with admin credentials that skip these rules.
@@ -18,7 +24,7 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Public profiles. A player sets only their display name; rank fields are written by the sync.
+    // Public profiles. A player sets their name, picture and featured badge; rank fields are written by the sync.
     match /users/{uid} {
       allow read: if true;
       allow create: if signedIn() && request.auth.uid == uid
@@ -26,7 +32,8 @@ service cloud.firestore {
         && validName(request.resource.data.name)
         && request.resource.data.nameLower == request.resource.data.name.lower();
       allow update: if signedIn() && request.auth.uid == uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'nameLower'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'nameLower', 'avatar', 'featuredBadge'])
+        && validAvatar(request.resource.data) && validFeatured(request.resource.data)
         && validName(request.resource.data.name)
         && request.resource.data.nameLower == request.resource.data.name.lower();
       allow delete: if false;

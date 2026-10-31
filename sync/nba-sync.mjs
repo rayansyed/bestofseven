@@ -13,7 +13,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { starsOf } from './game.mjs';
-import { groupNight, scoreNight } from './ranked.mjs';
+import { groupNight, scoreNight, bestSquads } from './ranked.mjs';
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const API = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba';
@@ -159,7 +159,7 @@ async function buildDay(db, date, agg) {
   }
   const doc = { date, lockAt, lockMs, final: games.every(g => DONE.has(g.status)), games: games.map(({ awayId, homeId, ...g }) => g), players, results, updatedAt: new Date().toISOString(),
     // Ranked progress, written by groupNight/scoreNight; carried across rewrites.
-    grouped: !!prev?.grouped, scored: !!prev?.scored, groups: prev?.groups || 0, entrants: prev?.entrants || 0 };
+    grouped: !!prev?.grouped, scored: !!prev?.scored, groups: prev?.groups || 0, entrants: prev?.entrants || 0, top3: prev?.top3 || null };
   await db.write('days/' + date, doc);
   return doc;
 }
@@ -180,8 +180,15 @@ for (const date of dates) {
     console.log(`${date}: grouped ${g.entrants} entries into ${g.groups} groups`);
   }
   if (doc.final && doc.grouped && !doc.scored) {
+    doc.scored = true;
     const s = await scoreNight(db, doc);
     console.log(`${date}: scored ${s.scored} groups, ${s.skipped} players skipped`);
+  }
+  // Also fills in a night that was scored before this existed.
+  if (doc.scored && !doc.top3) {
+    const top3 = await bestSquads(db, doc);
+    await db.batch([{ path: 'days/' + date, data: { top3 }, merge: true }]);
+    console.log(`${date}: best squads: ${top3.map(s => `${s.name} ${s.total}`).join(', ') || 'none'}`);
   }
 }
 process.exit(0);

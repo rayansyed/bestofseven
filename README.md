@@ -34,7 +34,7 @@ The Profile tab holds a player's picture, stats and badges. Pictures are center-
 | `.github/workflows/main.yml` | Runs the sync from GitHub Actions on a schedule. |
 
 Firestore collections:
-- `days/<YYYYMMDD>`: a night's games, player pool, star ratings, injury tags and box scores (written by the sync)
+- `days/<YYYYMMDD>`: a night's best three squads, games, player pool, star ratings, injury tags and box scores (written by the sync)
 - `days/<YYYYMMDD>/groups/<tier>-<n>`: a group's ten lineups, and the final order (written by the sync)
 - `entries/<YYYYMMDD>_<uid>`: a player's lineup for a night (written by the player until tip-off). The sync adds the group, finish and rank-point change.
 - `users/<uid>`: display name, picture and featured badge (written by the player), plus RP, tier, nights, wins, streak and personal bests (written by the sync)

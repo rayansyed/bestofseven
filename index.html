@@ -389,6 +389,12 @@ button.pod:hover .pod-step { filter: brightness(1.08); }
 .face img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
 .face .jersey { display: block; width: 28px; height: 28px; margin: 6px; }
 @media (max-width: 520px) { .face { width: 32px; height: 32px; } .face .jersey { width: 22px; height: 22px; margin: 5px; } }
+.ava.md { width: 52px; height: 52px; font-size: 20px; }
+.sq-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; padding-right: 34px; }
+.sq-who { display: grid; gap: 4px; justify-items: start; min-width: 0; }
+.sq-who h2 { font-size: 22px; }
+.sq-rows { margin: 14px -24px 0; border-bottom: 1px solid var(--line); }
+@media (max-width: 520px) { .sq-rows { margin-left: -18px; margin-right: -18px; } }
 .gdetail { padding: 0 0 8px 34px; }
 .gprog { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
 .pstate { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 5px; white-space: nowrap; background: var(--chip); color: var(--muted); }
@@ -636,15 +642,33 @@ function renderTop() {
     </div>`;
 }
 
-// Top 3 on the global table. Computer lineups have no profile, so they can never appear here.
+// The latest scored night that had real players. The sync saves its top 3 on the night itself.
+function bestNight() {
+  return [...days.values()].sort((a, b) => a.date < b.date ? 1 : -1).find(d => d.top3?.length) || null;
+}
+
+function openSquad(i) {
+  const night = bestNight(), s = night?.top3?.[i];
+  if (!s) return;
+  pcardFor = null;
+  const who = peer(s.uid), rows = scoreRows(s.ids, s.captain, night);
+  const dlg = $('#pcard');
+  dlg.innerHTML = `<button class="pc-x" data-action="pclose" aria-label="Close">✕</button>
+    <div class="sq-head">${avatarHtml(who || s, 'md')}
+      <div class="sq-who"><div class="eyebrow">${ordinal(i + 1)} best squad · ${dayLabel(night.date)}</div><h2 id="pc-name">${esc(s.name)}${badgeMark(who)}</h2>${tierBadge(s.tier || 0)}</div>
+      <span class="sc big">${f1(s.total)}</span></div>
+    <div class="sq-rows">${lineupDetail({ rows }, night)}</div>
+    <p class="pc-src">Tap a player for his profile.</p>`;
+  if (!dlg.open) dlg.showModal();
+}
+
 function renderPodium() {
-  const el = $('#podium'), top = leaders.slice(0, 3);
+  const el = $('#podium'), night = bestNight(), top = night?.top3 || [];
   el.hidden = !top.length;
-  const signedIn = me.id && profile?.name;
-  el.innerHTML = `<span class="pod-label">Top players</span>` + top.map((u, i) => {
-    const attrs = `class="pod p${i + 1} ${u.id === me.id ? 'me' : ''}"`, inner = `<span class="pod-who">${avatarHtml(u, 'sm')}<b>${esc(u.name || 'Player')}${badgeMark(u)}</b>${tierBadge(tierOf(u.rp))}</span>
-      <span class="pod-step"><span class="pod-sr">${ordinal(i + 1)} place: </span><span class="pod-rp">${fmt(u.rp || 0)}<small>RP</small></span></span>`;
-    return signedIn ? `<button ${attrs} data-action="view" data-v="leaders" aria-label="${esc(u.name || 'Player')}, rank ${i + 1}, ${fmt(u.rp || 0)} RP. Open the leaderboard">${inner}</button>` : `<div ${attrs}>${inner}</div>`;
+  el.innerHTML = `<span class="pod-label">Best squads · ${top.length ? dayLabel(night.date) : ''}</span>` + top.map((u, i) => {
+    const attrs = `class="pod p${i + 1} ${u.uid === me.id ? 'me' : ''}"`, who = peer(u.uid), inner = `<span class="pod-who">${avatarHtml(who || u, 'sm')}<b>${esc(u.name || 'Player')}${badgeMark(who)}</b>${tierBadge(u.tier || 0)}</span>
+      <span class="pod-step"><span class="pod-sr">${ordinal(i + 1)} place: </span><span class="pod-rp">${f1(u.total)}<small>PTS</small></span></span>`;
+    return `<button ${attrs} data-action="squad" data-i="${i}" aria-label="${esc(u.name || 'Player')}, ${ordinal(i + 1)} place with ${f1(u.total)} points. View squad">${inner}</button>`;
   }).join('');
 }
 
@@ -1123,6 +1147,7 @@ document.addEventListener('click', e => {
   const a = b.dataset.action;
   if (a === 'sel') { ui.view = 'night'; ui.sel = b.dataset.d; ui.limit = 80; ui.open = null; ui.sig = ''; render(); window.scrollTo({ top: 0 }); }
   else if (a === 'view') { ui.view = b.dataset.v; if (ui.view === 'leaders') watchLeaders(); ui.sig = ''; render(); window.scrollTo({ top: 0 }); }
+  else if (a === 'squad') openSquad(+b.dataset.i);
   else if (a === 'player') openPlayer(b.dataset.id);
   else if (a === 'avatar-pick') $('#avatar-file').click();
   else if (a === 'avatar-remove') saveProfile({ avatar: firebase.firestore.FieldValue.delete() }, 'Picture removed.');
@@ -1215,7 +1240,7 @@ function watchGroup() {
 function watchLeaders() {
   if (unsubLeaders) return;
   unsubLeaders = db.collection('users').orderBy('rp', 'desc').limit(50)
-    .onSnapshot(s => { leaders = s.docs.map(d => ({ id: d.id, ...d.data() })); renderPodium(); if (ui.view === 'leaders') { ui.sig = ''; render(); } }, () => {});
+    .onSnapshot(s => { leaders = s.docs.map(d => ({ id: d.id, ...d.data() })); if (ui.view === 'leaders') { ui.sig = ''; render(); } }, () => {});
 }
 
 /* ---------- Player profile ---------- */
@@ -1369,8 +1394,6 @@ async function pollLive() {
 
 function startData() {
   db.doc('users/' + me.id).onSnapshot(s => { profile = s.exists ? s.data() : null; loaded.profile = true; ui.sig = ''; render(); }, fail);
-  db.collection('days').where(firebase.firestore.FieldPath.documentId(), '>=', etDay(-3)).limit(6)
-    .onSnapshot(s => { rawDays = new Map(s.docs.map(x => [x.id, x.data()])); applyLive(); loaded.days = true; render(); }, fail);
   db.collection('entries').where('uid', '==', me.id)
     .onSnapshot(s => { entries = new Map(s.docs.map(x => [x.data().date, x.data()])); render(); }, () => {});
 }
@@ -1395,7 +1418,8 @@ async function boot() {
   firebase.initializeApp(cfg);
   auth = firebase.auth();
   db = firebase.firestore();
-  watchLeaders();
+  db.collection('days').where(firebase.firestore.FieldPath.documentId(), '>=', etDay(-3)).limit(6)
+    .onSnapshot(s => { rawDays = new Map(s.docs.map(x => [x.id, x.data()])); applyLive(); loaded.days = true; render(); }, fail);
   if (auth.isSignInWithEmailLink(location.href)) {
     let email = null;
     try { email = localStorage.getItem(EMAIL_KEY); } catch (e) {}

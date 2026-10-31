@@ -48,6 +48,19 @@ export async function groupNight(db, day) {
   return { groups, entrants: humans.length };
 }
 
+// The night's three best real squads across every group, for the page's podium. Computer lineups never count.
+export async function bestSquads(db, day) {
+  const squads = [];
+  for (const { data: g } of await db.list(`days/${day.date}/groups`)) {
+    for (const m of g.members) {
+      if (m.bot) continue;
+      squads.push({ uid: m.uid, name: m.name, tier: g.tier, ids: m.ids, captain: m.captain ?? null, at: m.at ?? null, ...scoreLineup(m.ids, m.captain, day.results || {}) });
+    }
+  }
+  return squads.sort((a, b) => b.total - a.total || b.best - a.best || (a.at ?? Infinity) - (b.at ?? Infinity)).slice(0, 3)
+    .map(({ uid, name, tier, ids, captain, total }) => ({ uid, name, tier, ids, captain, total }));
+}
+
 export async function scoreNight(db, day) {
   const date = day.date;
   const groups = await db.list(`days/${date}/groups`);

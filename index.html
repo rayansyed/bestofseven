@@ -288,6 +288,14 @@ main { display: grid; gap: 16px; min-width: 0; }
 .gboard-row:nth-child(1) .gpos { background: var(--tag); color: var(--tag-ink); }
 .gname { font-weight: 700; font-size: 15px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gdetail { padding: 0 0 8px 34px; }
+.gprog { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
+.pstate { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 5px; white-space: nowrap; background: var(--chip); color: var(--muted); }
+.pstate.live { background: rgba(74,222,128,.14); color: var(--good); }
+.pstate.live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: pulse 1.4s ease-in-out infinite; }
+.pstate.final::before { content: "✓"; }
+.pstate.off { background: rgba(248,113,113,.14); color: var(--bad); }
+@keyframes pulse { 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .pstate.live::before { animation: none; } }
 .runner.sub { padding: 10px 22px; border-top: 1px solid var(--line); }
 .sc.big { min-width: 120px; height: 56px; font-size: 22px; }
 .lb { width: 100%; border-collapse: collapse; }
@@ -612,12 +620,31 @@ function groupRows(day) {
   return rows;
 }
 
+// Where a player's night stands, from his game's status: live, final, did not play, game off or upcoming.
+function playerState(r, day) {
+  const g = day.games.find(x => x.away === r.p.team || x.home === r.p.team);
+  if (!g) return { kind: 'final', text: 'No game' };
+  if (g.status === 'STATUS_SCHEDULED') return { kind: 'soon', text: `Starts ${timeLabel(g.tip)}` };
+  if (LIVE_DONE.has(g.status)) {
+    if (g.status !== 'STATUS_FINAL') return { kind: 'off', text: 'Game off' };
+    return r.line ? { kind: 'final', text: 'Final' } : { kind: 'off', text: 'Did not play' };
+  }
+  return { kind: 'live', text: r.line ? `Live · ${g.detail}` : `Live · hasn’t played yet` };
+}
+
+function lineupProgress(rows, day) {
+  const n = { live: 0, final: 0, soon: 0, off: 0 };
+  rows.forEach(r => n[playerState(r, day).kind]++);
+  if (n.live + n.soon === 0) return 'All players finished';
+  return [n.live && `${n.live} live`,n.final + n.off && `${n.final + n.off} finished`, n.soon && `${n.soon} to come`].filter(Boolean).join(' · ');
+}
+
 function lineupDetail(mb, day) {
   return mb.rows.map(r => {
-    const l = r.line;
-    const stat = l ? `${l[1]} PTS · ${l[2]} REB · ${l[3]} AST · ${l[4]} STL · ${l[5]} BLK · ${l[6]} TO · ${l[0]} MIN` : day.final ? 'Did not play' : 'Not started';
+    const l = r.line, st = playerState(r, day);
+    const stat = l ? `<span class="sep">|</span>${l[1]} PTS · ${l[2]} REB · ${l[3]} AST · ${l[4]} STL · ${l[5]} BLK · ${l[6]} TO · ${l[0]} MIN` : '';
     return `<div class="runner sub">${jersey(r.p.team)}
-      <div><div class="r-name"><span class="ptag">${r.slot}</span>${esc(r.p.name)}${r.cap ? '<span class="ctag">★ Captain</span>' : ''}</div><div class="r-sub">${esc(r.p.team)}<span class="sep">|</span>${stat}</div></div>
+      <div><div class="r-name"><span class="ptag">${r.slot}</span>${esc(r.p.name)}${r.cap ? '<span class="ctag">★ Captain</span>' : ''}<span class="pstate ${st.kind}">${esc(st.text)}</span></div><div class="r-sub">${esc(r.p.team)} ${esc(r.p.opp)}${stat}</div></div>
       <div class="r-act"><span class="sc ${l ? '' : 'zero'} ${r.cap ? 'capsc' : ''}">${l ? f1(r.fp) : '—'}</span><span class="r-trail">${r.cap && l ? `${f1(r.base)} × 1.5` : starsHtml(r.p.stars)}</span></div></div>`;
   }).join('');
 }
@@ -635,7 +662,7 @@ function groupView(day) {
     return `<div class="gboard-row ${r.uid === me.id ? 'me' : ''}">
       <button class="grow" data-action="toggle-row" data-k="${esc(r.key)}" aria-expanded="${isOpen}">
         <span class="gpos">${i + 1}</span>
-        <span class="gname">${esc(r.name)}${r.bot ? '<span class="bot">Computer</span>' : ''}${r.uid === me.id ? '<span class="you">You</span>' : ''}</span>
+        <span class="gname">${esc(r.name)}${r.bot ? '<span class="bot">Computer</span>' : ''}${r.uid === me.id ? '<span class="you">You</span>' : ''}<small class="gprog">${lineupProgress(r.rows, day)}</small></span>
         ${delta}
         <span class="sc">${f1(r.total)}</span>
       </button>

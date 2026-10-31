@@ -494,8 +494,8 @@ const BADGES = [
   { id: 'score300', icon: '🎯', name: 'Big Night', how: 'Score 300+ in a night', on: u => (u.bestScore || 0) >= 300 },
   { id: 'streak7', icon: '🔥', name: 'Hot Streak', how: 'Reach a 7-night streak', on: u => (u.bestStreak || 0) >= 7 },
   { id: 'streak14', icon: '⚡', name: 'On Fire', how: 'Reach a 14-night streak', on: u => (u.bestStreak || 0) >= 14 },
-  { id: 'streak30', icon: '💎', name: 'Iron Player', how: 'Reach a 30-night streak', on: u => !!u.badge || (u.bestStreak || 0) >= 30 },
-  ...TIERS.slice(1).map((t, i) => ({ id: 'tier' + (i + 1), icon: ['🥈', '🥉', '💠', '🔷', '👑'][i], name: t, how: `Reach ${t}`, on: u => bestTierOf(u) >= i + 1 })),
+  { id: 'streak30', icon: '🛡️', name: 'Iron Player', how: 'Reach a 30-night streak', on: u => !!u.badge || (u.bestStreak || 0) >= 30 },
+  ...TIERS.slice(1).map((t, i) => ({ id: 'tier' + (i + 1), icon: ['🥈', '🌟', '💠', '💎', '👑'][i], name: t, how: `Reach ${t}`, on: u => bestTierOf(u) >= i + 1 })),
 ];
 const earnedBadges = u => BADGES.filter(b => b.on(u || {}));
 // The badge a player chose to show by their name (only if earned), else the 30-night flame.

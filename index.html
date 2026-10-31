@@ -893,7 +893,7 @@ function render() {
   if (!loaded.days) return;
   if (!ui.sel || !days.has(ui.sel)) {
     const sorted = [...days.keys()].sort();
-    ui.sel = nextOpenDate() || sorted.filter(d => entries.has(d)).pop() || sorted.pop() || null;
+    ui.sel = (days.has(etDay()) ? etDay() : nextOpenDate()) || sorted.filter(d => entries.has(d)).pop() || sorted.pop() || null;
   }
   watchGroup();
   if (ui.view === 'night' && liveSel !== ui.sel) { liveSel = ui.sel; pollLive(); }

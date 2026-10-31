@@ -396,6 +396,35 @@ button.pod:hover .pod-step { filter: brightness(1.08); }
 .sq-rows { margin: 14px -24px 0; border-bottom: 1px solid var(--line); }
 @media (max-width: 520px) { .sq-rows { margin-left: -18px; margin-right: -18px; } }
 .pool-tools .tabs { padding: 4px 22px 14px; border-bottom: 0; }
+.dock, .sheet-bg, .sheet-x { display: none; }
+.sx { display: none; position: sticky; right: 0; flex: 0 0 0; width: 0; align-self: stretch; }
+.more-r > .sx { display: block; }
+.sx::after { content: "›"; position: absolute; top: 0; bottom: 0; right: 0; width: 46px; display: grid; place-items: center end; padding-right: 6px; font-style: normal; font-size: 24px; font-weight: 800; color: var(--ink); background: linear-gradient(to right, transparent, var(--panel) 72%); pointer-events: none; }
+#side > .sx::after { background: linear-gradient(to right, transparent, var(--bg) 72%); }
+.tablewrap.more-r { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 44px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 44px), transparent); }
+@media (max-width: 860px) {
+  .dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 15; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; width: 100%; border: 0; border-top: 1px solid var(--chip-2); background: var(--panel-2); color: var(--ink); text-align: left;
+    padding: 10px max(14px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px)); }
+  .dk-slots { display: flex; gap: 5px; min-width: 0; }
+  .dk-slot { width: 32px; height: 32px; flex: 0 1 32px; min-width: 0; border-radius: 50%; display: grid; place-items: center; }
+  .dk-slot .face { width: 100%; height: 100%; aspect-ratio: 1; }
+  .dk-slot .face .jersey { width: 70%; height: 70%; margin: 15%; }
+  .dk-slot.free { border: 1.5px dashed var(--chip-2); color: var(--muted); font-size: 11px; font-weight: 700; }
+  .dk-slot.cap { box-shadow: 0 0 0 2px var(--tag); }
+  .dk-info { display: grid; justify-items: end; line-height: 1.2; white-space: nowrap; }
+  .dk-info b { font-size: 13px; font-weight: 800; }
+  .dk-info b.ok { color: var(--good); }
+  .dk-info small { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .dk-up { font-size: 18px; color: var(--muted); line-height: 1; }
+  #lineup { display: none; }
+  body.has-dock .app { padding-bottom: 84px; }
+  body.has-dock #toast { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+  body.sheet-open { overflow: hidden; }
+  body.sheet-open .sheet-bg { display: block; position: fixed; inset: 0; z-index: 16; background: rgba(5,6,8,.65); }
+  body.sheet-open #lineup { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 17; max-height: 85vh; max-height: 85dvh; overflow-y: auto; border-radius: 16px 16px 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
+  body.sheet-open .dk-up { transform: rotate(180deg); }
+  .sheet-x { display: grid; place-items: center; margin-left: auto; width: 30px; height: 30px; border: 0; border-radius: 50%; background: var(--chip); }
+}
 .gdetail { padding: 0 0 8px 34px; }
 .gprog { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
 .pstate { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 5px; white-space: nowrap; background: var(--chip); color: var(--muted); }
@@ -670,6 +699,9 @@ function bestNight() {
   return [...days.values()].sort((a, b) => a.date < b.date ? 1 : -1).find(d => d.top3?.length) || null;
 }
 
+document.addEventListener('scroll', e => { if (e.target.matches?.('.races, #side, .tablewrap')) updateScrollCues(); }, true);
+window.addEventListener('resize', updateScrollCues);
+
 function openSquad(i) {
   const night = bestNight(), s = night?.top3?.[i];
   if (!s) return;
@@ -760,7 +792,7 @@ function renderSide() {
     pos = `<div class="pos-group"><div class="side-label">Positions</div>${[['ALL', 'All players'], ['G', 'Guards'], ['F', 'Forwards'], ['C', 'Centers']].map(([v, l]) => `<button class="nav-item" data-action="pos" data-v="${v}" aria-pressed="${ui.pos === v}"><span class="gnum">${v === 'ALL' ? '★' : v}</span><span>${l}</span><span class="badge tag">${n(v)}</span></button>`).join('')}</div>`;
   }
   $('#side').innerHTML = `${rankCard()}<div class="side-label">Nights</div>${list}${pos}
-    <div class="side-label">Scoring</div><div class="side-note">Point 1 · Rebound 1.2<br>Assist 1.5 · Steal 3<br>Block 3 · Turnover −1<br>Captain ×1.5 · costs +1★<br>Budget ${CAP}★ · one 5★ max</div>`;
+    <div class="side-label">Scoring</div><div class="side-note">Point 1 · Rebound 1.2<br>Assist 1.5 · Steal 3<br>Block 3 · Turnover −1<br>Captain ×1.5 · costs +1★<br>Budget ${CAP}★ · one 5★ max</div><i class="sx" aria-hidden="true"></i>`;
 }
 
 /* ---------- Sign-in and profile ---------- */
@@ -796,7 +828,7 @@ function slateCard(day) {
     const started = x.status !== 'STATUS_SCHEDULED', done = LIVE_DONE.has(x.status);
     return `<div class="race ${done ? 'done' : started ? 'in' : ''}"><b>${started ? `${x.awayScore}–${x.homeScore}` : timeLabel(x.tip)}</b><span>${esc(x.away)} @ ${esc(x.home)}</span>${started ? `<small>${esc(x.detail)}</small>` : ''}</div>`;
   }).join('');
-  return `<div class="lockline"><span class="lock ${locked(day) ? 'locked' : ''}">${lockTxt}</span></div><div class="races" data-day="${day.date}">${races}</div>`;
+  return `<div class="lockline"><span class="lock ${locked(day) ? 'locked' : ''}">${lockTxt}</span></div><div class="races" data-day="${day.date}">${races}<i class="sx" aria-hidden="true"></i></div>`;
 }
 
 // Redraws keep the schedule where the player scrolled it, on the same night.
@@ -847,6 +879,24 @@ function renderPool() {
   $('#poolmore').innerHTML = rows.length > shown.length ? `<div class="more"><button class="btn" data-action="more">Show ${Math.min(80, rows.length - shown.length)} more of ${rows.length - shown.length}</button></div>` : '';
 }
 
+// The phone's always-visible lineup bar: who's in, and the stars spent.
+function renderDock(lu, s, open, day) {
+  const dock = $('#dock');
+  if (!dock) return;
+  const m = pmap(day);
+  dock.innerHTML = `<span class="dk-slots">${SLOTS.map((slot, i) => {
+    const p = lu[i] && m.get(lu[i]);
+    return p ? `<span class="dk-slot ${p.id === ui.draftCap ? 'cap' : ''}">${face(p)}</span>` : `<span class="dk-slot free">${slot === 'UTIL' ? 'U' : slot}</span>`;
+  }).join('')}</span>
+    <span class="dk-info"><b class="${!open && entries.has(ui.sel) ? 'ok' : ''}">${open ? `${6 - open} of 6` : entries.has(ui.sel) ? '✓ Entered' : 'Saving…'}</b><small>${s} of ${budget()}★</small></span>
+    <span class="dk-up" aria-hidden="true">⌃</span>`;
+}
+
+function setSheet(open) {
+  document.body.classList.toggle('sheet-open', open);
+  $('#dock')?.setAttribute('aria-expanded', open);
+}
+
 function renderLineup() {
   const day = days.get(ui.sel), lu = ui.draft, m = pmap(day);
   const s = cost(lu, ui.draftCap, day), left = budget() - s, open = lu.filter(x => !x).length;
@@ -868,8 +918,9 @@ function renderLineup() {
     : ui.save === 'pending' ? '<button class="cta" disabled>Saving…</button>'
     : ui.save === 'err' ? '<button class="cta err" disabled>Couldn’t save. Make any change to retry.</button>'
     : entered ? `<button class="cta ok" disabled>✓ Entered · edit until ${timeLabel(day.lockAt)}</button>` : '<button class="cta" disabled>Saving…</button>';
+  renderDock(lu, s, open, day);
   $('#lineup').innerHTML = `
-    <div class="slip-head"><span class="count">${6 - open}</span><h3>Lineup</h3></div>
+    <div class="slip-head"><span class="count">${6 - open}</span><h3>Lineup</h3><button class="sheet-x" data-action="sheet-close" aria-label="Close lineup">✕</button></div>
     <div class="seg"><span class="on">${esc(profile.name)}</span><span>${TIERS[tierOf(profile.rp)]} group</span></div>
     <ul class="legs">${legs}</ul>
     <div class="slip-foot">
@@ -1067,7 +1118,21 @@ function nextOpenDate() {
   return [...days.values()].sort((a, b) => a.date < b.date ? -1 : 1).find(d => !locked(d))?.date || null;
 }
 
+// Scroll cues: a row that has more to swipe to shows a fade and chevron at its edge.
+function updateScrollCues() {
+  document.querySelectorAll('.races, #side, .tablewrap').forEach(el => el.classList.toggle('more-r', el.scrollWidth - el.clientWidth - el.scrollLeft > 4));
+}
+let afterRenderQueued = false;
+function afterRender() {
+  afterRenderQueued = false;
+  const docked = !!$('#dock');
+  document.body.classList.toggle('has-dock', docked);
+  if (!docked) document.body.classList.remove('sheet-open');
+  updateScrollCues();
+}
+
 function render() {
+  if (!afterRenderQueued) { afterRenderQueued = true; setTimeout(afterRender, 0); }
   if (!loaded.auth) return;
   renderTop();
   renderPodium();
@@ -1103,7 +1168,7 @@ function render() {
     if (ui.draftFor !== ui.sel) { ui.draft = (e?.ids || SLOTS.map(() => null)).slice(); ui.draftCap = e?.captain ?? null; ui.draftFor = ui.sel; ui.save = ''; }
     if (sig === ui.sig && $('#poolrows')) { renderPool(); renderLineup(); const el = $('#slate'); if (el) keepRacesScroll(() => { el.innerHTML = slateCard(day); }); const st = $('#streak'); if (st) st.innerHTML = streakBanner(); return; }
     ui.sig = sig;
-    $('#slip').innerHTML = '<div class="slip-card" id="lineup"></div>';
+    $('#slip').innerHTML = '<button class="dock" id="dock" data-action="sheet" aria-expanded="false" aria-label="Show your lineup"></button><div class="sheet-bg" data-action="sheet-close"></div><div class="slip-card" id="lineup"></div>';
     m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day)}<section class="panel"><div class="list-head"><div><h2>${dayLabel(ui.sel)} player pool</h2><p class="sub">Tap a rating to add a player. Fit six within ${budget()}★, with one 5★ at most. The captain costs +1★.</p></div></div><div class="pool-tools">${poolTools()}</div><div id="poolrows"></div><div id="poolmore"></div></section>${legend}`;
     renderPool(); renderLineup();
     return;
@@ -1178,6 +1243,8 @@ document.addEventListener('click', e => {
   const a = b.dataset.action;
   if (a === 'sel') { ui.view = 'night'; ui.sel = b.dataset.d; ui.limit = 80; ui.open = null; ui.sig = ''; render(); window.scrollTo({ top: 0 }); }
   else if (a === 'view') { ui.view = b.dataset.v; if (ui.view === 'leaders') watchLeaders(); ui.sig = ''; render(); window.scrollTo({ top: 0 }); }
+  else if (a === 'sheet') setSheet(!document.body.classList.contains('sheet-open'));
+  else if (a === 'sheet-close') setSheet(false);
   else if (a === 'squad') openSquad(+b.dataset.i);
   else if (a === 'player') openPlayer(b.dataset.id);
   else if (a === 'avatar-pick') $('#avatar-file').click();
@@ -1329,6 +1396,7 @@ function gamesTable(games) {
 }
 
 function renderPlayer(id, p, data, failed) {
+  setTimeout(updateScrollCues, 0);
   const a = data?.[0]?.athlete, name = a?.displayName || p?.name || 'Player';
   const day = days.get(ui.sel);
   const canEdit = ui.view === 'night' && ui.draft && day && !locked(day) && p;

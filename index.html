@@ -51,11 +51,8 @@ p { max-width: 65ch; }
 .brand { font-weight: 800; font-size: 21px; letter-spacing: -.02em; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .brand .seven { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 7px; background: var(--accent); color: #fff; transform: skewX(-10deg); }
 .topnav { display: flex; gap: 6px; flex-wrap: wrap; }
-.navlink { border: 0; background: transparent; padding: 7px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 8px; color: var(--ink); }
-.navlink:hover:not(:disabled) { background: var(--panel-2); }
-.navlink:disabled { color: var(--dim); cursor: default; }
-.navlink i { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid currentColor; display: inline-grid; place-items: center; font-style: normal; font-size: 8px; }
-.navlink.live i { border-color: var(--live); background: var(--live); }
+.navlink { border: 0; border-bottom: 2px solid transparent; background: transparent; padding: 8px 12px; font-weight: 700; font-size: 14px; color: var(--muted); white-space: nowrap; }
+.navlink:hover { color: var(--ink); }
 .top-right { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .tchip { background: var(--panel-2); border-radius: 10px; padding: 8px 12px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
 .tdot { width: 9px; height: 9px; border-radius: 50%; background: var(--a); }
@@ -113,7 +110,6 @@ main { display: grid; gap: 16px; min-width: 0; }
 .lock { display: inline-flex; gap: 8px; align-items: center; background: var(--chip); padding: 9px 14px; border-radius: 10px; font-weight: 700; font-size: 13px; }
 .lock::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--good); }
 .lock.locked::before { background: var(--live); }
-.teal { display: inline-flex; gap: 6px; align-items: center; background: var(--teal-soft); color: var(--teal); padding: 8px 12px; border-radius: 10px; font-weight: 700; font-size: 12.5px; }
 
 .list-head { padding: 20px 22px 8px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
 .list-head .sub { color: var(--muted); font-size: 13.5px; margin-top: 6px; }
@@ -262,7 +258,7 @@ main { display: grid; gap: 16px; min-width: 0; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 /* Ranked mode */
 :root { --t0: #C8875A; --t1: #B9C3CE; --t2: #E8B931; --t3: #5CCFD0; --t4: #8FB8FF; --t5: #E3EF5B; }
-.navlink.on { background: var(--panel-2); }
+.navlink.on { color: var(--ink); border-bottom-color: var(--accent); }
 .tier { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; border: 1px solid currentColor; white-space: nowrap; }
 .tier::before { content: ""; width: 7px; height: 7px; transform: rotate(45deg); background: currentColor; }
 .tier.t0 { color: var(--t0); } .tier.t1 { color: var(--t1); } .tier.t2 { color: var(--t2); } .tier.t3 { color: var(--t3); } .tier.t4 { color: var(--t4); } .tier.t5 { color: var(--t5); }
@@ -547,10 +543,10 @@ function until(iso) {
 function renderTop() {
   const rp = profile?.rp || 0, tier = tierOf(rp);
   const open = [...days.values()].sort((a, b) => a.date < b.date ? -1 : 1).find(d => !locked(d));
-  const nav = (view, label, extra = '') => `<button class="navlink ${ui.view === view ? 'on' : ''}" data-action="view" data-v="${view}" ${extra}><i></i>${label}</button>`;
+  const nav = (view, label, extra = '') => `<button class="navlink ${ui.view === view ? 'on' : ''}" data-action="view" data-v="${view}" ${ui.view === view ? 'aria-current="page"' : ''} ${extra}>${label}</button>`;
   $('#topbar').innerHTML = `
     <div class="brand">BEST OF <span class="seven">7</span></div>
-    ${me.id && profile?.name ? `<nav class="topnav" aria-label="Sections">${open ? `<button class="navlink ${ui.view === 'night' && ui.sel === open.date ? 'on' : ''}" data-action="sel" data-d="${open.date}"><i></i>Enter ${dayLabel(open.date).split(',')[0]}</button>` : ''}${nav('leaders', 'Leaderboard')}${nav('history', 'My nights')}</nav>` : ''}
+    ${me.id && profile?.name ? `<nav class="topnav" aria-label="Sections">${open ? `<button class="navlink ${ui.view === 'night' && ui.sel === open.date ? 'on' : ''}" data-action="sel" data-d="${open.date}" ${ui.view === 'night' && ui.sel === open.date ? 'aria-current="page"' : ''}>Enter ${dayLabel(open.date).split(',')[0]}</button>` : ''}${nav('leaders', 'Leaderboard')}${nav('history', 'My nights')}</nav>` : ''}
     <div class="top-right">
       <span class="tchip">NBA · 2026–27</span>
       ${profile?.name ? `<span class="tchip">${tierBadge(tier)}<span>${esc(profile.name)} · ${fmt(rp)} RP</span></span>` : ''}
@@ -670,7 +666,7 @@ function slateCard(day) {
     const started = x.status !== 'STATUS_SCHEDULED', done = LIVE_DONE.has(x.status);
     return `<div class="race ${done ? 'done' : started ? 'in' : ''}"><b>${started ? `${x.awayScore}–${x.homeScore}` : timeLabel(x.tip)}</b><span>${esc(x.away)} @ ${esc(x.home)}</span>${started ? `<small>${esc(x.detail)}</small>` : ''}</div>`;
   }).join('');
-  return `<div class="lockline"><span class="lock ${locked(day) ? 'locked' : ''}">${lockTxt}</span><span class="teal">⇆ Budget ${budget()}★ · one 5★ max · captain +1★</span></div><div class="races" data-day="${day.date}">${races}</div>`;
+  return `<div class="lockline"><span class="lock ${locked(day) ? 'locked' : ''}">${lockTxt}</span></div><div class="races" data-day="${day.date}">${races}</div>`;
 }
 
 // Redraws keep the schedule where the player scrolled it, on the same night.

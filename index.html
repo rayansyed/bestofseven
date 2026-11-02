@@ -7,7 +7,7 @@
 <meta name="description" content="An NBA card battler: collect player cards, set a six-card lineup any game night and win nine stat categories against one opponent to climb from Bronze to Elite.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Oswald:wght@500;700&display=swap">
 <style>
 :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 body { margin: 0; }
@@ -461,19 +461,40 @@ button.pod:hover .pod-step { filter: brightness(1.08); }
 .combos { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 18px 0; }
 .dimtxt { color: var(--dim); font-size: 12px; }
 
-.tc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; padding: 8px 22px 22px; }
-.tc { --rc: var(--r-common); position: relative; display: grid; justify-items: center; gap: 6px; text-align: center; padding: 12px 12px 10px; border-radius: 14px; cursor: pointer;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--rc) 18%, var(--panel-2)), var(--panel-2) 55%); border: 1.5px solid color-mix(in srgb, var(--rc) 55%, transparent); }
-.tc:hover { border-color: var(--rc); }
-.tc.r-rare { --rc: var(--r-rare); } .tc.r-epic { --rc: var(--r-epic); } .tc.r-legendary { --rc: var(--r-legendary); box-shadow: 0 0 18px rgba(245,184,61,.18); }
-.tc-top { width: 100%; display: flex; justify-content: space-between; align-items: center; }
-.tc-face .face { width: 72px; height: 72px; }
-.tc-face .face .jersey { width: 46px; height: 46px; margin: 13px; }
-.tc-name { font-size: 14px; line-height: 1.2; }
-.tc-sub { font-size: 12px; color: var(--muted); }
-.tc-types { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; min-height: 20px; }
-.tc-foot { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 6px; border-top: 1px solid var(--line); padding-top: 8px; margin-top: 2px; }
-.tc-rar { font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--rc); }
+.tc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 16px; padding: 14px 22px 24px; }
+/* A trading card in a clear sleeve. The frame colour is the rarity: white Common, silver Rare, holo Epic, gold Legendary. */
+.tc { position: relative; aspect-ratio: 5 / 7; padding: 6px; border-radius: 11px; cursor: pointer; transition: transform .2s;
+  background: linear-gradient(155deg, rgba(255,255,255,.26), rgba(255,255,255,.07) 45%, rgba(255,255,255,.16));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.3), 0 10px 22px rgba(0,0,0,.4); }
+.tc:hover { transform: translateY(-3px) rotate(-.6deg); }
+.tc-card { --frame: #F3F1EA; --frame-ink: #1A1D22; position: relative; height: 100%; border-radius: 5px; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto auto; padding: 6px 6px 0; background: var(--frame); color: var(--frame-ink); }
+.r-rare .tc-card { --frame: linear-gradient(135deg, #E9ECF0, #9AA3AE 30%, #F7F8FA 52%, #87909C 75%, #DCE0E5); }
+.r-epic .tc-card { --frame: linear-gradient(135deg, #F2C6FF, #A98BFF 25%, #8FE3FF 50%, #FFD48A 75%, #F29BD8); }
+.r-legendary .tc-card { --frame: linear-gradient(135deg, #FFF1B8, #D9A227 28%, #FFE58A 50%, #B8801A 74%, #F7D46B); }
+.tc-art { position: relative; overflow: hidden; border-radius: 3px; isolation: isolate;
+  background: repeating-linear-gradient(135deg, rgba(255,255,255,.06) 0 2px, transparent 2px 9px),
+    radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--team) 75%, #fff), var(--team) 48%, color-mix(in srgb, var(--team) 45%, #000)); }
+.tc-mark { position: absolute; left: 0; right: 0; top: 16%; text-align: center; font: 700 64px/1 "Oswald", var(--sans); letter-spacing: -.02em; color: rgba(255,255,255,.16); z-index: -1; }
+.tc-art img { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); height: 82%; width: auto; max-width: none; filter: drop-shadow(0 6px 10px rgba(0,0,0,.35)); }
+.tc-jersey .jersey { position: absolute; left: 50%; bottom: 12%; transform: translateX(-50%); width: 60%; height: auto; }
+.tc-pos { position: absolute; top: 6px; left: 6px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #fff; color: #111; font: 700 12px/1 "Oswald", var(--sans); box-shadow: 0 0 0 2px var(--team); }
+.tc-stars { position: absolute; top: 7px; right: 6px; font-size: 11px; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+.tc-stars .stars { color: #fff; } .tc-stars .stars i { color: rgba(255,255,255,.3); }
+.tc-icons { position: absolute; left: 6px; top: 38px; display: grid; gap: 4px; font-size: 13px; }
+.tc-icons span { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: rgba(0,0,0,.45); }
+.tc-plate { margin: 5px -6px 0; padding: 5px 10px 6px; background: #121418; color: #fff; display: grid; line-height: 1.05; text-align: left; }
+.tc-first { font: 500 10px/1.2 "Oswald", var(--sans); letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.7); min-height: 12px; }
+.tc-last { font: 700 17px/1.05 "Oswald", var(--sans); letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tc-foot { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 5px 2px 6px; font-size: 9.5px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; }
+.tc-foot span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.tc-rar { flex: none; font: 700 9.5px/1 "Oswald", var(--sans); letter-spacing: .12em; }
+/* Foil: holo cards catch the light; gold cards shimmer. */
+.r-epic .tc-art::after, .r-legendary .tc-card::after { content: ""; position: absolute; inset: 0; pointer-events: none; }
+.r-epic .tc-art::after { background: linear-gradient(125deg, rgba(255,0,170,.18), rgba(0,220,255,.18), rgba(255,230,0,.18), rgba(140,0,255,.18)); mix-blend-mode: color-dodge; }
+.r-legendary .tc-card::after { background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.45) 50%, transparent 62%); background-size: 260% 100%; animation: tc-shine 3.6s ease-in-out infinite; mix-blend-mode: overlay; }
+.r-legendary { box-shadow: inset 0 0 0 1px rgba(255,255,255,.3), 0 10px 26px rgba(245,184,61,.28); }
+@keyframes tc-shine { from { background-position: 130% 0; } to { background-position: -130% 0; } }
+.tc-tonight { position: absolute; top: -7px; right: 12px; font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 3px 7px; border-radius: 6px; background: var(--good); color: #062411; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
 .tc.fresh { animation: tc-in .5s cubic-bezier(.2,.8,.3,1.2) both; animation-delay: calc(var(--i) * 120ms); }
 @keyframes tc-in { from { opacity: 0; transform: translateY(18px) rotateY(80deg) scale(.9); } to { opacity: 1; transform: none; } }
 .pack-start { padding: 28px 22px; display: grid; justify-items: center; gap: 16px; text-align: center; }
@@ -487,7 +508,7 @@ button.pod:hover .pod-step { filter: brightness(1.08); }
 .pack-label { font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; opacity: .85; }
 .pack-n { font-size: 40px; font-weight: 800; }
 .pack-cta { font-size: 12px; font-weight: 700; background: rgba(255,255,255,.16); padding: 6px 12px; border-radius: 999px; }
-.pack-reveal .tc-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); padding-top: 22px; }
+.pack-reveal .tc-grid { grid-template-columns: repeat(auto-fit, minmax(165px, 200px)); justify-content: center; padding-top: 22px; }
 .pack-row { justify-content: center; padding: 0 22px 24px; }
 .arch-legend { padding-bottom: 18px; }
 .arch-list { list-style: none; margin: 0; padding: 4px 22px 8px; display: grid; gap: 8px; }
@@ -543,7 +564,7 @@ button.pod:hover .pod-step { filter: brightness(1.08); }
   .tc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 8px 16px 16px; gap: 10px; }
   .arch-list, .arch-h { padding-left: 16px; padding-right: 16px; }
 }
-@media (prefers-reduced-motion: reduce) { .tc.fresh, .pack.busy { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .tc.fresh, .pack.busy, .r-legendary .tc-card::after { animation: none; } }
 </style>
 </head>
 <body>
@@ -861,14 +882,22 @@ const typeChips = types => (types || []).map(typeChip).join('');
 const rarityTag = r => r && r !== 'common' ? `<span class="rar r-${r}">${RARITY[r].name}</span>` : '';
 // A collectible card: rarity frame, headshot, rating and archetype.
 function cardHtml(c, { fresh = false, i = 0, tonight = false } = {}) {
-  const p = { ...c, ...roster.get(c.pid), id: c.pid };
-  return `<div class="tc r-${c.rarity || 'common'} ${fresh ? 'fresh' : ''}" style="--i:${i}" data-pid="${esc(c.pid)}">
-    <div class="tc-top"><span class="ptag">${esc(p.pos)}</span>${p.stars ? starsHtml(p.stars) : ''}</div>
-    <div class="tc-face">${face(p)}</div>
-    <b class="tc-name">${esc(p.name)}</b>
-    <span class="tc-sub">${esc(p.team)}${p.gp ? ` · ${f1(p.avg)} FPPG` : ''}</span>
-    <div class="tc-types">${typeChips(p.types)}</div>
-    <div class="tc-foot"><span class="tc-rar">${RARITY[c.rarity || 'common'].name}</span>${tonight ? '<span class="badge won">Plays tonight</span>' : ''}</div>
+  const p = { ...c, ...roster.get(c.pid), id: c.pid }, rarity = c.rarity || 'common';
+  const [first, ...rest] = String(p.name || '').split(' ');
+  const types = (p.types || []).filter(t => TYPES[t]);
+  return `<div class="tc r-${rarity} ${fresh ? 'fresh' : ''}" style="--i:${i};--team:${TEAM_COLORS[p.team] || '#5B6573'}" data-pid="${esc(c.pid)}" title="${esc(p.name)}">
+    <div class="tc-card">
+      <div class="tc-art">
+        <span class="tc-mark" aria-hidden="true">${esc(p.team)}</span>
+        <img src="https://a.espncdn.com/i/headshots/nba/players/full/${encodeURIComponent(c.pid)}.png" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="tc-jersey" hidden>${jersey(p.team)}</span>
+        <span class="tc-pos">${esc(p.pos)}</span>
+        ${p.stars ? `<span class="tc-stars">${starsHtml(p.stars)}</span>` : ''}
+        <span class="tc-icons">${types.map(t => `<span title="${esc(TYPES[t].name)}: ${esc(TYPES[t].what)}">${TYPES[t].icon}</span>`).join('')}</span>
+      </div>
+      <div class="tc-plate"><span class="tc-first">${esc(rest.length ? first : '')}</span><b class="tc-last">${esc(rest.length ? rest.join(' ') : first)}</b></div>
+      <div class="tc-foot"><span>${esc(p.team)} · ${esc(POS_NAME[p.pos] || p.pos)}${types.length ? ' · ' + types.map(t => esc(TYPES[t].name)).join(' / ') : ''}</span><span class="tc-rar">${RARITY[rarity].name}</span></div>
+    </div>
+    ${tonight ? '<span class="tc-tonight">Tonight</span>' : ''}
   </div>`;
 }
 

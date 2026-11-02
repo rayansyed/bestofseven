@@ -1,7 +1,7 @@
 // Ranked 1v1 nights. At lock, valid entries are paired with one opponent at a similar rank (a computer
 // lineup takes the odd seat). Once every game is final, each battle is decided on nine categories and
 // rank points are applied. Nights grouped before battles existed are scored by ranked-groups.mjs.
-import { CAP, BONUS_STAR, RP_WIN, RP_LOSS, SKIP_PENALTY, TIERS, tierOf, invalidReason, lineupCost, rewardFor, momentBadges, buildLineup, seeded, botName, botNoise } from './game.mjs';
+import { RP_WIN, RP_LOSS, SKIP_PENALTY, TIERS, tierOf, invalidReason, rewardFor, momentBadges, buildLineup, seeded, botName, botNoise } from './game.mjs';
 import { battle } from './battle.mjs';
 
 const RANK = { common: 0, rare: 1, epic: 2, legendary: 3 };
@@ -23,15 +23,9 @@ export async function pairNight(db, day) {
   for (const { id, data: e } of await db.query('entries', 'date', date)) {
     const user = (await db.read('users/' + e.uid)) || {};
     const owned = await collection(db, e.uid);
-    // A Bonus Star lifts the budget by one, and is spent only if the lineup needs it.
-    const hasBonus = (user.bonusStars || 0) > 0;
-    const bad = invalidReason({ ids: e.ids, captain: null }, pmap, CAP + (hasBonus ? BONUS_STAR : 0))
+    const bad = invalidReason({ ids: e.ids, captain: null }, pmap)
       || (e.ids.some(pid => pid && !owned.has(pid)) ? 'player not in your collection' : null);
     if (bad) { writes.push({ path: 'entries/' + id, data: { invalid: bad }, merge: true }); continue; }
-    if (lineupCost(e.ids, null, pmap) > CAP) {
-      writes.push({ path: 'users/' + e.uid, data: { bonusStars: user.bonusStars - 1 }, merge: true });
-      writes.push({ path: 'entries/' + id, data: { usedBonusStar: true }, merge: true });
-    }
     humans.push({ entryId: id, key: e.uid, uid: e.uid, name: user.name || 'Player', rp: user.rp || 0, ids: e.ids, slots: slotsOf(e.ids, pid => owned.get(pid)), at: e.at || 0, bot: false });
   }
 
@@ -90,7 +84,7 @@ export async function scoreBattles(db, day) {
         streak, bestStreak: Math.max(user.bestStreak || 0, streak), lastStreak: 0,
         bestTier: Math.max(user.bestTier || 0, tierOf(after)), bestScore: Math.max(user.bestScore || 0, r.fp[k]),
         ...(reward ? {
-          bonusStars: (user.bonusStars || 0) + reward.star, savers: (user.savers || 0) + reward.saver,
+          savers: (user.savers || 0) + reward.saver,
           badge: !!user.badge || reward.badge, lastReward: { date, streak, ...reward },
         } : {}),
       }, merge: true });

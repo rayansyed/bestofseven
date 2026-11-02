@@ -1,28 +1,29 @@
 // Game rules shared by the sync (grouping, bots, scoring, ranks).
 // index.html carries a copy of the lineup rules and builder; keep the two in step.
 export const SLOTS = ['G', 'G', 'F', 'F', 'C', 'UTIL'];
-export const CAP = 16;          // star budget for six players
+// Players can field any cards they own. Computer lineups still keep to a star budget so a new
+// player's Common cards stand a chance against them.
+export const BOT_CAP = 16;      // computer lineup star budget
 export const CAPTAIN_X = 1.5;   // the captain scores 1.5×…
 export const CAPTAIN_EXTRA = 1; // …and costs one extra star
-export const MAX_FIVE = 1;      // at most one 5★ player per lineup
+export const BOT_MAX_FIVE = 1; // at most one 5★ player in a computer lineup
 export const GROUP_SIZE = 10;
 export const TIERS = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Elite'];
 // Rank points by finish in a group of 10 (index 0 = 1st place).
 export const RP_BY_FINISH = [30, 20, 20, 5, 5, -5, -5, -15, -15, -15];
-export const BONUS_STAR = 1; // extra budget a Bonus Star gives for one night
 export const SKIP_PENALTY = 3;
 // Rank points for a 1v1 battle. A tie (same categories and fantasy points) changes nothing.
 export const RP_WIN = 20, RP_LOSS = -10; // RP lost for skipping a game night; never drops a player out of their tier
 
 // Entry streak rewards, paid when a night is scored. Rewards can stack on one night.
 export function rewardFor(streak) {
-  const r = { rp: 0, star: 0, saver: 0, badge: false };
+  const r = { rp: 0, saver: 0, badge: false };
   if (streak === 3) r.rp = 3;
   if (streak === 5) r.rp = 5;
-  if (streak % 7 === 0) r.star = 1;   // one night with a 17★ budget
+  if (streak % 7 === 0) r.rp += 7;
   if (streak % 14 === 0) r.saver = 1; // forgives one skipped night
   if (streak === 30) r.badge = true;
-  return r.rp || r.star || r.saver || r.badge ? r : null;
+  return r.rp || r.saver || r.badge ? r : null;
 }
 
 export const fpOf = l => l[1] + 1.2 * l[2] + 1.5 * l[3] + 3 * l[4] + 3 * l[5] - l[6];
@@ -38,7 +39,7 @@ export function lineupCost(ids, captain, pmap) {
 export const fiveStars = (ids, pmap) => ids.filter(id => id && pmap.get(id).stars === 5).length;
 
 // Null when the entry is a legal lineup for this pool, otherwise the reason.
-export function invalidReason(e, pmap, cap = CAP) {
+export function invalidReason(e, pmap) {
   // A slot can be left empty (null) when the player's collection has no card for it; it scores nothing.
   if (!Array.isArray(e.ids) || e.ids.length !== 6) return 'needs six slots';
   const ids = e.ids.filter(Boolean);
@@ -51,8 +52,6 @@ export function invalidReason(e, pmap, cap = CAP) {
     if (!elig(SLOTS[i], p)) return 'player in the wrong slot';
   }
   if (e.captain != null && !e.ids.includes(e.captain)) return 'captain not in lineup';
-  if (fiveStars(e.ids, pmap) > MAX_FIVE) return 'more than one 5★ player';
-  if (lineupCost(e.ids, e.captain, pmap) > cap) return 'over the star budget';
   return null;
 }
 
@@ -84,8 +83,8 @@ export function buildLineup(players, { base = SLOTS.map(() => null), captain = n
   const free = SLOTS.map((_, i) => i).filter(i => !base[i]);
   const fixedCap = captain && base.includes(captain) ? captain : null;
   // The captain is the best projected player, when the extra star fits.
-  const pickCaptain = lu => noCaptain ? null : fixedCap || (lineupCost(lu, null, pmap) + CAPTAIN_EXTRA <= CAP ? lu.slice().sort((a, b) => v(b) - v(a))[0] : null);
-  const legal = (lu, c) => lineupCost(lu, c, pmap) <= CAP && fiveStars(lu, pmap) <= MAX_FIVE;
+  const pickCaptain = lu => noCaptain ? null : fixedCap || (lineupCost(lu, null, pmap) + CAPTAIN_EXTRA <= BOT_CAP ? lu.slice().sort((a, b) => v(b) - v(a))[0] : null);
+  const legal = (lu, c) => lineupCost(lu, c, pmap) <= BOT_CAP && fiveStars(lu, pmap) <= BOT_MAX_FIVE;
   const score = (lu, c) => lu.reduce((a, id) => a + v(id), 0) + (c ? v(c) * (CAPTAIN_X - 1) : 0);
   let best = null, bestV = -Infinity;
   for (let t = 0; t < tries; t++) {
@@ -94,8 +93,8 @@ export function buildLineup(players, { base = SLOTS.map(() => null), captain = n
     const order = free.slice().sort(() => rnd() - .5).sort((a, b) => (a === 5) - (b === 5));
     for (let k = 0; k < order.length; k++) {
       const i = order[k];
-      const budget = CAP - lineupCost(lu, fixedCap, pmap) - (order.length - k - 1);
-      const fiveOk = fiveStars(lu, pmap) < MAX_FIVE;
+      const budget = BOT_CAP - lineupCost(lu, fixedCap, pmap) - (order.length - k - 1);
+      const fiveOk = fiveStars(lu, pmap) < BOT_MAX_FIVE;
       const c = pl.filter(p => elig(SLOTS[i], p) && !lu.includes(p.id) && p.stars <= budget && (fiveOk || p.stars < 5));
       if (!c.length) { ok = false; break; }
       lu[i] = c[Math.floor(rnd() * c.length)].id;

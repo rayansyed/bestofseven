@@ -6,9 +6,8 @@ An NBA card battler you can play any game night. Collect player cards, set a six
 | | |
 |---|---|
 | Cards | new players open **3 free starter packs** of 5 cards (2 G, 2 F, 1 C each), all Common, with no 4★ or 5★ players. The first pack favours players with a game in the next two days. Packs are opened on the server (`api/packs.js`), so cards can't be made up in the browser. |
-| Lineup | six slots from cards you own whose players have a game that night. A slot can stay empty when none of your cards fits it; it scores nothing. |
-| Budget | the cards' stars must add up to **16★ or less**, with **at most one 5★ player** |
-| Star ratings | every player is 1–5★ by fantasy points per game this season: 45+ = 5★, 35–44.9 = 4★, 25–34.9 = 3★, 15–24.9 = 2★, under 15 = 1★ |
+| Lineup | six slots from cards you own whose players have a game that night, in **any combination**: there is no star budget. A slot can stay empty when none of your cards fits it; it scores nothing. |
+| Star ratings | shown on every card as a guide to how good the player is: 1–5★ by fantasy points per game this season, 45+ = 5★, 35–44.9 = 4★, 25–34.9 = 3★, 15–24.9 = 2★, under 15 = 1★. Computer opponents keep to a 16★ budget so they stay beatable with starter cards. |
 | Matchups | at lock, entries are paired by rank within each tier, leftovers across tiers, and an odd player out faces a computer lineup. Each slot faces the same slot on the other side. |
 | Categories | points, rebounds, assists, steals, blocks, threes made, FG% (team made ÷ attempted), free throws made, turnovers (fewer wins). Most categories wins; a tie goes to total fantasy points (point 1 · rebound 1.2 · assist 1.5 · steal 3 · block 3 · turnover −1). |
 | Archetypes | +10% to one category: Sharpshooter (threes), Rim Protector (blocks), Floor General (assists), Slasher (free throws made), Lockdown (steals). Set monthly from season stats; elite players can carry two. |
@@ -19,8 +18,7 @@ An NBA card battler you can play any game night. Collect player cards, set a six
 | Tiers | 100 RP each. You can't drop out of a tier the night after reaching it. RP never goes below 0. |
 | Skipping | once you have played a night, each game night you skip costs **3 RP** and resets your streak. It can never drop you out of your tier, and nights with no NBA games don't count. |
 | Entry streak | enter every game night to build a streak, win or lose. Nights with no NBA games don't break it, and an invalid entry neither grows nor breaks it. |
-| Streak rewards | 3 nights: +3 RP · 5 nights: +5 RP · every 7 nights: a **Bonus Star** · every 14 nights: a **Streak Saver** · 30 nights: a leaderboard badge. Paid when the night is scored. |
-| Bonus Star | your budget is 17★ while you hold one. It's used up only by a lineup that actually costs 17★. |
+| Streak rewards | 3 nights: +3 RP · 5 nights: +5 RP · every 7 nights: +7 RP · every 14 nights: a **Streak Saver** · 30 nights: a leaderboard badge. Paid when the night is scored. |
 | Streak Saver | used automatically on your next skip: no RP lost, and the streak holds. |
 
 Nights played in groups of 10 before battles (with a captain) are still shown and scored the old way.
@@ -55,7 +53,7 @@ Firestore collections:
 ## A night, start to finish
 1. **Day before:** the sync posts the slate with star ratings and archetypes.
 2. **Until tip-off:** players set lineups from their cards. A lineup is entered once every slot one of your cards could fill is filled; emptying such a slot withdraws it.
-3. **First tip-off:** Firestore refuses lineup edits. On the next sync (within 30 minutes), entries are checked and paired. An illegal lineup (over the star budget, two 5★ players, wrong positions, a card you don't own) is marked invalid and doesn't count.
+3. **First tip-off:** Firestore refuses lineup edits. On the next sync (within 30 minutes), entries are checked and paired. An illegal lineup (wrong positions, a duplicate player, a card you don't own) is marked invalid and doesn't count.
 4. **During games:** an open page reads live scores straight from ESPN every minute and works out the battle as it goes, so the scoreboard stays current even when the sync is late. These numbers are for display only.
 5. **All games final:** on its next run, the sync decides each battle and writes everyone's result, rank-point change and new tier.
 

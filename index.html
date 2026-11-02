@@ -589,12 +589,9 @@ button.pod:hover .pod-step { filter: brightness(1.08); }
 /* ---------- Game rules (keep in step with sync/game.mjs) ---------- */
 const SLOTS = ['G', 'G', 'F', 'F', 'C', 'UTIL'];
 const SLOT_HINT = { G: 'Pick a guard', F: 'Pick a forward', C: 'Pick a center', UTIL: 'Any position' };
-const CAP = 16;          // star budget for six players
 const CAPTAIN_X = 1.5;   // nights scored in groups had a captain worth 1.5×; battles have none
-const MAX_FIVE = 1;      // at most one 5★ player per lineup
 const TIERS = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Elite'];
 const RP_WIN = 20, RP_LOSS = -10;
-const BONUS_STAR = 1; // extra budget a Bonus Star gives for one night
 const SKIP_PENALTY = 3; // RP lost for skipping a game night; never drops a player out of their tier
 const LIVE_DONE = new Set(['STATUS_FINAL', 'STATUS_POSTPONED', 'STATUS_CANCELED', 'STATUS_FORFEIT']);
 // Box score line from the sync job: [min, pts, reb, ast, stl, blk, to, threes, fgm, fga, ftm]
@@ -698,16 +695,15 @@ const ui = { view: 'night', sel: null, pos: 'ALL', q: '', sort: 'stars', limit: 
 
 // Entry streak rewards (mirrors rewardFor in sync/game.mjs). Rewards can stack on one night.
 function rewardFor(streak) {
-  const r = { rp: 0, star: 0, saver: 0, badge: false };
+  const r = { rp: 0, saver: 0, badge: false };
   if (streak === 3) r.rp = 3;
   if (streak === 5) r.rp = 5;
-  if (streak % 7 === 0) r.star = 1;
+  if (streak % 7 === 0) r.rp += 7;
   if (streak % 14 === 0) r.saver = 1;
   if (streak === 30) r.badge = true;
-  return r.rp || r.star || r.saver || r.badge ? r : null;
+  return r.rp || r.saver || r.badge ? r : null;
 }
-const rewardText = r => [r.rp && `+${r.rp} RP`, r.star && 'a Bonus Star', r.saver && 'a Streak Saver', r.badge && 'the streak badge'].filter(Boolean).join(' + ');
-const budget = () => CAP + ((profile?.bonusStars || 0) > 0 ? BONUS_STAR : 0);
+const rewardText = r => [r.rp && `+${r.rp} RP`, r.saver && 'a Streak Saver', r.badge && 'the streak badge'].filter(Boolean).join(' + ');
 
 /* ---------- Pictures and badges ---------- */
 const AVATAR_RE = /^data:image\/(jpeg|webp);base64,[A-Za-z0-9+/=]+$/;
@@ -782,23 +778,18 @@ function pmap(day) {
 }
 const locked = day => Date.now() >= (day.lockMs || Date.parse(day.lockAt));
 const complete = ids => ids && ids.length === 6 && ids.every(Boolean);
-function cost(ids, day) {
-  const m = pmap(day);
-  return ids.reduce((s, id) => s + (id ? m.get(id)?.stars || 0 : 0), 0);
-}
 const owns = id => cards.has(id);
 const rarityOf = id => cards.get(id)?.rarity || 'common';
 // The night's players the player holds a card for.
 const ownedPool = day => day.players.filter(p => owns(p.id));
-// Open slots some unused card could still fill within the budget. A lineup with none left is ready to enter,
-// even with empty slots, so a small collection can still play a light night.
+// Open slots some unused card could still fill. Any mix of owned cards is allowed. A lineup with none left
+// is ready to enter, even with empty slots, so a small collection can still play a light night.
 function fillableSlots(lu, day) {
-  const left = budget() - cost(lu, day), fiveOk = fiveStars(lu, day) < MAX_FIVE;
-  return SLOTS.map((slot, i) => i).filter(i => !lu[i] && ownedPool(day).some(p => elig(SLOTS[i], p) && !lu.includes(p.id) && p.stars <= left && (fiveOk || p.stars < 5)));
+  return SLOTS.map((slot, i) => i).filter(i => !lu[i] && ownedPool(day).some(p => elig(SLOTS[i], p) && !lu.includes(p.id)));
 }
+const projected = (lu, day) => lu.reduce((a, id) => a + (id ? pmap(day).get(id)?.avg || 0 : 0), 0);
 const ready = (lu, day) => lu.some(Boolean) && !fillableSlots(lu, day).length;
 const draftSlots = (lu, day) => lu.map(id => id ? { id, rarity: rarityOf(id), types: pmap(day).get(id)?.types || [] } : null);
-const fiveStars = (ids, day) => ids.filter(id => id && pmap(day).get(id)?.stars === 5).length;
 const starsHtml = n => `<span class="stars" aria-label="${n} star${n > 1 ? 's' : ''}">${'★'.repeat(n)}<i>${'★'.repeat(5 - n)}</i></span>`;
 function scoreRows(ids, captain, day) {
   const m = pmap(day);
@@ -814,20 +805,20 @@ const nightState = day => day.final ? 'final' : locked(day) ? 'live' : 'open';
 
 // Random legal lineups, then greedy upgrades, keeping the best. Mirrors buildLineup in sync/game.mjs.
 // partial: leave a slot empty when no player fits it (a small card collection), instead of giving up.
-function buildLineup(players, { base = SLOTS.map(() => null), captain = null, rnd = Math.random, noise = 0, tries = 120, cap: limit = CAP, noCaptain = false, partial = false } = {}) {
+// The sync's computer lineups use a star budget (cap); the player's Auto-fill has none.
+function buildLineup(players, { base = SLOTS.map(() => null), captain = null, rnd = Math.random, noise = 0, tries = 120, cap: limit = Infinity, noCaptain = false, partial = false } = {}) {
   const CAPTAIN_EXTRA = 1;
   const m = new Map(players.map(p => [p.id, p]));
   const pl = players.filter(p => p.gp > 0 && !isOut(p));
   if (!pl.length) return null;
   const lc = (lu, c) => lu.reduce((s, id) => s + (id ? m.get(id).stars : 0), 0) + (c && lu.includes(c) ? CAPTAIN_EXTRA : 0);
-  const fives = lu => lu.filter(id => id && m.get(id).stars === 5).length;
   const randn = () => Math.sqrt(-2 * Math.log(rnd() || 1e-9)) * Math.cos(2 * Math.PI * rnd());
   const val = new Map(pl.map(p => [p.id, p.avg * (1 + noise * randn())]));
   const v = id => val.get(id) ?? m.get(id)?.avg ?? 0;
   const free = SLOTS.map((_, i) => i).filter(i => !base[i]);
   const fixedCap = captain && base.includes(captain) ? captain : null;
   const pickCaptain = lu => noCaptain ? null : fixedCap || (lc(lu, null) + CAPTAIN_EXTRA <= limit ? lu.slice().sort((x, y) => v(y) - v(x))[0] : null);
-  const legal = (lu, c) => lc(lu, c) <= limit && fives(lu) <= MAX_FIVE;
+  const legal = (lu, c) => lc(lu, c) <= limit;
   const score = (lu, c) => lu.reduce((s, id) => s + v(id), 0) + (c ? v(c) * (CAPTAIN_X - 1) : 0);
   let best = null, bestV = -Infinity;
   for (let t = 0; t < tries; t++) {
@@ -835,8 +826,8 @@ function buildLineup(players, { base = SLOTS.map(() => null), captain = null, rn
     let ok = true;
     const order = free.slice().sort(() => rnd() - .5).sort((x, y) => (x === 5) - (y === 5));
     for (let k = 0; k < order.length; k++) {
-      const i = order[k], room = limit - lc(lu, fixedCap) - (order.length - k - 1), fiveOk = fives(lu) < MAX_FIVE;
-      const c = pl.filter(p => elig(SLOTS[i], p) && !lu.includes(p.id) && p.stars <= room && (fiveOk || p.stars < 5));
+      const i = order[k], room = limit - lc(lu, fixedCap) - (order.length - k - 1);
+      const c = pl.filter(p => elig(SLOTS[i], p) && !lu.includes(p.id) && p.stars <= room);
       if (!c.length) { if (partial) continue; ok = false; break; }
       lu[i] = c[Math.floor(rnd() * c.length)].id;
     }
@@ -873,7 +864,7 @@ const face = p => `<span class="face" style="--team:${TEAM_COLORS[p.team] || '#5
 const tierBadge = tier => `<span class="tier t${tier}">${TIERS[tier]}</span>`;
 const notice = (eyebrow, title, body) => `<div class="card notice"><div class="eyebrow">${eyebrow}</div><h2>${title}</h2>${body}</div>`;
 const TRASH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
-const legend = `<p class="legend">How a battle works: at the night's first tip-off your lineup is paired with one opponent at your rank (a computer lineup if there's an odd number). Each slot faces the same slot on the other side. Both lineups' real box scores are added up in nine categories: points, rebounds, assists, steals, blocks, threes made, FG%, free throws made, and turnovers (fewer wins). Win more categories to win the night; a tie goes to total fantasy points (point 1 · rebound 1.2 · assist 1.5 · steal 3 · block 3 · turnover −1). Each card's archetype adds 10% to its category, and rarity adds 3% (Rare), 6% (Epic) or 10% (Legendary) to all its stats, capped at +25% together. Counters between facing cards cut 10%: Lockdown cuts a Sharpshooter's threes, a Rim Protector cuts a Slasher's FG%, a Slasher cuts a Rim Protector's blocks, a Floor General cuts a Lockdown's steals. Lineups only use cards you own, fit a ${CAP}★ budget with at most one 5★, and can leave a slot empty when no card fits it. Win: +${RP_WIN} rank points · loss: ${RP_LOSS}. Every 100 points is a new tier, and you can't drop out of a tier the night after reaching it. Once you've played, skipping a game night costs ${SKIP_PENALTY} RP and your streak, but never your tier. Entering every game night builds a streak: 3 nights +3 RP, 5 nights +5 RP, every 7 a Bonus Star (one night with an extra star, used only if your lineup needs it), every 14 a Streak Saver (covers one skip), 30 a badge on the leaderboard. Archetypes are set each month from season stats. Data: ESPN public NBA feed.</p>`;
+const legend = `<p class="legend">How a battle works: at the night's first tip-off your lineup is paired with one opponent at your rank (a computer lineup if there's an odd number). Each slot faces the same slot on the other side. Both lineups' real box scores are added up in nine categories: points, rebounds, assists, steals, blocks, threes made, FG%, free throws made, and turnovers (fewer wins). Win more categories to win the night; a tie goes to total fantasy points (point 1 · rebound 1.2 · assist 1.5 · steal 3 · block 3 · turnover −1). Each card's archetype adds 10% to its category, and rarity adds 3% (Rare), 6% (Epic) or 10% (Legendary) to all its stats, capped at +25% together. Counters between facing cards cut 10%: Lockdown cuts a Sharpshooter's threes, a Rim Protector cuts a Slasher's FG%, a Slasher cuts a Rim Protector's blocks, a Floor General cuts a Lockdown's steals. Lineups can use any mix of cards you own, and can leave a slot empty when no card fits it. Win: +${RP_WIN} rank points · loss: ${RP_LOSS}. Every 100 points is a new tier, and you can't drop out of a tier the night after reaching it. Once you've played, skipping a game night costs ${SKIP_PENALTY} RP and your streak, but never your tier. Entering every game night builds a streak: 3 nights +3 RP, 5 nights +5 RP, every 7 nights +7 RP, every 14 a Streak Saver (covers one skip), 30 a badge on the leaderboard. Archetypes are set each month from season stats. Data: ESPN public NBA feed.</p>`;
 
 /* ---------- Cards ---------- */
 const typesOf = id => roster.get(id)?.types || [];
@@ -1044,7 +1035,6 @@ function streakBanner() {
   const earned = last && last.date === profile.lastNight ? `<span class="st-chip won">Earned ${dayLabel(last.date).split(',')[0]}: ${rewardText(last)}</span>` : '';
   const momentNames = profile.lastMoments && profile.lastMoments.date === profile.lastNight ? (profile.lastMoments.ids || []).map(id => MOMENTS.find(m => m.id === id)).filter(Boolean) : [];
   const moments = momentNames.map(m => `<span class="st-chip won">New badge: ${m.icon} ${esc(m.name)}</span>`).join('');
-  const stars = profile.bonusStars ? `<span class="st-chip tag">★ Bonus Star ready: ${budget()}★ budget</span>` : '';
   const savers = profile.savers ? `<span class="st-chip">Streak Saver × ${profile.savers}</span>` : '';
   // The last reward reached, the next few, and the 30-night badge while it's still ahead.
   const stops = [];
@@ -1054,7 +1044,7 @@ function streakBanner() {
   const ladderStops = [...new Set(shown)].sort((a, b) => a - b);
   const ladder = ladderStops.map(n => `<li class="${streak >= n ? 'done' : n === next ? 'next' : ''}"><b>${n}</b><span>${rewardText(rewardFor(n)).replace(/^a /, '').replace(' + a ', ' + ').replace('the streak badge', 'Badge')}</span></li>`).join('');
   return `<div class="st-top"><div><div class="st-title">${title}</div><p class="st-line">${line}</p></div>
-      <div class="st-chips">${earned}${moments}${stars}${savers}</div></div>
+      <div class="st-chips">${earned}${moments}${savers}</div></div>
     <ol class="st-ladder" aria-label="Streak rewards">${ladder}</ol>`;
 }
 
@@ -1075,7 +1065,7 @@ function renderSide() {
     pos = `<div class="pos-group"><div class="side-label">Positions</div>${[['ALL', 'All players'], ['G', 'Guards'], ['F', 'Forwards'], ['C', 'Centers']].map(([v, l]) => `<button class="nav-item" data-action="pos" data-v="${v}" aria-pressed="${ui.pos === v}"><span class="gnum">${v === 'ALL' ? '★' : v}</span><span>${l}</span><span class="badge tag">${n(v)}</span></button>`).join('')}</div>`;
   }
   $('#side').innerHTML = `${rankCard()}<div class="side-label">Nights</div>${list}${pos}
-    <div class="side-label">Battles</div><div class="side-note">1 opponent · 9 categories<br>Pts · Reb · Ast · Stl · Blk<br>3PM · FG% · FTM · fewer TO<br>Win +${RP_WIN} RP · loss ${RP_LOSS}<br>Budget ${CAP}★ · one 5★ max</div><i class="sx" aria-hidden="true"></i>`;
+    <div class="side-label">Battles</div><div class="side-note">1 opponent · 9 categories<br>Pts · Reb · Ast · Stl · Blk<br>3PM · FG% · FTM · fewer TO<br>Win +${RP_WIN} RP · loss ${RP_LOSS}<br>Any mix of your cards</div><i class="sx" aria-hidden="true"></i>`;
 }
 
 /* ---------- Sign-in and profile ---------- */
@@ -1139,7 +1129,6 @@ function heroCard(day) {
 
 function renderPool() {
   const day = days.get(ui.sel), lu = ui.draft;
-  const left = budget() - cost(lu, day);
   const q = ui.q.trim().toLowerCase();
   const mine = ownedPool(day);
   const rows = mine.filter(p => (ui.pos === 'ALL' || p.pos === ui.pos) && (!q || p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q)));
@@ -1147,7 +1136,7 @@ function renderPool() {
   rows.sort((a, b) => key(b) - key(a) || b.avg - a.avg);
   const shown = rows.slice(0, ui.limit);
   $('#poolrows').innerHTML = shown.length ? shown.map(p => {
-    const inLu = lu.includes(p.id), fiveFull = !inLu && p.stars === 5 && fiveStars(lu, day) >= MAX_FIVE, cant = !inLu && (p.stars > left || fiveFull);
+    const inLu = lu.includes(p.id), cant = !inLu && !SLOTS.some((slot, k) => !lu[k] && elig(slot, p));
     const tag = isOut(p) ? '<span class="inj out">Out</span>' : isGtd(p) ? `<span class="inj gtd" title="${esc(p.status)}">GTD</span>` : '';
     return `<div class="runner rc-${rarityOf(p.id)} ${inLu ? 'in' : ''} ${cant ? 'cant' : ''}" data-pid="${esc(p.id)}">
       ${face(p)}
@@ -1156,7 +1145,7 @@ function renderPool() {
         <div class="r-chips">${typeChips(p.types)}<span class="chip">FPPG: ${p.gp ? f1(p.avg) : '—'}</span><span class="chip hide-sm">GP: ${p.gp}</span></div></div>
       <div class="r-act">
         <button class="odds ${inLu ? 'on' : ''}" data-action="${inLu ? 'drop' : 'add'}" data-id="${esc(p.id)}" aria-label="${inLu ? 'Remove' : 'Add'} ${esc(p.name)}, ${p.stars} stars">${inLu ? '✓ ' : ''}${starsHtml(p.stars)}</button>
-        <span class="r-trail">${fiveFull ? 'You already have a 5★' : cant ? `needs <b>${p.stars - left}★</b> more` : `proj <b>${p.gp ? f1(p.avg) : '0.0'}</b> pts`}</span>
+        <span class="r-trail">${cant ? `No open ${p.pos} slot` : `proj <b>${p.gp ? f1(p.avg) : '0.0'}</b> pts`}</span>
       </div>
     </div>`;
   }).join('') : !mine.length ? `<p class="empty">None of your ${cards.size} cards play on ${dayLabel(day.date)}. Check another night.</p>`
@@ -1165,7 +1154,7 @@ function renderPool() {
 }
 
 // The phone's always-visible lineup bar: who's in, and the stars spent.
-function renderDock(lu, s, open, day) {
+function renderDock(lu, proj, open, day) {
   const dock = $('#dock');
   if (!dock) return;
   const m = pmap(day);
@@ -1173,7 +1162,7 @@ function renderDock(lu, s, open, day) {
     const p = lu[i] && m.get(lu[i]);
     return p ? `<span class="dk-slot">${face(p)}</span>` : `<span class="dk-slot free">${slot === 'UTIL' ? 'U' : slot}</span>`;
   }).join('')}</span>
-    <span class="dk-info"><b class="${entries.has(ui.sel) && ui.save !== 'pending' ? 'ok' : ''}">${!ready(lu, day) ? `${6 - open} of 6` : entries.has(ui.sel) && ui.save !== 'pending' ? '✓ Entered' : 'Saving…'}</b><small>${s} of ${budget()}★</small></span>
+    <span class="dk-info"><b class="${entries.has(ui.sel) && ui.save !== 'pending' ? 'ok' : ''}">${!ready(lu, day) ? `${6 - open} of 6` : entries.has(ui.sel) && ui.save !== 'pending' ? '✓ Entered' : 'Saving…'}</b><small>${f1(proj)} proj pts</small></span>
     <svg class="dk-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 10l7-7M15 3h6v6M10 14l-7 7M3 15v6h6"/></svg>`;
 }
 
@@ -1184,7 +1173,7 @@ function setSheet(open) {
 
 function renderLineup() {
   const day = days.get(ui.sel), lu = ui.draft, m = pmap(day);
-  const s = cost(lu, day), left = budget() - s, open = lu.filter(x => !x).length;
+  const open = lu.filter(x => !x).length;
   const fillable = new Set(fillableSlots(lu, day)), isReady = ready(lu, day);
   const legs = SLOTS.map((slot, i) => {
     const p = lu[i] && m.get(lu[i]);
@@ -1195,27 +1184,26 @@ function renderLineup() {
           <span class="leg-types">${rarityTag(rarityOf(p.id))}${typeChips(p.types)}</span></div></div></li>`
       : `<li class="leg open ${fillable.has(i) ? '' : 'none'}"><span></span><div class="leg-top"><span class="ptag dim">${slot}</span><span>${fillable.has(i) ? SLOT_HINT[slot] : 'No card fits · scores nothing'}</span><span></span></div></li>`;
   }).join('');
-  const proj = lu.reduce((a, id) => a + (id ? m.get(id)?.avg || 0 : 0), 0);
+  const proj = projected(lu, day);
   const combos = synergiesOf(draftSlots(lu, day));
   const entered = entries.has(ui.sel);
   const skipNote = !entered && profile.nights ? ` ${profile.savers ? 'Skipping tonight uses your Streak Saver.' : `Skipping tonight costs ${SKIP_PENALTY} RP and your streak.`}` : '';
   const info = lu.some(id => id && !owns(id)) ? 'Remove the players you don’t have a card for. They’d make this lineup invalid.'
-    : !isReady ? `Fill the open slots to enter. ${fillable.size} to fill · ${left}★ left to spend.${skipNote}`
+    : !isReady ? `Fill the open slots to enter. ${fillable.size} to fill.${skipNote}`
     : `Entered for ${dayLabel(ui.sel)}${open ? ` with ${open} empty slot${open > 1 ? 's' : ''}` : ''}. At ${timeLabel(day.lockAt)} you’ll face one ${TIERS[tierOf(profile?.rp)]} player, slot against slot.`;
   const cta = fillable.size ? `<button class="cta" data-action="auto">Auto-fill ${fillable.size} open slot${fillable.size > 1 ? 's' : ''}</button>`
     : ui.save === 'pending' ? '<button class="cta" disabled>Saving…</button>'
     : ui.save === 'err' ? '<button class="cta err" disabled>Couldn’t save. Make any change to retry.</button>'
     : !lu.some(Boolean) ? '<button class="cta" disabled>No cards play tonight</button>'
     : entered ? `<button class="cta ok" disabled>✓ Entered · edit until ${timeLabel(day.lockAt)}</button>` : '<button class="cta" disabled>Saving…</button>';
-  renderDock(lu, s, open, day);
+  renderDock(lu, proj, open, day);
   $('#lineup').innerHTML = `
     <div class="slip-head"><span class="count">${6 - open}</span><h3>Lineup</h3><button class="sheet-x" data-action="sheet-close" aria-label="Close lineup">✕</button></div>
     <div class="seg"><span class="on">${esc(profile.name)}</span><span>${TIERS[tierOf(profile.rp)]} · 1v1</span></div>
     <ul class="legs">${legs}</ul>
     ${combos.length ? `<div class="combos">${combos.map(sy => `<span class="arch syn" title="${esc(sy.text)}">✦ ${esc(sy.name)}</span>`).join('')}</div>` : ''}
     <div class="slip-foot">
-      <div class="capbar"><i style="--w:${Math.min(100, s / budget() * 100)}%"></i></div>
-      <dl class="totals"><div><dt>Stars used</dt><dd>${s} of ${budget()}★</dd></div><div><dt>Stars left</dt><dd>${left}★</dd></div><div><dt>Projected</dt><dd>${f1(proj)} pts</dd></div></dl>
+      <dl class="totals"><div><dt>Cards</dt><dd>${6 - open} of 6</dd></div><div><dt>Stars</dt><dd>${lu.reduce((a, id) => a + (id ? m.get(id)?.stars || 0 : 0), 0)}★</dd></div><div><dt>Projected</dt><dd>${f1(proj)} pts</dd></div></dl>
       <div class="info">${info}</div>
       <div class="ctarow"><button class="trash" data-action="clear" aria-label="Clear lineup" ${lu.some(Boolean) ? '' : 'disabled'}>${TRASH}</button>${cta}</div>
     </div>`;
@@ -1534,7 +1522,7 @@ function render() {
     if (sig === ui.sig && $('#poolrows')) { renderPool(); renderLineup(); const el = $('#slate'); if (el) keepRacesScroll(() => { el.innerHTML = slateCard(day); }); const st = $('#streak'); if (st) st.innerHTML = streakBanner(); return; }
     ui.sig = sig;
     $('#slip').innerHTML = '<button class="dock" id="dock" data-action="sheet" aria-expanded="false" aria-label="Show your lineup"></button><div class="sheet-bg" data-action="sheet-close"></div><div class="slip-card" id="lineup"></div>';
-    m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day)}<section class="panel"><div class="list-head"><div><h2>${dayLabel(ui.sel)} · your cards</h2><p class="sub">Your cards with a game this night. Tap a rating to add one. Fit six within ${budget()}★, with one 5★ at most.</p></div></div><div class="pool-tools">${poolTools()}</div><div id="poolrows"></div><div id="poolmore"></div></section>${legend}`;
+    m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day)}<section class="panel"><div class="list-head"><div><h2>${dayLabel(ui.sel)} · your cards</h2><p class="sub">Your cards with a game this night. Tap a rating to add one. Any mix of your cards works.</p></div></div><div class="pool-tools">${poolTools()}</div><div id="poolrows"></div><div id="poolmore"></div></section>${legend}`;
     renderPool(); renderLineup();
     return;
   }
@@ -1589,9 +1577,6 @@ function addPlayer(id) {
   let i = SLOTS.findIndex((s, k) => s === p.pos && !lu[k]);
   if (i < 0 && !lu[5]) i = 5;
   if (i < 0) return toast(`Your ${p.pos} slots and UTIL are full. Remove someone first.`);
-  if (p.stars === 5 && fiveStars(lu, day) >= MAX_FIVE) return toast('You can only have one 5★ player. Remove your other 5★ first.');
-  const over = cost(lu, day) + p.stars - budget();
-  if (over > 0) return toast(`${p.name} is ${p.stars}★. You’d be ${over}★ over your ${budget()}★ budget.`);
   if (isOut(p)) toast(`${p.name} is listed as out. Out players score 0.`);
   lu[i] = id; changed();
 }
@@ -1625,8 +1610,8 @@ document.addEventListener('click', e => {
   else if (a === 'clear') { ui.draft = SLOTS.map(() => null); changed(); }
   else if (a === 'auto') {
     const day = days.get(ui.sel), base = ui.draft.map(id => id && owns(id) ? id : null);
-    const r = buildLineup(ownedPool(day), { base, noise: 0.05, cap: budget(), noCaptain: true, partial: true });
-    if (!r || r.ids.filter(Boolean).length <= base.filter(Boolean).length) return toast('None of your other cards fit the open slots within your star budget. Swap out a high-rated card.');
+    const r = buildLineup(ownedPool(day), { base, noise: 0.05, noCaptain: true, partial: true });
+    if (!r || r.ids.filter(Boolean).length <= base.filter(Boolean).length) return toast('None of your other cards fit the open slots.');
     ui.draft = r.ids; changed();
   }
   else if (a === 'more') { ui.limit += 80; renderPool(); }

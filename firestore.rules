@@ -19,11 +19,11 @@ service cloud.firestore {
         allow read: if true;
         allow write: if false;
       }
-      // Tonight's 1v1 battles, built by the sync at lock.
-      match /matches/{mid} {
-        allow read: if true;
-        allow write: if false;
-      }
+    }
+    // Weekly matchups (Monday to Sunday), built and scored by the sync. Both lineups are public once locked.
+    match /matches/{mid} {
+      allow read: if true;
+      allow write: if false;
     }
     match /meta/{doc} {
       allow read, write: if false;

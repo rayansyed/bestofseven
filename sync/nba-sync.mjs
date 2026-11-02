@@ -1,8 +1,8 @@
 // Best of 7 (NBA) data sync.
 // Pulls ESPN's public NBA scoreboard, rosters and box scores and writes one Firestore document per
 // game day to `days/<YYYYMMDD>`, plus season stats (`meta/season`), monthly archetypes (`meta/types`) and
-// the league roster for starter packs (`meta/roster`). After a slate locks it pairs entries into 1v1
-// battles; once every game is final it scores them and updates ranks.
+// the league roster for starter packs (`meta/roster`). After a slate locks it adds each lineup to
+// its owner's weekly matchup; each final night's stats join the week, and finished weeks update ranks.
 // Runs from GitHub Actions (see .github/workflows/nba-sync.yml).
 //
 // Env:
@@ -14,7 +14,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { starsOf } from './game.mjs';
-import { pairNight, scoreBattles, applySkips, bestSquads } from './ranked.mjs';
+import { lockNight, scoreNight, scoreWeeks, applySkips, bestSquads } from './ranked.mjs';
 import * as groups from './ranked-groups.mjs';
 import { assignTypes, SEASON } from './battle.mjs';
 
@@ -217,17 +217,17 @@ for (const date of dates) {
   const live = doc.games.filter(g => g.status !== 'STATUS_SCHEDULED').length;
   console.log(`${date}: ${doc.games.length} games, ${doc.players.length} players, ${live} started, final=${doc.final}`);
   if (Date.now() >= doc.lockMs && !doc.grouped) {
-    const g = await pairNight(db, doc);
-    doc.grouped = true; doc.mode = 'battle';
-    console.log(`${date}: paired ${g.entrants} entries into ${g.matches} battles`);
+    const g = await lockNight(db, doc);
+    doc.grouped = true; doc.mode = 'week';
+    console.log(`${date}: ${g.entrants} lineups locked into ${g.matches} weekly matchups (${g.created} new)`);
   }
-  // Nights grouped before battles existed (no mode) are scored the old way.
-  const battleNight = doc.mode === 'battle';
+  // Nights grouped before weekly matchups existed (no mode) are scored the old way.
+  const battleNight = doc.mode === 'week';
   if (doc.final && doc.grouped && !doc.scored) {
     doc.scored = true;
-    const s = battleNight ? await scoreBattles(db, doc) : await groups.scoreNight(db, doc);
+    const s = battleNight ? await scoreNight(db, doc) : await groups.scoreNight(db, doc);
     const skipped = await applySkips(db, date);
-    console.log(`${date}: scored ${s.scored} ${battleNight ? 'battles' : 'groups'}, ${skipped} players skipped`);
+    console.log(`${date}: scored ${s.scored} ${battleNight ? 'matchups' : 'groups'}, ${skipped} players skipped`);
   }
   // Also fills in a night that was scored before this existed.
   if (doc.scored && !doc.top3) {
@@ -236,4 +236,7 @@ for (const date of dates) {
     console.log(`${date}: best squads: ${top3.map(s => `${s.name} ${s.total}`).join(', ') || 'none'}`);
   }
 }
+// Weeks end on Sunday: decide every matchup whose week is over and fully scored.
+const weeks = await scoreWeeks(db, etDate(now));
+if (weeks) console.log(`weeks: decided ${weeks} matchups`);
 process.exit(0);

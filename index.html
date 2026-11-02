@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Best of 7 NBA</title>
-<meta name="description" content="An NBA card battler: collect player cards, set a six-card lineup any game night and win nine stat categories against one opponent to climb from Bronze to Elite.">
+<meta name="description" content="An NBA card battler: collect player cards, set a lineup every game night and win nine stat categories against one opponent each week to climb from Bronze to Elite.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Oswald:wght@500;700&display=swap">
@@ -565,6 +565,30 @@ button.pod:hover .pod-step { filter: brightness(1.08); }
   .arch-list, .arch-h { padding-left: 16px; padding-right: 16px; }
 }
 @media (prefers-reduced-motion: reduce) { .tc.fresh, .pack.busy, .r-legendary .tc-card::after { animation: none; } }
+
+/* Weekly matchup: category grid above an open night, and the Monday-to-Sunday strip */
+.cats.mini { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 4px 22px 12px; border-top: 0; }
+.mc { background: var(--panel-2); border-radius: 9px; padding: 7px 10px; display: grid; gap: 1px; box-shadow: inset 3px 0 0 var(--chip-2); }
+.mc span { font-size: 11px; color: var(--muted); font-weight: 600; }
+.mc b { font-size: 14px; font-variant-numeric: tabular-nums; color: var(--muted); }
+.mc b em { font-style: normal; color: var(--ink); }
+.mc i { font-style: normal; color: var(--dim); padding: 0 4px; }
+.mc.w-me { box-shadow: inset 3px 0 0 var(--good); } .mc.w-me b em { color: var(--good); }
+.mc.w-them { box-shadow: inset 3px 0 0 var(--bad); }
+.wk-nights { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; padding: 6px 22px 16px; }
+.wn { border: 0; border-radius: 9px; background: var(--panel-2); padding: 7px 4px; display: grid; gap: 1px; justify-items: center; color: var(--ink); font-variant-numeric: tabular-nums; min-width: 0; }
+.wn .wn-d { font-size: 11px; color: var(--muted); font-weight: 700; }
+.wn b { font-size: 13px; }
+.wn small { font-size: 11px; color: var(--muted); }
+.wn.up b { color: var(--good); } .wn.down b { color: var(--bad); }
+.wn.on { box-shadow: inset 0 0 0 2px var(--accent); }
+button.wn:hover { background: var(--chip); }
+.wk-missing { padding: 12px 22px 20px; }
+@media (max-width: 700px) {
+  .cats.mini { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 4px 16px 12px; }
+  .wk-nights { gap: 4px; padding: 6px 16px 14px; }
+  .wn b { font-size: 12px; }
+}
 </style>
 </head>
 <body>
@@ -591,7 +615,7 @@ const SLOTS = ['G', 'G', 'F', 'F', 'C', 'UTIL'];
 const SLOT_HINT = { G: 'Pick a guard', F: 'Pick a forward', C: 'Pick a center', UTIL: 'Any position' };
 const CAPTAIN_X = 1.5;   // nights scored in groups had a captain worth 1.5×; battles have none
 const TIERS = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Elite'];
-const RP_WIN = 20, RP_LOSS = -10;
+const RP_WIN = 40, RP_LOSS = -20; // a weekly matchup's win or loss
 const SKIP_PENALTY = 3; // RP lost for skipping a game night; never drops a player out of their tier
 const LIVE_DONE = new Set(['STATUS_FINAL', 'STATUS_POSTPONED', 'STATUS_CANCELED', 'STATUS_FORFEIT']);
 // Box score line from the sync job: [min, pts, reb, ast, stl, blk, to, threes, fgm, fga, ftm]
@@ -660,8 +684,8 @@ function sideTotals(slots, opp, results) {
   t.fgp = t.fga ? (t.fgm / t.fga) * 100 : 0;
   return { t, fp: Math.round(fp * 10) / 10 };
 }
-function battle(a, b, results) {
-  const A = sideTotals(a, b, results), B = sideTotals(b, a, results);
+// The result from each side's category totals ({ t, fp }). Equal category wins fall back to fantasy points.
+function decide(A, B) {
   let winsA = 0, winsB = 0;
   const cats = CATS.map(c => {
     const va = A.t[c.key], vb = B.t[c.key];
@@ -673,6 +697,23 @@ function battle(a, b, results) {
   const winner = winsA > winsB ? 0 : winsB > winsA ? 1 : A.fp > B.fp ? 0 : B.fp > A.fp ? 1 : null;
   return { cats, wins: [winsA, winsB], fp: [A.fp, B.fp], winner, tiebreak: winsA === winsB && winner !== null };
 }
+// Adds nightly totals into one week. A null is a night without a lineup.
+function addTotals(list) {
+  const t = Object.fromEntries(COUNTING.map(k => [k, 0]));
+  let fp = 0;
+  for (const n of list) {
+    if (!n) continue;
+    for (const k of COUNTING) t[k] += n.t[k] || 0;
+    fp += n.fp || 0;
+  }
+  t.fgp = t.fga ? (t.fgm / t.fga) * 100 : 0;
+  return { t, fp: Math.round(fp * 10) / 10 };
+}
+// Weeks run Monday to Sunday and are named by their Monday (YYYYMMDD, US Eastern game dates).
+const ymd = d => d.toISOString().slice(0, 10).replace(/-/g, '');
+const utcDay = (date, plus = 0) => new Date(Date.UTC(+date.slice(0, 4), +date.slice(4, 6) - 1, +date.slice(6, 8) + plus));
+const weekOf = date => ymd(utcDay(date, -((utcDay(date).getUTCDay() + 6) % 7)));
+const weekDates = week => Array.from({ length: 7 }, (_, i) => ymd(utcDay(week, i)));
 const tierOf = rp => Math.min(TIERS.length - 1, Math.floor(Math.max(0, rp || 0) / 100));
 const fmt = n => Math.round(n).toLocaleString('en-US');
 const f1 = n => (Math.round(n * 10) / 10).toFixed(1);
@@ -687,7 +728,7 @@ const ordinal = n => n + (['th', 'st', 'nd', 'rd'][(n % 100 - 20) % 10] || ['th'
 const elig = (slot, p) => slot === 'UTIL' || p.pos === slot;
 
 let db = null, auth = null, me = { id: null, email: '' };
-let profile = null, days = new Map(), entries = new Map(), group = null, match = null, leaders = [];
+let profile = null, days = new Map(), entries = new Map(), group = null, myMatches = [], leaders = [];
 // The player's cards, one per player id (the rarest copy), and the league roster for archetypes and ratings.
 let cards = new Map(), roster = new Map();
 const loaded = { auth: false, profile: false, days: false, entries: false, cards: false };
@@ -719,8 +760,8 @@ const BADGES = [
   { id: 'first', icon: '🏀', name: 'First Tip-Off', how: 'Finish your first night', on: u => (u.nights || 0) >= 1 },
   { id: 'nights10', icon: '🎟️', name: 'Regular', how: 'Play 10 nights', on: u => (u.nights || 0) >= 10 },
   { id: 'nights50', icon: '🎖️', name: 'Veteran', how: 'Play 50 nights', on: u => (u.nights || 0) >= 50 },
-  { id: 'win1', icon: '🥇', name: 'First Win', how: 'Win a matchup', on: u => (u.wins || 0) >= 1 },
-  { id: 'win10', icon: '🏆', name: 'Champion', how: 'Win 10 matchups', on: u => (u.wins || 0) >= 10 },
+  { id: 'win1', icon: '🥇', name: 'First Win', how: 'Win a weekly matchup', on: u => (u.wins || 0) >= 1 },
+  { id: 'win10', icon: '🏆', name: 'Champion', how: 'Win 10 weekly matchups', on: u => (u.wins || 0) >= 10 },
   { id: 'score300', icon: '🎯', name: 'Big Night', how: 'Score 300+ in a night', on: u => (u.bestScore || 0) >= 300 },
   { id: 'streak7', icon: '🔥', name: 'Hot Streak', how: 'Reach a 7-night streak', on: u => (u.bestStreak || 0) >= 7 },
   { id: 'streak14', icon: '⚡', name: 'On Fire', how: 'Reach a 14-night streak', on: u => (u.bestStreak || 0) >= 14 },
@@ -864,7 +905,7 @@ const face = p => `<span class="face" style="--team:${TEAM_COLORS[p.team] || '#5
 const tierBadge = tier => `<span class="tier t${tier}">${TIERS[tier]}</span>`;
 const notice = (eyebrow, title, body) => `<div class="card notice"><div class="eyebrow">${eyebrow}</div><h2>${title}</h2>${body}</div>`;
 const TRASH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
-const legend = `<p class="legend">How a battle works: at the night's first tip-off your lineup is paired with one opponent at your rank (a computer lineup if there's an odd number). Each slot faces the same slot on the other side. Both lineups' real box scores are added up in nine categories: points, rebounds, assists, steals, blocks, threes made, FG%, free throws made, and turnovers (fewer wins). Win more categories to win the night; a tie goes to total fantasy points (point 1 · rebound 1.2 · assist 1.5 · steal 3 · block 3 · turnover −1). Each card's archetype adds 10% to its category, and rarity adds 3% (Rare), 6% (Epic) or 10% (Legendary) to all its stats, capped at +25% together. Counters between facing cards cut 10%: Lockdown cuts a Sharpshooter's threes, a Rim Protector cuts a Slasher's FG%, a Slasher cuts a Rim Protector's blocks, a Floor General cuts a Lockdown's steals. Lineups can use any mix of cards you own, and can leave a slot empty when no card fits it. Win: +${RP_WIN} rank points · loss: ${RP_LOSS}. Every 100 points is a new tier, and you can't drop out of a tier the night after reaching it. Once you've played, skipping a game night costs ${SKIP_PENALTY} RP and your streak, but never your tier. Entering every game night builds a streak: 3 nights +3 RP, 5 nights +5 RP, every 7 nights +7 RP, every 14 a Streak Saver (covers one skip), 30 a badge on the leaderboard. Archetypes are set each month from season stats. Data: ESPN public NBA feed.</p>`;
+const legend = `<p class="legend">How a week works: each week, Monday to Sunday, you face one opponent at your rank. The first night you enter in a week pairs you (a computer takes an odd seat and sets a new lineup every night). Every game night you both set a lineup from your cards, locked at that night's first tip-off, and each slot faces the same slot on the other side. Each night's real box scores add to nine category totals for the week: points, rebounds, assists, steals, blocks, threes made, FG%, free throws made, and turnovers (fewer wins). A night you skip adds nothing. After Sunday's games, whoever wins more categories wins the week; a tie goes to total fantasy points (point 1 · rebound 1.2 · assist 1.5 · steal 3 · block 3 · turnover −1). Each card's archetype adds 10% to its category, and rarity adds 3% (Rare), 6% (Epic) or 10% (Legendary) to all its stats, capped at +25% together. Counters between facing cards cut 10%: Lockdown cuts a Sharpshooter's threes, a Rim Protector cuts a Slasher's FG%, a Slasher cuts a Rim Protector's blocks, a Floor General cuts a Lockdown's steals. Lineups can use any mix of cards you own, and can leave a slot empty when no card fits it. Win the week: +${RP_WIN} rank points · loss: ${RP_LOSS}. Every 100 points is a new tier, and you can't drop out of a tier the week after reaching it. Once you've played, skipping a game night costs ${SKIP_PENALTY} RP and your streak, but never your tier. Entering every game night builds a streak: 3 nights +3 RP, 5 nights +5 RP, every 7 nights +7 RP, every 14 a Streak Saver (covers one skip), 30 a badge on the leaderboard. Archetypes are set each month from season stats. Data: ESPN public NBA feed.</p>`;
 
 /* ---------- Cards ---------- */
 const typesOf = id => roster.get(id)?.types || [];
@@ -1019,7 +1060,7 @@ function streakBanner() {
   const open = nextOpenDate();
   const inTonight = !!(open && entries.has(open));
   // Entered nights the sync hasn't scored yet count toward the streak you're on.
-  const pending = [...entries.values()].filter(e => !e.finish && !e.result && !e.invalid && days.has(e.date)).length;
+  const pending = [...entries.values()].filter(e => !e.finish && !e.scored && !e.invalid && days.has(e.date)).length;
   const streak = scored + pending;
   let next = streak + 1;
   while (!rewardFor(next)) next++;
@@ -1055,7 +1096,7 @@ function renderSide() {
     const badge = st === 'open' ? (e ? '<span class="badge won">Entered</span>' : '<span class="badge draft">Open</span>')
       : !e ? (profile?.lastSkip === d.date && profile.lastSkipRp < 0 ? `<span class="badge lost">${profile.lastSkipRp} RP</span>` : '<span class="badge">—</span>')
       : st === 'live' ? '<span class="badge live">Live</span>'
-      : e.result ? resultBadge(e) : e.finish ? `<span class="badge ${e.rpDelta >= 0 ? 'won' : 'lost'}">${ordinal(e.finish)}</span>` : '<span class="badge">Final</span>';
+      : e.scored ? `<span class="badge won">${f1(e.score)}</span>` : e.finish ? `<span class="badge ${e.rpDelta >= 0 ? 'won' : 'lost'}">${ordinal(e.finish)}</span>` : '<span class="badge">Final</span>';
     return `<button class="nav-item" data-action="sel" data-d="${d.date}" aria-pressed="${ui.view === 'night' && ui.sel === d.date}"><span class="gnum">${dateOf(d.date).getDate()}</span><span>${dayLabel(d.date)}</span>${badge}</button>`;
   }).join('');
   let pos = '';
@@ -1065,12 +1106,12 @@ function renderSide() {
     pos = `<div class="pos-group"><div class="side-label">Positions</div>${[['ALL', 'All players'], ['G', 'Guards'], ['F', 'Forwards'], ['C', 'Centers']].map(([v, l]) => `<button class="nav-item" data-action="pos" data-v="${v}" aria-pressed="${ui.pos === v}"><span class="gnum">${v === 'ALL' ? '★' : v}</span><span>${l}</span><span class="badge tag">${n(v)}</span></button>`).join('')}</div>`;
   }
   $('#side').innerHTML = `${rankCard()}<div class="side-label">Nights</div>${list}${pos}
-    <div class="side-label">Battles</div><div class="side-note">1 opponent · 9 categories<br>Pts · Reb · Ast · Stl · Blk<br>3PM · FG% · FTM · fewer TO<br>Win +${RP_WIN} RP · loss ${RP_LOSS}<br>Any mix of your cards</div><i class="sx" aria-hidden="true"></i>`;
+    <div class="side-label">Battles</div><div class="side-note">1 opponent a week, Mon–Sun<br>9 categories, weekly totals<br>Pts · Reb · Ast · Stl · Blk<br>3PM · FG% · FTM · fewer TO<br>Win the week +${RP_WIN} RP · loss ${RP_LOSS}<br>Any mix of your cards</div><i class="sx" aria-hidden="true"></i>`;
 }
 
 /* ---------- Sign-in and profile ---------- */
 function signinView() {
-  const intro = `<section class="hero-card"><div><h1>Best of 7 · NBA</h1><p class="hero-sub">Collect NBA player cards and play them against one opponent on any game night. Real box scores decide nine stat categories. Win the most to climb from Bronze to Elite.</p></div></section>`;
+  const intro = `<section class="hero-card"><div><h1>Best of 7 · NBA</h1><p class="hero-sub">Collect NBA player cards and play them against one opponent each week. Every night’s real box scores add up across nine stat categories. Win the most by Sunday to climb from Bronze to Elite.</p></div></section>`;
   if (ui.auth === 'confirm') return intro + `<form class="card form" id="confirm-form">
     <div><div class="eyebrow">Almost there</div><h2>Confirm your email</h2></div>
     <p class="hint">You opened the sign-in link on a different device or browser. Enter the email address you used.</p>
@@ -1188,9 +1229,10 @@ function renderLineup() {
   const combos = synergiesOf(draftSlots(lu, day));
   const entered = entries.has(ui.sel);
   const skipNote = !entered && profile.nights ? ` ${profile.savers ? 'Skipping tonight uses your Streak Saver.' : `Skipping tonight costs ${SKIP_PENALTY} RP and your streak.`}` : '';
+  const wm = weekMatch(weekOf(ui.sel)), opp = wm?.sides.find(x => x.uid !== me.id);
   const info = lu.some(id => id && !owns(id)) ? 'Remove the players you don’t have a card for. They’d make this lineup invalid.'
     : !isReady ? `Fill the open slots to enter. ${fillable.size} to fill.${skipNote}`
-    : `Entered for ${dayLabel(ui.sel)}${open ? ` with ${open} empty slot${open > 1 ? 's' : ''}` : ''}. At ${timeLabel(day.lockAt)} you’ll face one ${TIERS[tierOf(profile?.rp)]} player, slot against slot.`;
+    : `Entered for ${dayLabel(ui.sel)}${open ? ` with ${open} empty slot${open > 1 ? 's' : ''}` : ''}. ${wm ? `At ${timeLabel(day.lockAt)} it joins your week against ${esc(opp?.name || 'your opponent')}.` : `At ${timeLabel(day.lockAt)} you’ll be paired with a ${TIERS[tierOf(profile?.rp)]} player for the rest of the week.`}`;
   const cta = fillable.size ? `<button class="cta" data-action="auto">Auto-fill ${fillable.size} open slot${fillable.size > 1 ? 's' : ''}</button>`
     : ui.save === 'pending' ? '<button class="cta" disabled>Saving…</button>'
     : ui.save === 'err' ? '<button class="cta err" disabled>Couldn’t save. Make any change to retry.</button>'
@@ -1199,7 +1241,7 @@ function renderLineup() {
   renderDock(lu, proj, open, day);
   $('#lineup').innerHTML = `
     <div class="slip-head"><span class="count">${6 - open}</span><h3>Lineup</h3><button class="sheet-x" data-action="sheet-close" aria-label="Close lineup">✕</button></div>
-    <div class="seg"><span class="on">${esc(profile.name)}</span><span>${TIERS[tierOf(profile.rp)]} · 1v1</span></div>
+    <div class="seg"><span class="on">${esc(profile.name)}</span><span>${TIERS[tierOf(profile.rp)]} · weekly 1v1</span></div>
     <ul class="legs">${legs}</ul>
     ${combos.length ? `<div class="combos">${combos.map(sy => `<span class="arch syn" title="${esc(sy.text)}">✦ ${esc(sy.name)}</span>`).join('')}</div>` : ''}
     <div class="slip-foot">
@@ -1286,7 +1328,7 @@ function groupView(day) {
 }
 
 /* ---------- Battles ---------- */
-const resultBadge = e => `<span class="badge ${e.result === 'W' ? 'won' : e.result === 'L' ? 'lost' : ''}">${e.result === 'W' ? 'Won' : e.result === 'L' ? 'Lost' : 'Tied'} ${e.cats?.[0] ?? ''}–${e.cats?.[1] ?? ''}</span>`;
+
 const catVal = (key, v) => key === 'fgp' ? (v ? f1(v) + '%' : '—') : f1(v);
 
 function battleSlot(sl, day, side) {
@@ -1301,46 +1343,91 @@ function battleSlot(sl, day, side) {
     <span class="sc ${line ? '' : 'zero'}">${line ? f1(fpOf(line)) : '—'}</span></div>`;
 }
 
-function battleView(day) {
-  const k = match.sides.findIndex(x => x.uid === me.id);
-  if (k < 0) return notice('Locked in', 'Matchup not found', '<p>Your lineup isn’t in this matchup. Reload the page to try again.</p>');
-  const mine = match.sides[k], opp = match.sides[1 - k];
-  const r = match.scored && match.result ? match.result : battle(match.sides[0].slots, match.sides[1].slots, day.results || {});
-  const my = i => k === 0 ? i : 1 - i; // flip side 1's view so "a" is always me
-  const wins = [r.wins[my(0)], r.wins[my(1)]], fp = [r.fp[my(0)], r.fp[my(1)]];
-  const won = r.winner === k, lost = r.winner === 1 - k;
-  const e = entries.get(ui.sel);
-  const head = match.scored
-    ? (won ? `You won ${wins[0]}–${wins[1]}` : lost ? `You lost ${wins[0]}–${wins[1]}` : `Tied ${wins[0]}–${wins[1]}`)
-    : wins[0] > wins[1] ? `You lead ${wins[0]}–${wins[1]}` : wins[0] < wins[1] ? `You trail ${wins[0]}–${wins[1]}` : `Level at ${wins[0]}–${wins[1]}`;
-  const tb = r.tiebreak ? ` Categories are level, so fantasy points decide it: ${f1(fp[0])} to ${f1(fp[1])}.` : '';
-  const rp = match.scored && e?.rpDelta != null ? `<span class="badge ${e.rpDelta >= 0 ? 'won' : 'lost'}">${e.rpDelta >= 0 ? '+' : ''}${e.rpDelta} RP</span>`
-    : `<span class="badge">Win +${RP_WIN} · loss ${RP_LOSS} RP</span>`;
+/* ---------- Weekly matchups ---------- */
+const weekLabel = w => { const ds = weekDates(w), md = d => dateOf(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); return `${md(ds[0])} – ${md(ds[6])}`; };
+const weekMatch = week => myMatches.find(m => m.week === week) || null;
+
+// A matchup's week so far, from this player's side ("a" is always me). Nights the page has loaded are worked
+// out from their box scores, live during games; earlier nights use the totals the sync stored.
+function weekState(m) {
+  const k = Math.max(0, m.sides.findIndex(x => x.uid === me.id));
+  const nights = Object.keys(m.nights || {}).sort().map(date => {
+    const n = m.nights[date], d = days.get(date), live = d && locked(d);
+    const tot = n.sides.map((x, j) => !x.slots ? null : live ? sideTotals(x.slots, n.sides[1 - j].slots || [], d.results || {}) : x.tot);
+    return { date, slots: [n.sides[k].slots, n.sides[1 - k].slots], tot: [tot[k], tot[1 - k]] };
+  });
+  const r = decide(addTotals(nights.map(n => n.tot[0])), addTotals(nights.map(n => n.tot[1])));
+  return { k, mine: m.sides[k], opp: m.sides[1 - k], nights, r };
+}
+
+function weekHead(m, w) {
+  const [a, b] = w.r.wins;
+  if (m.scored) return w.r.winner === 0 ? `You won the week ${a}–${b}` : w.r.winner === 1 ? `You lost the week ${a}–${b}` : `The week ended level, ${a}–${b}`;
+  return a > b ? `You lead ${a}–${b}` : a < b ? `You trail ${a}–${b}` : `Level at ${a}–${b}`;
+}
+const rpBadge = (m, w) => m.scored && w.mine.rpDelta != null
+  ? `<span class="badge ${w.mine.rpDelta >= 0 ? 'won' : 'lost'}">${w.mine.rpDelta >= 0 ? '+' : ''}${w.mine.rpDelta} RP</span>`
+  : `<span class="badge">Win +${RP_WIN} · loss ${RP_LOSS} RP</span>`;
+
+function catRows(w, mini) {
+  return CATS.map((c, i) => {
+    const x = w.r.cats[i], cls = x.w === 0 ? 'w-me' : x.w === 1 ? 'w-them' : '';
+    return mini
+      ? `<div class="mc ${cls}"><span>${c.name}</span><b><em>${catVal(c.key, x.a)}</em><i>–</i>${catVal(c.key, x.b)}</b></div>`
+      : `<div class="cat ${cls}"><span class="cv a">${catVal(c.key, x.a)}</span><span class="cn">${c.name}</span><span class="cv b">${catVal(c.key, x.b)}</span></div>`;
+  }).join('');
+}
+
+// Monday to Sunday: each side's fantasy points per night. Nights on the page can be opened.
+function nightsStrip(m, w) {
+  const by = new Map(w.nights.map(n => [n.date, n]));
+  const pts = x => x ? f1(x.fp) : '—';
+  return `<div class="wk-nights">${weekDates(m.week).map(d => {
+    const n = by.get(d), day = days.get(d), sel = d === ui.sel && ui.view === 'night';
+    const lead = n && n.tot[0] && n.tot[1] ? (n.tot[0].fp >= n.tot[1].fp ? 'up' : 'down') : '';
+    const inner = `<span class="wn-d">${dateOf(d).toLocaleDateString('en-US', { weekday: 'short' })}</span>`
+      + (n ? `<b>${pts(n.tot[0])}</b><small>${pts(n.tot[1])}</small>` : `<small>${day ? (locked(day) ? '—' : 'Open') : d < etDay() ? '—' : 'Soon'}</small>`);
+    return day ? `<button class="wn ${lead} ${sel ? 'on' : ''}" data-action="sel" data-d="${d}" aria-pressed="${sel}">${inner}</button>` : `<div class="wn ${lead}">${inner}</div>`;
+  }).join('')}</div>`;
+}
+
+// The week at a glance above an open night's cards, so the lineup can chase the categories being lost.
+function weekPanel() {
+  const week = weekOf(ui.sel), m = weekMatch(week);
+  if (!m) return `<section class="panel wk"><div class="list-head"><div><div class="eyebrow">Week of ${weekLabel(week)}</div><h2>Your weekly matchup starts at lock</h2>
+    <p class="sub">When this night locks you’re paired with a ${TIERS[tierOf(profile?.rp)]} player until Sunday. Every night you play adds to nine category totals, and the week’s totals decide it.</p></div></div></section>`;
+  const w = weekState(m);
+  return `<section class="panel wk"><div class="list-head"><div><div class="eyebrow">${tierBadge(m.tier)} Week of ${weekLabel(m.week)} · vs ${esc(w.opp.name)}</div><h2>${weekHead(m, w)}</h2>
+    <p class="sub">Your totals first. Set tonight’s cards to win the categories you’re losing.</p></div>${rpBadge(m, w)}</div>
+    <div class="cats mini">${catRows(w, true)}</div>${nightsStrip(m, w)}</section>`;
+}
+
+function weekView(day, m) {
+  const w = weekState(m), tonight = w.nights.find(n => n.date === day.date);
   const who = (sd, mineSide) => {
     const u = sd.bot ? { name: '#' } : peer(sd.uid) || { name: sd.name };
     return `<div class="bt-who ${mineSide ? 'me' : ''}">${avatarHtml(u, 'md')}<div><b>${esc(sd.name)}${sd.bot ? '' : badgeMark(peer(sd.uid))}</b>${sd.bot ? '<span class="bot">Computer</span>' : mineSide ? '<span class="you">You</span>' : `<small>${tierBadge(tierOf(sd.rpBefore))}</small>`}</div></div>`;
   };
-  const cats = CATS.map((c, i) => {
-    const x = r.cats[i], a = k === 0 ? x.a : x.b, b = k === 0 ? x.b : x.a, w = x.w === null ? null : x.w === k ? 'me' : 'them';
-    return `<div class="cat ${w ? 'w-' + w : ''}"><span class="cv a">${catVal(c.key, a)}</span><span class="cn">${c.name}</span><span class="cv b">${catVal(c.key, b)}</span></div>`;
-  }).join('');
-  const slots = SLOTS.map((slot, i) => {
-    const a = mine.slots[i], b = opp.slots[i];
+  const tb = w.r.tiebreak ? ` Categories are level, so fantasy points decide it: ${f1(w.r.fp[0])} to ${f1(w.r.fp[1])}.` : '';
+  const updated = day.updatedAt && !m.scored ? ` Stats as of ${new Date(day.updatedAt).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}.` : '';
+  const combo = list => synergiesOf(list || []).map(sy => `<span class="arch syn" title="${esc(sy.text)}">✦ ${esc(sy.name)}</span>`).join('') || '<span class="dimtxt">No combos</span>';
+  const slots = tonight ? SLOTS.map((slot, i) => {
+    const a = tonight.slots[0]?.[i] || null, b = tonight.slots[1]?.[i] || null;
     const marks = [...countersOn(a, b).map(c => ({ c, mine: true })), ...countersOn(b, a).map(c => ({ c, mine: false }))];
     return `<div class="bslot"><span class="ptag">${slot}</span>${battleSlot(a, day, 'a')}<span class="vs">vs</span>${battleSlot(b, day, 'b')}
       ${marks.length ? `<div class="ctr">${marks.map(x => `<span class="ctr-i ${x.mine ? 'good' : 'bad'}">${TYPES[x.c.by].icon} ${esc(x.c.text)}${x.mine ? '' : ' (theirs)'}</span>`).join('')}</div>` : ''}</div>`;
-  }).join('');
-  const combo = sd => synergiesOf(sd.slots).map(sy => `<span class="arch syn" title="${esc(sy.text)}">✦ ${esc(sy.name)}</span>`).join('') || '<span class="dimtxt">No combos</span>';
-  const updated = day.updatedAt ? `Stats as of ${new Date(day.updatedAt).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}.` : '';
+  }).join('') : '';
+  const missing = day.grouped ? `Neither of you set a lineup on ${dayLabel(day.date)}.` : 'Tonight’s lineups join the week on the next sync, within 30 minutes of tip-off.';
   return `<section class="panel battle">
-    <div class="list-head"><div><div class="eyebrow">${tierBadge(match.tier)} 1v1 · ${dayLabel(day.date)}</div><h2>${head}</h2>
-      <p class="sub">${match.scored ? '' : day.final ? 'All games are final. Rank points are added on the next sync. ' : 'Live stats refresh every minute. '}${updated}${tb}</p></div>${rp}</div>
-    <div class="bt-top">${who(mine, true)}<div class="bt-score"><b>${wins[0]}</b><span>–</span><b>${wins[1]}</b><small>categories</small></div>${who(opp, false)}</div>
-    <div class="cats">${cats}</div>
-    <div class="bt-fp"><span>${f1(fp[0])} fantasy pts</span><span class="dimtxt">tiebreak</span><span>${f1(fp[1])} fantasy pts</span></div>
-    <div class="bt-combos"><div>${combo(mine)}</div><div>${combo(opp)}</div></div>
-    <h3 class="bt-h">Slot by slot</h3>
-    <div class="bslots">${slots}</div>
+    <div class="list-head"><div><div class="eyebrow">${tierBadge(m.tier)} Week of ${weekLabel(m.week)}</div><h2>${weekHead(m, w)}</h2>
+      <p class="sub">${m.scored ? 'Final for the week.' : `Nine categories added up over the whole week. It’s decided after Sunday’s games.${day.final ? '' : ' Live stats refresh every minute.'}`}${updated}${tb}</p></div>${rpBadge(m, w)}</div>
+    <div class="bt-top">${who(w.mine, true)}<div class="bt-score"><b>${w.r.wins[0]}</b><span>–</span><b>${w.r.wins[1]}</b><small>categories this week</small></div>${who(w.opp, false)}</div>
+    <div class="cats">${catRows(w, false)}</div>
+    <div class="bt-fp"><span>${f1(w.r.fp[0])} fantasy pts</span><span class="dimtxt">tiebreak</span><span>${f1(w.r.fp[1])} fantasy pts</span></div>
+    ${nightsStrip(m, w)}
+    ${tonight ? `<h3 class="bt-h">${dayLabel(day.date)} · slot by slot</h3>
+    <div class="bt-combos"><div>${combo(tonight.slots[0])}</div><div>${combo(tonight.slots[1])}</div></div>
+    <div class="bslots">${slots}</div>` : `<p class="hint wk-missing">${missing}</p>`}
   </section>`;
 }
 
@@ -1355,21 +1442,35 @@ function leadersView() {
 }
 
 function historyView() {
+  const weeks = myMatches.map(m => {
+    const w = weekState(m), [a, b] = w.r.wins;
+    const st = m.scored
+      ? `<span class="badge ${w.r.winner === 0 ? 'won' : w.r.winner === 1 ? 'lost' : ''}">${w.r.winner === 0 ? 'Won' : w.r.winner === 1 ? 'Lost' : 'Tied'} ${a}–${b}</span>${w.mine.rpDelta != null ? `<span class="badge ${w.mine.rpDelta >= 0 ? 'won' : 'lost'}">${w.mine.rpDelta >= 0 ? '+' : ''}${w.mine.rpDelta} RP</span>` : ''}`
+      : `<span class="badge live">${a}–${b} so far</span>`;
+    const last = w.nights.map(n => n.date).filter(d => days.has(d)).pop();
+    const tag = last ? `button class="runner hist" data-action="sel" data-d="${last}"` : 'div class="runner hist"';
+    return `<${tag}><span class="gnum">W</span>
+      <div><div class="r-name">Week of ${weekLabel(m.week)}</div><div class="r-sub">vs ${esc(w.opp.name)}${w.opp.bot ? ' (computer)' : ''} · ${esc(m.tierName)} · ${w.nights.filter(n => n.slots[0]).length} nights played</div></div>
+      <div class="r-act">${st}</div></${tag.split(' ')[0]}>`;
+  }).join('');
   const list = [...entries.values()].sort((a, b) => a.date < b.date ? 1 : -1);
   const rows = list.map(e => {
     const st = e.invalid ? `<span class="badge lost">Invalid: ${esc(e.invalid)}</span>`
-      : e.finish || e.result ? `<span class="badge ${e.rpDelta >= 0 ? 'won' : 'lost'}">${e.rpDelta >= 0 ? '+' : ''}${e.rpDelta} RP</span>`
+      : e.finish ? `<span class="badge ${e.rpDelta >= 0 ? 'won' : 'lost'}">${e.rpDelta >= 0 ? '+' : ''}${e.rpDelta} RP</span>`
+      : e.scored ? '<span class="badge won">Added to week</span>'
       : e.group || e.match ? '<span class="badge live">In progress</span>' : '<span class="badge draft">Entered</span>';
-    const sub = e.result ? `${e.result === 'W' ? 'Won' : e.result === 'L' ? 'Lost' : 'Tied'} ${e.cats[0]}–${e.cats[1]} vs ${esc(e.opp)} · ${e.tierName}${e.reward ? ` · 🔥 ${e.streak} nights: ${rewardText(e.reward)}` : ''}`
-      : e.finish ? `${ordinal(e.finish)} of ${e.of} · ${e.tierName}${e.reward ? ` · 🔥 ${e.streak} nights: ${rewardText(e.reward)}` : ''}`
-      : e.match ? 'Matchup set' : e.group ? 'Group formed' : 'Waiting for tip-off';
+    const sub = e.finish ? `${ordinal(e.finish)} of ${e.of} · ${e.tierName}${e.reward ? ` · 🔥 ${e.streak} nights: ${rewardText(e.reward)}` : ''}`
+      : e.scored ? `Week of ${weekLabel(e.week || weekOf(e.date))}${e.reward ? ` · 🔥 ${e.streak} nights: ${rewardText(e.reward)}` : ''}`
+      : e.match ? 'In your weekly matchup' : e.group ? 'Group formed' : 'Waiting for tip-off';
     const tag = days.has(e.date) ? `button class="runner hist" data-action="sel" data-d="${e.date}"` : 'div class="runner hist"';
     return `<${tag}>
       <span class="gnum">${dateOf(e.date).getDate()}</span>
       <div><div class="r-name">${dayLabel(e.date)}</div><div class="r-sub">${sub}</div></div>
       <div class="r-act">${e.score != null ? `<span class="sc">${f1(e.score)}</span>` : ''}${st}</div></${tag.split(' ')[0]}>`;
   }).join('');
-  return `<section class="panel"><div class="list-head"><div><h2>My nights</h2><p class="sub">Every night you entered, newest first. Tap one of the last few nights to see the matchup.</p></div></div>
+  return `<section class="panel"><div class="list-head"><div><h2>My weeks</h2><p class="sub">Weekly matchups, newest first. Each is decided after Sunday’s games.</p></div></div>
+    ${weeks || '<p class="empty">No weekly matchups yet. Enter a night to get paired.</p>'}</section>
+    <section class="panel"><div class="list-head"><div><h2>My nights</h2><p class="sub">Every night you entered, newest first, with your lineup’s fantasy points.</p></div></div>
     ${rows || '<p class="empty">You haven’t entered a night yet.</p>'}</section>`;
 }
 
@@ -1440,12 +1541,14 @@ function profileView() {
 /* ---------- Right rail ---------- */
 function slipSummary() {
   const rp = profile?.rp || 0, tier = tierOf(rp);
-  const e = entries.get(ui.sel);
+  const e = entries.get(ui.sel), wm = ui.view === 'night' && ui.sel ? weekMatch(weekOf(ui.sel)) : null;
   let night = '';
-  if (ui.view === 'night' && e) {
-    night = e.result
-      ? `<div class="series-row"><span>Result</span><b>${e.result === 'W' ? 'Won' : e.result === 'L' ? 'Lost' : 'Tied'} ${e.cats[0]}–${e.cats[1]}</b></div><div class="series-row"><span>Opponent</span><b class="small">${esc(e.opp)}</b></div><div class="series-row"><span>Rank points</span><b class="${e.rpDelta >= 0 ? 'up' : 'down'}">${e.rpDelta >= 0 ? '+' : ''}${e.rpDelta}</b></div>`
-      : e.finish
+  if (wm) {
+    const w = weekState(wm);
+    night = `<div class="series-row"><span>This week</span><b class="small">vs ${esc(w.opp.name)}</b></div><div class="series-row"><span>Categories</span><b>${w.r.wins[0]}–${w.r.wins[1]}</b></div>`
+      + (wm.scored && w.mine.rpDelta != null ? `<div class="series-row"><span>Week result</span><b class="${w.mine.rpDelta >= 0 ? 'up' : 'down'}">${w.mine.rpDelta >= 0 ? '+' : ''}${w.mine.rpDelta} RP</b></div>` : '');
+  } else if (ui.view === 'night' && e) {
+    night = e.finish
       ? `<div class="series-row"><span>Finish</span><b>${ordinal(e.finish)}</b></div><div class="series-row"><span>Score</span><b>${f1(e.score)}</b></div><div class="series-row"><span>Rank points</span><b class="${e.rpDelta >= 0 ? 'up' : 'down'}">${e.rpDelta >= 0 ? '+' : ''}${e.rpDelta}</b></div>`
       : `<div class="series-row"><span>Status</span><b class="small">${e.invalid ? 'Invalid' : e.group || e.match ? 'Live' : 'Locked'}</b></div>`;
   }
@@ -1453,7 +1556,7 @@ function slipSummary() {
     <div class="slip-head"><span class="count">${tier + 1}</span><h3>${TIERS[tier]}</h3></div>
     ${night}
     <div class="series-row"><span>Rank points</span><b>${fmt(rp)}</b></div>
-    <div class="slip-foot"><div class="info">${tier === TIERS.length - 1 ? 'You’re in the top tier.' : `${100 - (rp - tier * 100)} more RP to reach ${TIERS[tier + 1]}.`} Win: +${RP_WIN} RP · loss: ${RP_LOSS}.</div></div>
+    <div class="slip-foot"><div class="info">${tier === TIERS.length - 1 ? 'You’re in the top tier.' : `${100 - (rp - tier * 100)} more RP to reach ${TIERS[tier + 1]}.`} Win a week: +${RP_WIN} RP · loss: ${RP_LOSS}.</div></div>
   </div>`;
 }
 
@@ -1505,7 +1608,7 @@ function render() {
     const sorted = [...days.keys()].sort();
     ui.sel = (days.has(etDay()) ? etDay() : nextOpenDate()) || sorted.filter(d => entries.has(d)).pop() || sorted.pop() || null;
   }
-  watchGroup(); watchMatch();
+  watchGroup();
   if (ui.view === 'night' && liveSel !== ui.sel) { liveSel = ui.sel; pollLive(); }
   renderSide();
   const m = $('#main');
@@ -1519,10 +1622,10 @@ function render() {
   if (!locked(day)) {
     const sig = 'build|' + ui.sel;
     if (ui.draftFor !== ui.sel) { ui.draft = (e?.ids || SLOTS.map(() => null)).slice(); ui.draftFor = ui.sel; ui.save = ''; }
-    if (sig === ui.sig && $('#poolrows')) { renderPool(); renderLineup(); const el = $('#slate'); if (el) keepRacesScroll(() => { el.innerHTML = slateCard(day); }); const st = $('#streak'); if (st) st.innerHTML = streakBanner(); return; }
+    if (sig === ui.sig && $('#poolrows')) { renderPool(); renderLineup(); const wk = $('#week'); if (wk) wk.innerHTML = weekPanel(); const el = $('#slate'); if (el) keepRacesScroll(() => { el.innerHTML = slateCard(day); }); const st = $('#streak'); if (st) st.innerHTML = streakBanner(); return; }
     ui.sig = sig;
     $('#slip').innerHTML = '<button class="dock" id="dock" data-action="sheet" aria-expanded="false" aria-label="Show your lineup"></button><div class="sheet-bg" data-action="sheet-close"></div><div class="slip-card" id="lineup"></div>';
-    m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day)}<section class="panel"><div class="list-head"><div><h2>${dayLabel(ui.sel)} · your cards</h2><p class="sub">Your cards with a game this night. Tap a rating to add one. Any mix of your cards works.</p></div></div><div class="pool-tools">${poolTools()}</div><div id="poolrows"></div><div id="poolmore"></div></section>${legend}`;
+    m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day)}<div id="week">${weekPanel()}</div><section class="panel"><div class="list-head"><div><h2>${dayLabel(ui.sel)} · your cards</h2><p class="sub">Your cards with a game this night. Tap a rating to add one. Any mix of your cards works.</p></div></div><div class="pool-tools">${poolTools()}</div><div id="poolrows"></div><div id="poolmore"></div></section>${legend}`;
     renderPool(); renderLineup();
     return;
   }
@@ -1531,11 +1634,13 @@ function render() {
   let body;
   const next = nextOpenDate();
   const nextBtn = next ? `<div class="row"><button class="btn primary" data-action="sel" data-d="${next}">Enter ${dayLabel(next)}</button></div>` : '';
-  if (!e) body = notice('Not entered', 'You sat this night out', `<p>${profile.nights ? `${profile.lastSaved === ui.sel ? 'Your Streak Saver covered this night, so your streak and RP are safe.' : `Skipping a game night costs ${SKIP_PENALTY} RP and your streak, but it can’t drop you out of your tier.`}` : 'Enter a night to get on the board.'}</p>${nextBtn}`);
-  else if (e.invalid) body = notice('Entry not counted', 'This lineup was invalid', `<p>The lineup was rejected (${esc(e.invalid)}), so it wasn’t given an opponent. Nothing changed on your rank.</p>${nextBtn}`);
-  else if (e.group && group && group.date === ui.sel) body = groupView(day);
-  else if (e.match && match && match.date === ui.sel) body = battleView(day);
-  else body = notice('Locked in', 'Finding your opponent', `<p>Lineups locked at ${timeLabel(day.lockAt)}. Opponents are paired on the next sync, within 30 minutes of tip-off. Both lineups are revealed then.</p>`);
+  const wm = weekMatch(weekOf(ui.sel));
+  const sat = notice('Not entered', 'You sat this night out', `<p>${profile.nights ? `${profile.lastSaved === ui.sel ? 'Your Streak Saver covered this night, so your streak and RP are safe.' : `Skipping a game night adds nothing to your week and costs ${SKIP_PENALTY} RP and your streak, but it can’t drop you out of your tier.`}` : 'Enter a night to get on the board.'}</p>${nextBtn}`);
+  if (e?.group && group && group.date === ui.sel) body = groupView(day);
+  else if (e?.invalid) body = notice('Entry not counted', 'This lineup was invalid', `<p>The lineup was rejected (${esc(e.invalid)}), so it didn’t count toward your week.</p>${nextBtn}`) + (wm ? weekView(day, wm) : '');
+  else if (wm) body = (e ? '' : sat) + weekView(day, wm);
+  else if (!e) body = sat;
+  else body = notice('Locked in', 'Finding your opponent', `<p>Lineups locked at ${timeLabel(day.lockAt)}. Your opponent for the week is set on the next sync, within 30 minutes of tip-off, and both lineups are revealed then.</p>`);
   keepRacesScroll(() => { m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day)}${body}${legend}`; });
 }
 
@@ -1659,7 +1764,7 @@ document.addEventListener('change', e => {
 
 /* ---------- Boot (Firebase) ---------- */
 const EMAIL_KEY = 'bo7-signin-email';
-let unsubGroup = null, groupKey = '', unsubMatch = null, matchKey = '', unsubLeaders = null;
+let unsubGroup = null, groupKey = '', unsubLeaders = null;
 
 // US Eastern calendar date, offset by whole days, as YYYYMMDD (NBA game days are Eastern dates).
 function etDay(offset = 0) {
@@ -1680,14 +1785,6 @@ function watchGroup() {
   groupKey = key; unsubGroup?.(); group = null;
   if (!key) return;
   unsubGroup = db.doc(`days/${ui.sel}/groups/${e.group}`).onSnapshot(s => { group = s.exists ? s.data() : null; ui.sig = ''; render(); }, () => {});
-}
-
-function watchMatch() {
-  const e = entries.get(ui.sel), key = e?.match ? `${ui.sel}/${e.match}` : '';
-  if (key === matchKey) return;
-  matchKey = key; unsubMatch?.(); match = null;
-  if (!key) return;
-  unsubMatch = db.doc(`days/${ui.sel}/matches/${e.match}`).onSnapshot(s => { match = s.exists ? s.data() : null; ui.sig = ''; render(); }, () => {});
 }
 
 function watchLeaders() {
@@ -1860,6 +1957,11 @@ function startData() {
     }
     loaded.cards = true; ui.sig = ''; render();
   }, () => { loaded.cards = true; render(); });
+  // Every weekly matchup the player has been in, newest first.
+  db.collection('matches').where('uids', 'array-contains', me.id).onSnapshot(s => {
+    myMatches = s.docs.map(d => d.data()).sort((a, b) => a.week < b.week ? 1 : -1);
+    render();
+  }, () => {});
   db.doc('meta/roster').get().then(s => { roster = new Map((s.exists ? s.data().players : []).map(p => [p.id, p])); ui.sig = ''; render(); }, () => {});
 }
 

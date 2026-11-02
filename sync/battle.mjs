@@ -1,4 +1,5 @@
-// Head-to-head battles: two six-card lineups, nine categories, decided by real box scores.
+// Weekly head-to-head matchups: each night both players field six cards, their real box scores
+// (after boosts, counters and combos) add up Monday to Sunday, and nine categories decide the week.
 // index.html carries a copy of this file's rules for the live board; keep the two in step.
 //
 // A box score line is [min, pts, reb, ast, stl, blk, to, threes, fgm, fga, ftm].
@@ -74,9 +75,8 @@ export function sideTotals(slots, opp, results) {
   return { t, fp: Math.round(fp * 10) / 10 };
 }
 
-// The result of a matchup. Equal category wins (a tied category) fall back to total fantasy points.
-export function battle(a, b, results) {
-  const A = sideTotals(a, b, results), B = sideTotals(b, a, results);
+// The result from each side's category totals ({ t, fp }). Equal category wins fall back to fantasy points.
+export function decide(A, B) {
   let winsA = 0, winsB = 0;
   const cats = CATS.map(c => {
     const va = A.t[c.key], vb = B.t[c.key];
@@ -88,6 +88,35 @@ export function battle(a, b, results) {
   let winner = winsA > winsB ? 0 : winsB > winsA ? 1 : A.fp > B.fp ? 0 : B.fp > A.fp ? 1 : null;
   return { cats, wins: [winsA, winsB], fp: [A.fp, B.fp], winner, tiebreak: winsA === winsB && winner !== null };
 }
+// One night between two lineups.
+export const battle = (a, b, results) => decide(sideTotals(a, b || [], results), sideTotals(b || [], a, results));
+
+// Adds nightly totals into one week. A null is a night without a lineup.
+export function addTotals(list) {
+  const t = Object.fromEntries(COUNTING.map(k => [k, 0]));
+  let fp = 0;
+  for (const n of list) {
+    if (!n) continue;
+    for (const k of COUNTING) t[k] += n.t[k] || 0;
+    fp += n.fp || 0;
+  }
+  t.fgp = t.fga ? (t.fgm / t.fga) * 100 : 0;
+  return { t, fp: Math.round(fp * 10) / 10 };
+}
+// A week's result so far from a matchup's stored nights: { <date>: { sides: [{ slots, tot }, { slots, tot }] } }.
+export function weekResult(nights) {
+  const list = Object.values(nights || {});
+  return decide(addTotals(list.map(n => n.sides?.[0]?.tot)), addTotals(list.map(n => n.sides?.[1]?.tot)));
+}
+
+// Weeks run Monday to Sunday and are named by their Monday (YYYYMMDD, US Eastern game dates).
+const ymd = d => d.toISOString().slice(0, 10).replace(/-/g, '');
+const utc = (date, plus = 0) => new Date(Date.UTC(+date.slice(0, 4), +date.slice(4, 6) - 1, +date.slice(6, 8) + plus));
+export function weekOf(date) {
+  const d = utc(date);
+  return ymd(utc(date, -((d.getUTCDay() + 6) % 7)));
+}
+export const weekDates = week => Array.from({ length: 7 }, (_, i) => ymd(utc(week, i)));
 
 /* ---------- Archetype assignment ---------- */
 // Season sums per player: [games, fp, min, pts, reb, ast, stl, blk, to, threes, fgm, fga, ftm]

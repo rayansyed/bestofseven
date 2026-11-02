@@ -1,8 +1,11 @@
-// Ranked 1v1 nights. At lock, valid entries are paired with one opponent at a similar rank (a computer
-// lineup takes the odd seat). Once every game is final, each battle is decided on nine categories and
-// rank points are applied. Nights grouped before battles existed are scored by ranked-groups.mjs.
+// Ranked weekly matchups. Each game night's lineups lock at the first tip-off; each valid lineup joins its
+// owner's matchup for the week (Monday to Sunday). Players without one yet are paired with someone at a
+// similar rank, and a computer takes an odd seat, setting a fresh lineup every night. When a night's games
+// are final its stats are added to every matchup that week, and once the week's last game is final the nine
+// categories over the whole week decide each matchup and rank points are applied.
+// Nights grouped before matchups existed are scored by ranked-groups.mjs.
 import { RP_WIN, RP_LOSS, SKIP_PENALTY, TIERS, tierOf, invalidReason, rewardFor, momentBadges, buildLineup, seeded, botName, botNoise } from './game.mjs';
-import { battle } from './battle.mjs';
+import { sideTotals, weekResult, weekOf, weekDates } from './battle.mjs';
 
 const RANK = { common: 0, rare: 1, epic: 2, legendary: 3 };
 
@@ -15,23 +18,10 @@ async function collection(db, uid) {
   return owned;
 }
 
-export async function pairNight(db, day) {
-  const date = day.date;
-  const pmap = new Map(day.players.map(p => [p.id, p]));
-  const slotsOf = (ids, rarityOf) => ids.map(id => ({ id, rarity: rarityOf(id), types: pmap.get(id)?.types || [] }));
-  const humans = [], writes = [];
-  for (const { id, data: e } of await db.query('entries', 'date', date)) {
-    const user = (await db.read('users/' + e.uid)) || {};
-    const owned = await collection(db, e.uid);
-    const bad = invalidReason({ ids: e.ids, captain: null }, pmap)
-      || (e.ids.some(pid => pid && !owned.has(pid)) ? 'player not in your collection' : null);
-    if (bad) { writes.push({ path: 'entries/' + id, data: { invalid: bad }, merge: true }); continue; }
-    humans.push({ entryId: id, key: e.uid, uid: e.uid, name: user.name || 'Player', rp: user.rp || 0, ids: e.ids, slots: slotsOf(e.ids, pid => owned.get(pid)), at: e.at || 0, bot: false });
-  }
-
-  // Pair within each tier by RP; leftovers pair across neighbouring tiers; one odd seat gets a computer.
+// Pair players within each tier by RP; leftovers pair across tiers; one odd player is left over.
+function pair(players) {
   const byTier = new Map();
-  for (const h of humans) { const t = tierOf(h.rp); if (!byTier.has(t)) byTier.set(t, []); byTier.get(t).push(h); }
+  for (const h of players) { const t = tierOf(h.rp); if (!byTier.has(t)) byTier.set(t, []); byTier.get(t).push(h); }
   const pairs = [], leftovers = [];
   for (const [, list] of [...byTier].sort((a, b) => b[0] - a[0])) {
     list.sort((a, b) => b.rp - a.rp);
@@ -40,28 +30,108 @@ export async function pairNight(db, day) {
   }
   leftovers.sort((a, b) => b.rp - a.rp);
   for (let i = 0; i + 1 < leftovers.length; i += 2) pairs.push([leftovers[i], leftovers[i + 1]]);
-  if (leftovers.length % 2) {
-    const h = leftovers[leftovers.length - 1], tier = tierOf(h.rp);
-    const lu = buildLineup(day.players, { rnd: seeded(`${date}|bot|${h.uid}`), noise: botNoise(tier), tries: 80, noCaptain: true });
-    if (lu) pairs.push([h, { key: 'bot', uid: null, name: botName(pairs.length), ids: lu.ids, slots: slotsOf(lu.ids, () => 'common'), at: null, bot: true }]);
-  }
-
-  pairs.forEach((sides, n) => {
-    const mid = `m${n + 1}`, tier = tierOf(Math.max(...sides.map(s => s.rp || 0)));
-    writes.push({ path: `days/${date}/matches/${mid}`, data: { date, mid, tier, tierName: TIERS[tier], sides: sides.map(({ entryId, rp, ...s }) => ({ ...s, rpBefore: rp ?? null })), scored: false } });
-    sides.forEach((s, k) => { if (!s.bot) writes.push({ path: 'entries/' + s.entryId, data: { match: mid, side: k, tier }, merge: true }); });
-  });
-  writes.push({ path: 'days/' + date, data: { grouped: true, mode: 'battle', matches: pairs.length, entrants: humans.length }, merge: true });
-  await db.batch(writes);
-  return { matches: pairs.length, entrants: humans.length };
+  return { pairs, odd: leftovers.length % 2 ? leftovers[leftovers.length - 1] : null };
 }
 
-export async function scoreBattles(db, day) {
-  const date = day.date, writes = [];
+// At a night's lock: check entries, add each lineup to its owner's weekly matchup, and pair anyone new.
+export async function lockNight(db, day) {
+  const date = day.date, week = weekOf(date);
+  const pmap = new Map(day.players.map(p => [p.id, p]));
+  const slotsOf = (ids, rarityOf) => ids.map(id => id ? { id, rarity: rarityOf(id), types: pmap.get(id)?.types || [] } : null);
+  const matches = new Map((await db.query('matches', 'week', week)).map(m => [m.id, m.data]));
+  const seat = new Map();
+  for (const [mid, m] of matches) m.sides.forEach((s, k) => { if (s.uid) seat.set(s.uid, [mid, k]); });
+
+  const writes = [], lineups = [], unpaired = [];
+  for (const { id, data: e } of await db.query('entries', 'date', date)) {
+    const user = (await db.read('users/' + e.uid)) || {};
+    const owned = await collection(db, e.uid);
+    const bad = invalidReason({ ids: e.ids, captain: null }, pmap)
+      || (e.ids.some(pid => pid && !owned.has(pid)) ? 'player not in your collection' : null);
+    if (bad) { writes.push({ path: 'entries/' + id, data: { invalid: bad }, merge: true }); continue; }
+    const h = { entryId: id, uid: e.uid, name: user.name || 'Player', rp: user.rp || 0, slots: slotsOf(e.ids, pid => owned.get(pid)) };
+    lineups.push(h);
+    if (!seat.has(e.uid)) unpaired.push(h);
+  }
+
+  // New matchups for players without one this week.
+  const { pairs, odd } = pair(unpaired);
+  if (odd) pairs.push([odd, null]);
+  let n = matches.size;
+  for (const sides of pairs) {
+    const mid = `${week}_m${++n}`, tier = tierOf(Math.max(...sides.map(s => s?.rp || 0)));
+    const side = (s, k) => s ? { key: s.uid, uid: s.uid, name: s.name, bot: false, rpBefore: s.rp } : { key: 'bot', uid: null, name: botName(n + k), bot: true, rpBefore: null };
+    matches.set(mid, { week, mid, tier, tierName: TIERS[tier], uids: sides.map(s => s?.uid || null), sides: sides.map(side), nights: {}, scored: false, startedOn: date });
+    sides.forEach((s, k) => { if (s) seat.set(s.uid, [mid, k]); });
+  }
+
+  // Tonight's lineups go into each matchup this week; computer seats pick a new lineup every night.
+  for (const [mid, m] of matches) {
+    // Firestore can't hold an array inside an array, so each side is its own map.
+    const night = { sides: [{ slots: null, tot: null }, { slots: null, tot: null }] };
+    m.sides.forEach((s, k) => {
+      if (!s.bot) return;
+      const lu = buildLineup(day.players, { rnd: seeded(`${date}|bot|${mid}`), noise: botNoise(m.tier), tries: 80, noCaptain: true });
+      if (lu) night.sides[k].slots = slotsOf(lu.ids, () => 'common');
+    });
+    m.nights = { ...m.nights, [date]: night };
+  }
+  for (const h of lineups) {
+    const [mid, k] = seat.get(h.uid);
+    matches.get(mid).nights[date].sides[k].slots = h.slots;
+    writes.push({ path: 'entries/' + h.entryId, data: { match: mid, week, side: k }, merge: true });
+  }
+  for (const [mid, m] of matches) writes.push({ path: 'matches/' + mid, data: m });
+  writes.push({ path: 'days/' + date, data: { grouped: true, mode: 'week', matches: matches.size, entrants: lineups.length }, merge: true });
+  await db.batch(writes);
+  return { matches: matches.size, created: pairs.length, entrants: lineups.length };
+}
+
+// Once a night's games are final: store its totals in every matchup that week, and pay streaks and moments.
+export async function scoreNight(db, day) {
+  const date = day.date, week = weekOf(date), results = day.results || {}, writes = [];
   let scored = 0;
-  for (const { id: mid, data: m } of await db.list(`days/${date}/matches`)) {
-    if (m.scored) continue;
-    const r = battle(m.sides[0].slots, m.sides[1].slots, day.results || {});
+  for (const { id: mid, data: m } of await db.query('matches', 'week', week)) {
+    const night = m.nights?.[date];
+    if (!night) continue;
+    const [a, b] = night.sides.map(x => x.slots);
+    night.sides[0].tot = a ? sideTotals(a, b || [], results) : null;
+    night.sides[1].tot = b ? sideTotals(b, a || [], results) : null;
+    writes.push({ path: 'matches/' + mid, data: { nights: m.nights }, merge: true });
+    for (let k = 0; k < 2; k++) {
+      const me = m.sides[k];
+      if (me.bot || !night.sides[k].slots) continue;
+      const user = (await db.read('users/' + me.uid)) || {};
+      const fp = night.sides[k].tot.fp, ids = night.sides[k].slots.map(s => s?.id || null);
+      // The streak grows on every scored entry.
+      const streak = (user.streak || 0) + 1, reward = rewardFor(streak);
+      const rp = (user.rp || 0) + (reward?.rp || 0);
+      const fresh = momentBadges(ids, null, day).filter(id => !user.moments?.[id]);
+      writes.push({ path: 'users/' + me.uid, data: {
+        ...(fresh.length ? { moments: { ...user.moments, ...Object.fromEntries(fresh.map(id => [id, date])) }, lastMoments: { date, ids: fresh } } : {}),
+        rp, tier: tierOf(rp), nights: (user.nights || 0) + 1, lastNight: date,
+        streak, bestStreak: Math.max(user.bestStreak || 0, streak), lastStreak: 0,
+        bestTier: Math.max(user.bestTier || 0, tierOf(rp)), bestScore: Math.max(user.bestScore || 0, fp),
+        ...(reward ? { savers: (user.savers || 0) + reward.saver, badge: !!user.badge || reward.badge, lastReward: { date, streak, ...reward } } : {}),
+      }, merge: true });
+      writes.push({ path: `entries/${date}_${me.uid}`, data: { score: fp, scored: true, streak, reward: reward || null }, merge: true });
+    }
+    scored++;
+  }
+  writes.push({ path: 'days/' + date, data: { scored: true }, merge: true });
+  await db.batch(writes);
+  return { scored };
+}
+
+// Decides every matchup whose week is over and whose game nights are all final and scored.
+export async function scoreWeeks(db, today) {
+  const current = weekOf(today), writes = [];
+  let done = 0;
+  for (const { id: mid, data: m } of await db.query('matches', 'scored', false)) {
+    if (m.week >= current) continue;
+    const nights = await Promise.all(weekDates(m.week).map(d => db.read('days/' + d)));
+    if (nights.some(d => d && d.grouped && (!d.final || !d.scored))) continue;
+    const r = weekResult(m.nights);
     for (let k = 0; k < 2; k++) {
       const me = m.sides[k], opp = m.sides[1 - k];
       if (me.bot) continue;
@@ -69,36 +139,21 @@ export async function scoreBattles(db, day) {
       const won = r.winner === k, lost = r.winner === 1 - k;
       const before = user.rp || 0, tierBefore = tierOf(before);
       let after = Math.max(0, before + (won ? RP_WIN : lost ? RP_LOSS : 0));
-      // A player can't drop out of a tier on the first night after reaching it.
+      // A player can't drop out of a tier the week after reaching it.
       if (user.shield && tierOf(after) < tierBefore) after = tierBefore * 100;
-      const delta = after - before;
-      // The streak grows on every scored entry, win or lose.
-      const streak = (user.streak || 0) + 1, reward = rewardFor(streak);
-      after += reward?.rp || 0;
       const promoted = tierOf(after) > tierBefore;
-      const fresh = momentBadges(me.ids, null, day).filter(id => !user.moments?.[id]);
+      const res = { week: m.week, mid, result: won ? 'W' : lost ? 'L' : 'T', cats: [r.wins[k], r.wins[1 - k]], opp: opp.name, rpDelta: after - before, rpAfter: after };
       writes.push({ path: 'users/' + me.uid, data: {
-        ...(fresh.length ? { moments: { ...user.moments, ...Object.fromEntries(fresh.map(id => [id, date])) }, lastMoments: { date, ids: fresh } } : {}),
-        rp: after, tier: tierOf(after), shield: promoted ? 1 : 0,
-        nights: (user.nights || 0) + 1, wins: (user.wins || 0) + (won ? 1 : 0), losses: (user.losses || 0) + (lost ? 1 : 0), lastNight: date,
-        streak, bestStreak: Math.max(user.bestStreak || 0, streak), lastStreak: 0,
-        bestTier: Math.max(user.bestTier || 0, tierOf(after)), bestScore: Math.max(user.bestScore || 0, r.fp[k]),
-        ...(reward ? {
-          savers: (user.savers || 0) + reward.saver,
-          badge: !!user.badge || reward.badge, lastReward: { date, streak, ...reward },
-        } : {}),
+        rp: after, tier: tierOf(after), shield: promoted ? 1 : 0, bestTier: Math.max(user.bestTier || 0, tierOf(after)),
+        wins: (user.wins || 0) + (won ? 1 : 0), losses: (user.losses || 0) + (lost ? 1 : 0), lastWeek: res,
       }, merge: true });
-      writes.push({ path: `entries/${date}_${me.uid}`, data: {
-        result: won ? 'W' : lost ? 'L' : 'T', cats: [r.wins[k], r.wins[1 - k]], score: r.fp[k], opp: opp.name,
-        rpDelta: delta, rpAfter: after, tierName: TIERS[m.tier], streak, reward: reward || null,
-      }, merge: true });
+      m.sides[k] = { ...me, rpDelta: res.rpDelta };
     }
-    writes.push({ path: `days/${date}/matches/${mid}`, data: { scored: true, result: r }, merge: true });
-    scored++;
+    writes.push({ path: 'matches/' + mid, data: { scored: true, result: r, sides: m.sides }, merge: true });
+    done++;
   }
-  writes.push({ path: 'days/' + date, data: { scored: true }, merge: true });
-  await db.batch(writes);
-  return { scored };
+  if (writes.length) await db.batch(writes);
+  return done;
 }
 
 // Returning players who didn't enter lose a little RP (never their tier) and their streak, unless a
@@ -116,13 +171,17 @@ export async function applySkips(db, date) {
   return writes.length;
 }
 
-// The night's three best real squads by fantasy points, for the page's podium. Computer lineups never count.
+// The night's three best real lineups by fantasy points, for the page's podium. Computer lineups never count.
 export async function bestSquads(db, day) {
   const squads = [];
-  for (const { data: m } of await db.list(`days/${day.date}/matches`)) {
-    const r = m.result || battle(m.sides[0].slots, m.sides[1].slots, day.results || {});
-    m.sides.forEach((s, k) => { if (!s.bot) squads.push({ uid: s.uid, name: s.name, tier: m.tier, ids: s.ids, captain: null, at: s.at ?? null, total: r.fp[k] }); });
+  for (const { data: m } of await db.query('matches', 'week', weekOf(day.date))) {
+    const night = m.nights?.[day.date];
+    if (!night) continue;
+    m.sides.forEach((s, k) => {
+      if (s.bot || !night.sides[k].slots) return;
+      const total = night.sides[k].tot?.fp ?? sideTotals(night.sides[k].slots, night.sides[1 - k].slots || [], day.results || {}).fp;
+      squads.push({ uid: s.uid, name: s.name, tier: m.tier, ids: night.sides[k].slots.map(x => x?.id || null), captain: null, total });
+    });
   }
-  return squads.sort((a, b) => b.total - a.total || (a.at ?? Infinity) - (b.at ?? Infinity)).slice(0, 3)
-    .map(({ uid, name, tier, ids, captain, total }) => ({ uid, name, tier, ids, captain, total }));
+  return squads.sort((a, b) => b.total - a.total).slice(0, 3);
 }

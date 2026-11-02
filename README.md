@@ -1,22 +1,29 @@
 # Best of 7 · NBA
 
-Ranked NBA fantasy you can play any night. Draft six real players (2 G, 2 F, 1 C, 1 UTIL) on a 16★ budget and name a captain. When lineups lock at the first tip-off, you're placed in a group of 10 players at your rank, with computer lineups filling empty seats. Real box scores decide the group. Finishing high earns rank points, and every 100 points moves you up a tier: Bronze → Silver → Gold → Platinum → Diamond → Elite.
+An NBA card battler you can play any game night. Collect player cards, set a six-card lineup (2 G, 2 F, 1 C, 1 UTIL) from the cards you own, and when lineups lock at the first tip-off you're paired with one opponent at your rank. Both lineups are revealed, and real box scores decide nine stat categories. Win more categories to win the night and earn rank points; every 100 points moves you up a tier: Bronze → Silver → Gold → Platinum → Diamond → Elite.
 
 ## Rules
 | | |
 |---|---|
-| Scoring | point 1 · rebound 1.2 · assist 1.5 · steal 3 · block 3 · turnover −1 |
-| Star ratings | every player is 1–5★ by fantasy points per game this season: 45+ = 5★, 35–44.9 = 4★, 25–34.9 = 3★, 15–24.9 = 2★, under 15 = 1★. Ratings freeze at the first tip-off. |
-| Budget | your six players' stars must add up to **16★ or less**, with **at most one 5★ player** |
-| Captain | scores 1.5× and **costs one extra star** |
-| Rank points | 1st +30 · 2nd–3rd +20 · 4th–5th +5 · 6th–7th −5 · 8th–10th −15 |
+| Cards | new players open **3 free starter packs** of 5 cards (2 G, 2 F, 1 C each), all Common, with no 4★ or 5★ players. The first pack favours players with a game in the next two days. Packs are opened on the server (`api/packs.js`), so cards can't be made up in the browser. |
+| Lineup | six slots from cards you own whose players have a game that night. A slot can stay empty when none of your cards fits it; it scores nothing. |
+| Budget | the cards' stars must add up to **16★ or less**, with **at most one 5★ player** |
+| Star ratings | every player is 1–5★ by fantasy points per game this season: 45+ = 5★, 35–44.9 = 4★, 25–34.9 = 3★, 15–24.9 = 2★, under 15 = 1★ |
+| Matchups | at lock, entries are paired by rank within each tier, leftovers across tiers, and an odd player out faces a computer lineup. Each slot faces the same slot on the other side. |
+| Categories | points, rebounds, assists, steals, blocks, threes made, FG% (team made ÷ attempted), free throws made, turnovers (fewer wins). Most categories wins; a tie goes to total fantasy points (point 1 · rebound 1.2 · assist 1.5 · steal 3 · block 3 · turnover −1). |
+| Archetypes | +10% to one category: Sharpshooter (threes), Rim Protector (blocks), Floor General (assists), Slasher (free throws made), Lockdown (steals). Set monthly from season stats; elite players can carry two. |
+| Counters | between facing slots, −10%: Lockdown cuts a Sharpshooter's threes · Rim Protector cuts a Slasher's FG% · Slasher cuts a Rim Protector's blocks · Floor General cuts a Lockdown's steals |
+| Combos | Spacing (2 Sharpshooters + a Floor General): +8% assists · Twin Towers (2 Rim Protectors): +8% rebounds · Defensive Wall (Lockdown + Rim Protector): +5% steals and blocks |
+| Rarity | Common +0 · Rare +3% · Epic +6% · Legendary +10% to all of a card's stats (and fewer turnovers). Rarity and archetype stack up to +25%. |
+| Rank points | win **+20** · loss **−10** · tie 0 |
 | Tiers | 100 RP each. You can't drop out of a tier the night after reaching it. RP never goes below 0. |
-| Ties | best single player score, then whoever entered first |
 | Skipping | once you have played a night, each game night you skip costs **3 RP** and resets your streak. It can never drop you out of your tier, and nights with no NBA games don't count. |
-| Entry streak | enter every game night to build a streak, whatever your finish. Nights with no NBA games don't break it, and an invalid entry neither grows nor breaks it. |
+| Entry streak | enter every game night to build a streak, win or lose. Nights with no NBA games don't break it, and an invalid entry neither grows nor breaks it. |
 | Streak rewards | 3 nights: +3 RP · 5 nights: +5 RP · every 7 nights: a **Bonus Star** · every 14 nights: a **Streak Saver** · 30 nights: a leaderboard badge. Paid when the night is scored. |
 | Bonus Star | your budget is 17★ while you hold one. It's used up only by a lineup that actually costs 17★. |
 | Streak Saver | used automatically on your next skip: no RP lost, and the streak holds. |
+
+Nights played in groups of 10 before battles (with a captain) are still shown and scored the old way.
 
 ## Profiles
 The Profile tab holds a player's picture, stats and badges. Pictures are center-cropped in the browser to 128×128 and saved on the player's own record, which keeps the site on Firebase's free plan and removes photo metadata such as location. Badges are worked out from stats only the sync can write, so they can't be self-awarded. **NBA moment** badges (such as Blocked by James: LeBron records a block in your lineup) are checked against each night's real box scores when it's scored, in `momentBadges` in `sync/game.mjs`. **Pictures aren't moderated**, and they're public.
@@ -27,25 +34,30 @@ The Profile tab holds a player's picture, stats and badges. Pictures are center-
 |---|---|
 | `index.html` | The game. A static page hosted on Vercel. |
 | `config.js` | Your Firebase web config (public values). |
-| `firestore.rules` | Who can read and write what. Lineups lock at tip-off, and only the sync can change ranks. |
+| `firestore.rules` | Who can read and write what. Lineups lock at tip-off, and only the server can create cards or change ranks. |
+| `api/packs.js` | A Vercel function that opens a player's starter packs. `api/_packs.js` picks the cards. |
+| `package.json` | The function's one dependency, `firebase-admin`. |
 | `sync/nba-sync.mjs` | Pulls ESPN's NBA scoreboard, rosters, injuries and box scores into Firestore, then runs the ranked steps. |
-| `sync/ranked.mjs` | Forms groups at lock (computer lineups fill seats) and scores finished nights into rank points. |
+| `sync/ranked.mjs` | Pairs entries into 1v1 battles at lock (a computer lineup takes an odd seat) and scores finished nights into rank points. `sync/ranked-groups.mjs` scores nights from before battles. |
+| `sync/battle.mjs` | Battle rules: categories, archetypes, counters, combos, rarity, and the monthly archetype assignment. `index.html` has a copy for the live board, so keep the two in step. |
 | `sync/game.mjs` | Game rules shared by the sync: star ratings, lineup checks, scoring, the computer's lineup builder. `index.html` has a copy of the lineup rules, so keep the two in step. |
 | `.github/workflows/main.yml` | Runs the sync from GitHub Actions on a schedule. |
 
 Firestore collections:
-- `days/<YYYYMMDD>`: a night's best three squads, games, player pool, star ratings, injury tags and box scores (written by the sync)
-- `days/<YYYYMMDD>/groups/<tier>-<n>`: a group's ten lineups, and the final order (written by the sync)
-- `entries/<YYYYMMDD>_<uid>`: a player's lineup for a night (written by the player until tip-off). The sync adds the group, finish and rank-point change.
-- `users/<uid>`: display name, picture and featured badge (written by the player), plus RP, tier, nights, wins, streak and personal bests (written by the sync)
-- `meta/averages`: running season fantasy averages (written by the sync)
+- `days/<YYYYMMDD>`: a night's best three squads, games, player pool (with star ratings and archetypes), injury tags and box scores (written by the sync)
+- `days/<YYYYMMDD>/matches/m<n>`: a battle's two lineups with each card's rarity and archetypes, and the result (written by the sync)
+- `days/<YYYYMMDD>/groups/<tier>-<n>`: groups of ten from before battles
+- `entries/<YYYYMMDD>_<uid>`: a player's lineup for a night (written by the player until tip-off). The sync adds the matchup, result and rank-point change.
+- `users/<uid>`: display name, picture and featured badge (written by the player), plus RP, tier, record, streak, personal bests and starter packs opened (written by the server)
+- `users/<uid>/cards/<id>`: the player's cards (written by the server only)
+- `meta/season`: running season stat totals · `meta/types`: this month's archetypes · `meta/roster`: every player's team, position, rating and archetypes, read by the page and the pack opener (written by the sync)
 
 ## A night, start to finish
-1. **Day before:** the sync posts the slate with star ratings.
-2. **Until tip-off:** players draft. A complete lineup is an entry, and emptying a slot withdraws it.
-3. **First tip-off:** Firestore refuses lineup edits. On the next sync (within 30 minutes), entries are checked. Legal ones are grouped by tier in tens, sorted by RP, and computer lineups fill the empty seats. An illegal lineup (over the star budget, two 5★ players, wrong positions) is marked invalid and doesn't count.
-4. **During games:** an open page reads live scores straight from ESPN every minute, so the group board stays current even when the sync is late. These numbers are for display only.
-5. **All games final:** on its next run, the sync ranks each group and writes everyone's finish, rank-point change and new tier.
+1. **Day before:** the sync posts the slate with star ratings and archetypes.
+2. **Until tip-off:** players set lineups from their cards. A lineup is entered once every slot one of your cards could fill is filled; emptying such a slot withdraws it.
+3. **First tip-off:** Firestore refuses lineup edits. On the next sync (within 30 minutes), entries are checked and paired. An illegal lineup (over the star budget, two 5★ players, wrong positions, a card you don't own) is marked invalid and doesn't count.
+4. **During games:** an open page reads live scores straight from ESPN every minute and works out the battle as it goes, so the scoreboard stays current even when the sync is late. These numbers are for display only.
+5. **All games final:** on its next run, the sync decides each battle and writes everyone's result, rank-point change and new tier.
 
 ## Setup (about 15 minutes)
 
@@ -69,7 +81,10 @@ Then **Authentication → Settings → Authorized domains → Add domain**, and 
 **Actions → NBA sync → Run workflow**. After that it runs every 30 minutes from 6 PM to 3:30 AM ET, and at 9 AM, 1 PM and 4 PM ET.
 
 ### 7. Deploy on Vercel
-Import the repo with **Framework preset: Other** and no build command. Open the site, sign in with your email, pick a display name, and enter tonight.
+Import the repo with **Framework preset: Other** and no build command.
+
+### 8. Let Vercel open card packs
+In Vercel, open the project's **Settings → Environment Variables**, add `FIREBASE_SERVICE_ACCOUNT` with the same service-account JSON as the GitHub secret (make a new key in step 5 if you deleted it), and redeploy. Then open the site, sign in with your email, pick a display name, open your starter packs and enter tonight.
 
 ## Notes
 - **First leaderboard query:** the leaderboard sorts `users` by `rp`. Firestore indexes single fields automatically, so no setup is needed. If the browser console ever shows a "requires an index" link, click it once.

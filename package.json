@@ -1,0 +1,9 @@
+{
+  "name": "best-of-7-site",
+  "private": true,
+  "description": "Static game page plus the pack-opening function Vercel runs from /api.",
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "firebase-admin": "^12.1.0"
+  }
+}

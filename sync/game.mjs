@@ -10,7 +10,9 @@ export const TIERS = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Elite'
 // Rank points by finish in a group of 10 (index 0 = 1st place).
 export const RP_BY_FINISH = [30, 20, 20, 5, 5, -5, -5, -15, -15, -15];
 export const BONUS_STAR = 1; // extra budget a Bonus Star gives for one night
-export const SKIP_PENALTY = 3; // RP lost for skipping a game night; never drops a player out of their tier
+export const SKIP_PENALTY = 3;
+// Rank points for a 1v1 battle. A tie (same categories and fantasy points) changes nothing.
+export const RP_WIN = 20, RP_LOSS = -10; // RP lost for skipping a game night; never drops a player out of their tier
 
 // Entry streak rewards, paid when a night is scored. Rewards can stack on one night.
 export function rewardFor(streak) {
@@ -37,9 +39,13 @@ export const fiveStars = (ids, pmap) => ids.filter(id => id && pmap.get(id).star
 
 // Null when the entry is a legal lineup for this pool, otherwise the reason.
 export function invalidReason(e, pmap, cap = CAP) {
-  if (!Array.isArray(e.ids) || e.ids.length !== 6) return 'needs six players';
-  if (new Set(e.ids).size !== 6) return 'duplicate player';
+  // A slot can be left empty (null) when the player's collection has no card for it; it scores nothing.
+  if (!Array.isArray(e.ids) || e.ids.length !== 6) return 'needs six slots';
+  const ids = e.ids.filter(Boolean);
+  if (!ids.length) return 'no players';
+  if (new Set(ids).size !== ids.length) return 'duplicate player';
   for (let i = 0; i < 6; i++) {
+    if (!e.ids[i]) continue;
     const p = pmap.get(e.ids[i]);
     if (!p) return 'player not on this slate';
     if (!elig(SLOTS[i], p)) return 'player in the wrong slot';
@@ -68,7 +74,7 @@ export function seeded(str) {
 
 // Random legal lineups, then greedy upgrades, keeping the best. `noise` blurs the
 // projections so computer lineups differ and aren't perfect.
-export function buildLineup(players, { base = SLOTS.map(() => null), captain = null, rnd = Math.random, noise = 0, tries = 200 } = {}) {
+export function buildLineup(players, { base = SLOTS.map(() => null), captain = null, rnd = Math.random, noise = 0, tries = 200, noCaptain = false } = {}) {
   const pmap = new Map(players.map(p => [p.id, p]));
   const pl = players.filter(p => p.gp > 0 && !isOut(p));
   if (!pl.length) return null;
@@ -78,7 +84,7 @@ export function buildLineup(players, { base = SLOTS.map(() => null), captain = n
   const free = SLOTS.map((_, i) => i).filter(i => !base[i]);
   const fixedCap = captain && base.includes(captain) ? captain : null;
   // The captain is the best projected player, when the extra star fits.
-  const pickCaptain = lu => fixedCap || (lineupCost(lu, null, pmap) + CAPTAIN_EXTRA <= CAP ? lu.slice().sort((a, b) => v(b) - v(a))[0] : null);
+  const pickCaptain = lu => noCaptain ? null : fixedCap || (lineupCost(lu, null, pmap) + CAPTAIN_EXTRA <= CAP ? lu.slice().sort((a, b) => v(b) - v(a))[0] : null);
   const legal = (lu, c) => lineupCost(lu, c, pmap) <= CAP && fiveStars(lu, pmap) <= MAX_FIVE;
   const score = (lu, c) => lu.reduce((a, id) => a + v(id), 0) + (c ? v(c) * (CAPTAIN_X - 1) : 0);
   let best = null, bestV = -Infinity;
@@ -120,7 +126,8 @@ export function buildLineup(players, { base = SLOTS.map(() => null), captain = n
 const NBA = { lebron: '1966', curry: '3975', klay: '6475', kawhi: '6450', giannis: '3032977', jokic: '3112335', luka: '3945274', wemby: '5104157', dame: '6606', kd: '3202', harden: '3992', embiid: '3059318', ant: '4594268', jimmy: '6430' };
 const tripleDouble = l => [l[1], l[2], l[3], l[4], l[5]].filter(v => v >= 10).length >= 3;
 
-// Ids of the moment badges this lineup earned tonight. A line is [min, pts, reb, ast, stl, blk, to, threes].
+// Ids of the moment badges this lineup earned tonight. A line is [min, pts, reb, ast, stl, blk, to, threes, fgm, fga, ftm].
+// Battles have no captain, so the old captain moments now need only the player in your lineup.
 export function momentBadges(ids, captain, day) {
   const results = day.results || {}, pool = new Map(day.players.map(p => [p.id, p]));
   const line = id => (ids.includes(id) ? results[id] : null);
@@ -132,11 +139,11 @@ export function momentBadges(ids, captain, day) {
   const add = (badge, ok) => { if (ok) earned.push(badge); };
   add('blocked_by_james', has(NBA.lebron, l => l[5] >= 1));
   add('splash_brothers', !!line(NBA.curry) && !!line(NBA.klay) && threes(line(NBA.curry)) + threes(line(NBA.klay)) >= 6);
-  add('night_night', captain === NBA.curry && has(NBA.curry, l => threes(l) >= 6));
+  add('night_night', has(NBA.curry, l => threes(l) >= 8));
   add('the_klaw', has(NBA.kawhi, l => l[4] >= 3));
   add('greek_freak', has(NBA.giannis, l => l[1] >= 30 && l[2] >= 10));
   add('the_joker', has(NBA.jokic, tripleDouble));
-  add('luka_magic', captain === NBA.luka && has(NBA.luka, l => l[1] >= 40));
+  add('luka_magic', has(NBA.luka, l => l[1] >= 40 && l[3] >= 10));
   add('alien_invasion', has(NBA.wemby, l => l[5] >= 5));
   add('dame_time', has(NBA.dame, l => l[1] >= 30));
   add('easy_money', has(NBA.kd, l => l[1] >= 35));
@@ -146,7 +153,7 @@ export function momentBadges(ids, captain, day) {
   add('playoff_jimmy', has(NBA.jimmy, l => l[1] >= 30));
   add('mamba_mentality', lines.some(l => l[1] >= 60));
   add('shaqtin', lines.some(l => l[6] >= 8));
-  add('load_management', !!captain && ids.includes(captain) && !results[captain] && finalGame(pool.get(captain)?.team));
+  add('load_management', ids.some(id => !results[id] && finalGame(pool.get(id)?.team)));
   add('sixth_man', ids.some(id => pool.get(id)?.stars === 1 && results[id] && fpOf(results[id]) >= 30));
   return earned;
 }

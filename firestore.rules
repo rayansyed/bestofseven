@@ -19,9 +19,18 @@ service cloud.firestore {
         allow read: if true;
         allow write: if false;
       }
+      // Tonight's 1v1 battles, built by the sync at lock.
+      match /matches/{mid} {
+        allow read: if true;
+        allow write: if false;
+      }
     }
     match /meta/{doc} {
       allow read, write: if false;
+    }
+    // Every player's position, rating and archetype, for the card collection screen.
+    match /meta/roster {
+      allow read: if true;
     }
 
     // Public profiles. A player sets their name, picture and featured badge; rank fields are written by the sync.
@@ -37,10 +46,15 @@ service cloud.firestore {
         && validName(request.resource.data.name)
         && request.resource.data.nameLower == request.resource.data.name.lower();
       allow delete: if false;
+      // A player's cards. Only the server creates them (the sync and /api/packs), so they can't be forged.
+      match /cards/{cid} {
+        allow read: if signedIn();
+        allow write: if false;
+      }
     }
 
     // One entry per player per night: entries/<date>_<uid>. Editable until the first tip-off.
-    // Others see your lineup only through your group, which the sync builds after lock.
+    // Others see your lineup only through your matchup, which the sync builds after lock.
     match /entries/{eid} {
       allow read: if signedIn() && resource.data.uid == request.auth.uid;
       allow create, update: if signedIn()

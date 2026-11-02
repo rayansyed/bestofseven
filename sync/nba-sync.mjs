@@ -1,7 +1,8 @@
 // Best of 7 (NBA) data sync.
 // Pulls ESPN's public NBA scoreboard, rosters and box scores and writes one Firestore document per
-// game day to `days/<YYYYMMDD>`, plus running season averages to `meta/averages`. After a slate
-// locks it forms the ranked groups; once every game is final it scores them and updates ranks.
+// game day to `days/<YYYYMMDD>`, plus season stats (`meta/season`), monthly archetypes (`meta/types`) and
+// the league roster for starter packs (`meta/roster`). After a slate locks it pairs entries into 1v1
+// battles; once every game is final it scores them and updates ranks.
 // Runs from GitHub Actions (see .github/workflows/nba-sync.yml).
 //
 // Env:
@@ -13,7 +14,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { starsOf } from './game.mjs';
-import { groupNight, scoreNight, bestSquads } from './ranked.mjs';
+import { pairNight, scoreBattles, applySkips, bestSquads } from './ranked.mjs';
+import * as groups from './ranked-groups.mjs';
+import { assignTypes, SEASON } from './battle.mjs';
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const API = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba';
@@ -79,7 +82,7 @@ async function store() {
 }
 
 /* ---------- ESPN parsing ---------- */
-// Box score lines: { athleteId: [min, pts, reb, ast, stl, blk, to, threes] }
+// Box score lines: { athleteId: [min, pts, reb, ast, stl, blk, to, threes, fgm, fga, ftm] }
 function boxLines(box) {
   const out = {};
   for (const t of box.boxscore?.players || []) {
@@ -89,7 +92,9 @@ function boxLines(box) {
     for (const a of st.athletes || []) {
       if (a.didNotPlay || !a.stats || !a.stats.length) continue;
       const n = k => { const v = parseFloat(a.stats[L.indexOf(k)]); return isNaN(v) ? 0 : v; };
-      out[a.athlete.id] = [n('MIN'), n('PTS'), n('REB'), n('AST'), n('STL'), n('BLK'), n('TO'), n('3PT')];
+      // Shooting columns read "made-attempted".
+      const att = k => { const v = parseFloat(String(a.stats[L.indexOf(k)] || '').split('-')[1]); return isNaN(v) ? 0 : v; };
+      out[a.athlete.id] = [n('MIN'), n('PTS'), n('REB'), n('AST'), n('STL'), n('BLK'), n('TO'), n('3PT'), n('FG'), att('FG'), n('FT')];
     }
   }
   return out;
@@ -100,9 +105,10 @@ function seasonCalendar(sb) {
   return (sb.leagues?.[0]?.calendar || []).map(c => etDate(Date.parse(c) + 12 * 36e5));
 }
 
-// Season-to-date averages, kept incrementally: `through` is the last game day folded in.
-async function updateAverages(db, calendar, today) {
-  const agg = (await db.read('meta/averages')) || { through: '', p: {} };
+// Season-to-date sums per player, kept incrementally: `through` is the last game day folded in.
+// p[id] = [games, fp, min, pts, reb, ast, stl, blk, to, threes, fgm, fga, ftm]
+async function updateSeason(db, calendar, today) {
+  const agg = (await db.read('meta/season')) || { through: '', p: {} };
   for (const d of calendar) {
     if (d <= agg.through || d >= today) continue;
     const sb = await get(`${API}/scoreboard?dates=${d}`);
@@ -111,18 +117,51 @@ async function updateAverages(db, calendar, today) {
     for (const e of events) {
       if (e.status.type.name !== 'STATUS_FINAL') continue;
       for (const [id, line] of Object.entries(boxLines(await get(`${API}/summary?event=${e.id}`)))) {
-        const s = agg.p[id] || (agg.p[id] = [0, 0]);
-        s[0]++; s[1] = Math.round((s[1] + fp(line)) * 10) / 10;
+        const t = agg.p[id] || (agg.p[id] = new Array(13).fill(0));
+        t[0]++; t[1] = Math.round((t[1] + fp(line)) * 10) / 10;
+        for (let k = 0; k < 11; k++) t[2 + k] += line[k] || 0;
       }
     }
     agg.through = d;
-    console.log(`averages: folded in ${d} (${events.length} games)`);
+    console.log(`season: folded in ${d} (${events.length} games)`);
   }
-  await db.write('meta/averages', agg);
+  await db.write('meta/season', agg);
   return agg;
 }
+const avgOf = (season, id) => { const t = season.p[id]; return t ? Math.round(t[SEASON.fp] / t[SEASON.n] * 10) / 10 : 0; };
 
-async function buildDay(db, date, agg) {
+// Archetypes recalculate monthly: a player keeps this month's type, and new players get one when first seen.
+async function monthlyTypes(db, season, pos) {
+  const month = etDate().slice(0, 6);
+  const stored = (await db.read('meta/types')) || {};
+  const fresh = assignTypes(season.p, pos);
+  const t = stored.month === month ? { ...fresh, ...stored.t } : fresh;
+  if (stored.month !== month || Object.keys(t).length !== Object.keys(stored.t || {}).length) {
+    await db.write('meta/types', { month, t });
+    console.log(`types: ${stored.month === month ? 'added new players' : 'recalculated for ' + month}`);
+  }
+  return t;
+}
+
+// Every active player, for starter packs. Refreshed about once a day.
+async function updateRoster(db, season, types) {
+  const prev = await db.read('meta/roster');
+  if (prev && Date.now() - Date.parse(prev.updatedAt) < 20 * 36e5) return prev;
+  const teams = (await get(`${API}/teams`)).sports[0].leagues[0].teams.map(x => x.team);
+  const players = [];
+  for (const tm of teams) {
+    for (const p of (await get(`${API}/teams/${tm.id}/roster`)).athletes || []) {
+      const avg = avgOf(season, p.id);
+      players.push({ id: p.id, name: p.displayName, team: tm.abbreviation, pos: normPos(p.position?.abbreviation), avg, gp: season.p[p.id]?.[SEASON.n] || 0, stars: starsOf(avg), types: types[p.id] || [] });
+    }
+  }
+  const roster = { updatedAt: new Date().toISOString(), players };
+  await db.write('meta/roster', roster);
+  console.log(`roster: ${players.length} players`);
+  return roster;
+}
+
+async function buildDay(db, date, season, types) {
   const sb = await get(`${API}/scoreboard?dates=${date}`);
   const events = sb.events.filter(e => e.season?.type === 2 || e.season?.type === 3);
   if (!events.length) return null;
@@ -144,9 +183,8 @@ async function buildDay(db, date, agg) {
       for (const [teamId, team, opp, home] of [[g.awayId, g.away, g.home, false], [g.homeId, g.home, g.away, true]]) {
         const ro = await get(`${API}/teams/${teamId}/roster`);
         for (const a of ro.athletes || []) {
-          const s = agg.p[a.id];
-          const av = s ? Math.round(s[1] / s[0] * 10) / 10 : 0;
-          players.push({ id: a.id, name: a.displayName, team, opp: (home ? 'vs ' : '@ ') + opp, pos: normPos(a.position?.abbreviation), avg: av, gp: s ? s[0] : 0, stars: starsOf(av), status: a.injuries?.[0]?.status || '' });
+          const av = avgOf(season, a.id);
+          players.push({ id: a.id, name: a.displayName, team, opp: (home ? 'vs ' : '@ ') + opp, pos: normPos(a.position?.abbreviation), avg: av, gp: season.p[a.id]?.[SEASON.n] || 0, stars: starsOf(av), types: types[a.id] || [], status: a.injuries?.[0]?.status || '' });
         }
       }
     }
@@ -159,7 +197,7 @@ async function buildDay(db, date, agg) {
   }
   const doc = { date, lockAt, lockMs, final: games.every(g => DONE.has(g.status)), games: games.map(({ awayId, homeId, ...g }) => g), players, results, updatedAt: new Date().toISOString(),
     // Ranked progress, written by groupNight/scoreNight; carried across rewrites.
-    grouped: !!prev?.grouped, scored: !!prev?.scored, groups: prev?.groups || 0, entrants: prev?.entrants || 0, top3: prev?.top3 || null };
+    grouped: !!prev?.grouped, scored: !!prev?.scored, mode: prev?.mode || null, groups: prev?.groups || 0, matches: prev?.matches || 0, entrants: prev?.entrants || 0, top3: prev?.top3 || null };
   await db.write('days/' + date, doc);
   return doc;
 }
@@ -168,25 +206,32 @@ const db = await store();
 const now = Date.now();
 const dates = process.argv.slice(2).length ? process.argv.slice(2) : [etDate(now - 864e5), etDate(now), etDate(now + 864e5)];
 const calendar = seasonCalendar(await get(`${API}/scoreboard?dates=${dates[0]}`));
-const agg = await updateAverages(db, calendar, etDate(now));
+const season = await updateSeason(db, calendar, etDate(now));
+const roster0 = await db.read('meta/roster');
+const pos = Object.fromEntries((roster0?.players || []).map(p => [p.id, p.pos]));
+const types = await monthlyTypes(db, season, pos);
+await updateRoster(db, season, types);
 for (const date of dates) {
-  const doc = await buildDay(db, date, agg);
+  const doc = await buildDay(db, date, season, types);
   if (!doc) { console.log(`${date}: no NBA games`); continue; }
   const live = doc.games.filter(g => g.status !== 'STATUS_SCHEDULED').length;
   console.log(`${date}: ${doc.games.length} games, ${doc.players.length} players, ${live} started, final=${doc.final}`);
   if (Date.now() >= doc.lockMs && !doc.grouped) {
-    const g = await groupNight(db, doc);
-    doc.grouped = true;
-    console.log(`${date}: grouped ${g.entrants} entries into ${g.groups} groups`);
+    const g = await pairNight(db, doc);
+    doc.grouped = true; doc.mode = 'battle';
+    console.log(`${date}: paired ${g.entrants} entries into ${g.matches} battles`);
   }
+  // Nights grouped before battles existed (no mode) are scored the old way.
+  const battleNight = doc.mode === 'battle';
   if (doc.final && doc.grouped && !doc.scored) {
     doc.scored = true;
-    const s = await scoreNight(db, doc);
-    console.log(`${date}: scored ${s.scored} groups, ${s.skipped} players skipped`);
+    const s = battleNight ? await scoreBattles(db, doc) : await groups.scoreNight(db, doc);
+    const skipped = await applySkips(db, date);
+    console.log(`${date}: scored ${s.scored} ${battleNight ? 'battles' : 'groups'}, ${skipped} players skipped`);
   }
   // Also fills in a night that was scored before this existed.
   if (doc.scored && !doc.top3) {
-    const top3 = await bestSquads(db, doc);
+    const top3 = battleNight ? await bestSquads(db, doc) : await groups.bestSquads(db, doc);
     await db.batch([{ path: 'days/' + date, data: { top3 }, merge: true }]);
     console.log(`${date}: best squads: ${top3.map(s => `${s.name} ${s.total}`).join(', ') || 'none'}`);
   }

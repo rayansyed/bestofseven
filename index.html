@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Best of 7 NBA</title>
-<meta name="description" content="Ranked NBA fantasy: draft six real players on a star budget any night you like and climb from Bronze to Elite.">
+<meta name="description" content="An NBA card battler: collect player cards, set a six-card lineup any game night and win nine stat categories against one opponent to climb from Bronze to Elite.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap">
@@ -164,10 +164,6 @@ main { display: grid; gap: 16px; min-width: 0; }
 .leg-sal .stars i { color: var(--ink); }
 .leg-sub { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 .leg-sub b { color: var(--tag); }
-.capbtn { border: 1px solid var(--chip-2); background: transparent; color: var(--muted); border-radius: 7px; padding: 3px 8px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
-.capbtn:hover { border-color: var(--tag); color: var(--tag); }
-.capbtn.on { background: var(--tag); border-color: var(--tag); color: var(--tag-ink); }
-.leg.cap { background: linear-gradient(90deg, rgba(227,239,91,.08), transparent 70%); }
 .ctag { font-size: 10px; font-weight: 800; letter-spacing: .04em; padding: 2px 6px; border-radius: 5px; background: var(--tag); color: var(--tag-ink); text-transform: uppercase; }
 .sc.capsc { color: var(--tag); }
 .leg-sub { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
@@ -405,7 +401,6 @@ button.pod:hover .pod-step { filter: brightness(1.08); }
   .dk-slot .face { width: 100%; height: 100%; aspect-ratio: 1; }
   .dk-slot .face .jersey { width: 70%; height: 70%; margin: 15%; }
   .dk-slot.free { border: 1.5px dashed var(--chip-2); color: var(--muted); font-size: 11px; font-weight: 700; }
-  .dk-slot.cap { box-shadow: 0 0 0 2px var(--tag); }
   .dk-info { display: grid; justify-items: end; line-height: 1.2; white-space: nowrap; }
   .dk-info b { font-size: 13px; font-weight: 800; }
   .dk-info b.ok { color: var(--good); }
@@ -425,6 +420,7 @@ button.pod:hover .pod-step { filter: brightness(1.08); }
 .pstate.live { background: rgba(74,222,128,.14); color: var(--good); }
 .pstate.live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: pulse 1.4s ease-in-out infinite; }
 .pstate.final::before { content: "✓"; }
+.pstate.final { display: inline-flex; min-width: 0; padding: 2px 7px; border-radius: 5px; background: var(--chip); gap: 5px; }
 .pstate.off { background: rgba(248,113,113,.14); color: var(--bad); }
 @keyframes pulse { 50% { opacity: .3; } }
 @media (prefers-reduced-motion: reduce) { .pstate.live::before { animation: none; } }
@@ -445,6 +441,109 @@ button.pod:hover .pod-step { filter: brightness(1.08); }
 .series-row b.small { font-size: 16px; }
 @media (max-width: 1180px) { .rank-card { flex: 0 0 auto; min-width: 220px; margin-bottom: 0; } }
 @media (max-width: 520px) { .grow { grid-template-columns: 28px auto minmax(0, 1fr) auto; padding: 12px 16px; } .grow .badge { display: none; } .gdetail { padding-left: 0; } }
+/* Cards: rarity colours, archetype chips, the collectible card and starter packs */
+:root { --r-common: #8A94A3; --r-rare: #4FB3F6; --r-epic: #B78CFF; --r-legendary: #F5B83D; }
+.arch { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; background: var(--chip); color: #D5DBE2; white-space: nowrap; }
+.arch.syn { background: var(--teal-soft); color: var(--teal); }
+.rar { font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 2px 6px; border-radius: 5px; margin-left: 6px; vertical-align: 1px; }
+.rar.r-common { background: var(--chip); color: var(--r-common); }
+.rar.r-rare { background: rgba(79,179,246,.16); color: var(--r-rare); }
+.rar.r-epic { background: rgba(183,140,255,.16); color: var(--r-epic); }
+.rar.r-legendary { background: rgba(245,184,61,.16); color: var(--r-legendary); }
+.runner.rc-rare, .leg.rc-rare { box-shadow: inset 3px 0 0 var(--r-rare); }
+.runner.rc-epic, .leg.rc-epic { box-shadow: inset 3px 0 0 var(--r-epic); }
+.runner.rc-legendary, .leg.rc-legendary { box-shadow: inset 3px 0 0 var(--r-legendary); }
+.r-chips { flex-wrap: wrap; }
+.leg-types { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+.leg-types .rar { margin-left: 0; }
+.leg.open.none { opacity: .6; }
+.leg.bad { background: rgba(248,113,113,.08); }
+.combos { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 18px 0; }
+.dimtxt { color: var(--dim); font-size: 12px; }
+
+.tc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; padding: 8px 22px 22px; }
+.tc { --rc: var(--r-common); position: relative; display: grid; justify-items: center; gap: 6px; text-align: center; padding: 12px 12px 10px; border-radius: 14px; cursor: pointer;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--rc) 18%, var(--panel-2)), var(--panel-2) 55%); border: 1.5px solid color-mix(in srgb, var(--rc) 55%, transparent); }
+.tc:hover { border-color: var(--rc); }
+.tc.r-rare { --rc: var(--r-rare); } .tc.r-epic { --rc: var(--r-epic); } .tc.r-legendary { --rc: var(--r-legendary); box-shadow: 0 0 18px rgba(245,184,61,.18); }
+.tc-top { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+.tc-face .face { width: 72px; height: 72px; }
+.tc-face .face .jersey { width: 46px; height: 46px; margin: 13px; }
+.tc-name { font-size: 14px; line-height: 1.2; }
+.tc-sub { font-size: 12px; color: var(--muted); }
+.tc-types { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; min-height: 20px; }
+.tc-foot { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 6px; border-top: 1px solid var(--line); padding-top: 8px; margin-top: 2px; }
+.tc-rar { font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--rc); }
+.tc.fresh { animation: tc-in .5s cubic-bezier(.2,.8,.3,1.2) both; animation-delay: calc(var(--i) * 120ms); }
+@keyframes tc-in { from { opacity: 0; transform: translateY(18px) rotateY(80deg) scale(.9); } to { opacity: 1; transform: none; } }
+.pack-start { padding: 28px 22px; display: grid; justify-items: center; gap: 16px; text-align: center; }
+.pack { width: 210px; height: 290px; border: 0; border-radius: 18px; display: grid; align-content: center; justify-items: center; gap: 10px; color: #fff;
+  background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.18), transparent 45%), linear-gradient(150deg, #1D9BF0, #0B4F86 60%, #0A2B4A); box-shadow: 0 18px 40px rgba(29,155,240,.25), inset 0 0 0 2px rgba(255,255,255,.12); transition: transform .2s; }
+.pack:hover:not(:disabled) { transform: translateY(-4px) rotate(-1deg); }
+.pack.busy { animation: pack-shake .5s infinite; }
+@keyframes pack-shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-2deg); } 75% { transform: rotate(2deg); } }
+.pack-brand { font-weight: 800; font-size: 20px; display: flex; gap: 6px; align-items: center; }
+.pack-brand .seven { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 7px; background: #fff; color: var(--accent); transform: skewX(-10deg); }
+.pack-label { font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; opacity: .85; }
+.pack-n { font-size: 40px; font-weight: 800; }
+.pack-cta { font-size: 12px; font-weight: 700; background: rgba(255,255,255,.16); padding: 6px 12px; border-radius: 999px; }
+.pack-reveal .tc-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); padding-top: 22px; }
+.pack-row { justify-content: center; padding: 0 22px 24px; }
+.arch-legend { padding-bottom: 18px; }
+.arch-list { list-style: none; margin: 0; padding: 4px 22px 8px; display: grid; gap: 8px; }
+.arch-list li { display: flex; gap: 10px; align-items: center; font-size: 13px; color: #C9D0D8; flex-wrap: wrap; }
+.arch-h { font-size: 14px; padding: 12px 22px 2px; color: var(--muted); }
+
+/* Battles: both sides, nine categories, slot by slot */
+.bt-top { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; align-items: center; padding: 10px 22px 14px; }
+.bt-who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.bt-who:not(.me) { flex-direction: row-reverse; text-align: right; }
+.bt-who b { display: block; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bt-who .you, .bt-who .bot { margin-left: 0; }
+.bt-score { display: grid; grid-template-columns: auto auto auto; gap: 6px; align-items: baseline; text-align: center; }
+.bt-score b { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.bt-score small { grid-column: 1 / -1; font-size: 11px; color: var(--muted); }
+.cats { border-top: 1px solid var(--line); }
+.cat { display: grid; grid-template-columns: 1fr minmax(120px, auto) 1fr; gap: 10px; align-items: center; padding: 8px 22px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.cat .cn { text-align: center; font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.cat .cv { font-weight: 700; font-size: 15px; color: var(--muted); }
+.cat .cv.b { text-align: right; }
+.cat.w-me .cv.a { color: var(--good); } .cat.w-them .cv.b { color: var(--bad); }
+.cat.w-me .cv.a::after { content: " ✓"; font-size: 12px; } .cat.w-them .cv.b::before { content: "✓ "; font-size: 12px; }
+.bt-fp { display: flex; justify-content: space-between; gap: 10px; padding: 10px 22px; font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.bt-combos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 22px 12px; }
+.bt-combos > div { display: flex; gap: 6px; flex-wrap: wrap; }
+.bt-combos > div:last-child { justify-content: flex-end; }
+.bt-h { font-size: 15px; padding: 14px 22px 8px; border-top: 1px solid var(--line); }
+.bslot { display: grid; grid-template-columns: 38px minmax(0, 1fr) 26px minmax(0, 1fr); gap: 8px; align-items: center; padding: 10px 22px; border-top: 1px solid var(--line); }
+.bslot .vs { font-size: 11px; color: var(--dim); text-align: center; font-weight: 700; }
+.bslot > .ptag { justify-self: start; }
+.bs { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 8px; border-radius: 10px; background: var(--panel-2); min-width: 0; cursor: pointer; }
+.bs .face { width: 34px; height: 34px; }
+.bs .face .jersey { width: 22px; height: 22px; margin: 6px; }
+.bs.rc-rare { box-shadow: inset 0 0 0 1.5px var(--r-rare); } .bs.rc-epic { box-shadow: inset 0 0 0 1.5px var(--r-epic); } .bs.rc-legendary { box-shadow: inset 0 0 0 1.5px var(--r-legendary); }
+.bs.none { display: grid; grid-template-columns: 1fr; color: var(--dim); cursor: default; font-size: 12px; }
+.bs-who { min-width: 0; }
+.bs-name { font-weight: 700; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bs-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+.bs-tags .rar { margin-left: 0; }
+.bs-line { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.bs .sc { font-size: 15px; }
+.ctr { grid-column: 2 / -1; display: flex; gap: 6px; flex-wrap: wrap; }
+.ctr-i { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+.ctr-i.good { background: rgba(74,222,128,.12); color: var(--good); }
+.ctr-i.bad { background: rgba(248,113,113,.12); color: var(--bad); }
+@media (max-width: 700px) {
+  .bslot { grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 12px 16px; }
+  .bslot .vs { text-align: left; }
+  .ctr { grid-column: 1; }
+  .cat, .bt-top, .bt-fp, .bt-combos, .bt-h { padding-left: 16px; padding-right: 16px; }
+  .bt-score b { font-size: 26px; }
+  .bt-who .ava.md { width: 36px; height: 36px; font-size: 15px; }
+  .tc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 8px 16px 16px; gap: 10px; }
+  .arch-list, .arch-h { padding-left: 16px; padding-right: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { .tc.fresh, .pack.busy { animation: none; } }
 </style>
 </head>
 <body>
@@ -470,16 +569,92 @@ button.pod:hover .pod-step { filter: brightness(1.08); }
 const SLOTS = ['G', 'G', 'F', 'F', 'C', 'UTIL'];
 const SLOT_HINT = { G: 'Pick a guard', F: 'Pick a forward', C: 'Pick a center', UTIL: 'Any position' };
 const CAP = 16;          // star budget for six players
-const CAPTAIN_X = 1.5;   // the captain scores 1.5×…
-const CAPTAIN_EXTRA = 1; // …and costs one extra star
+const CAPTAIN_X = 1.5;   // nights scored in groups had a captain worth 1.5×; battles have none
 const MAX_FIVE = 1;      // at most one 5★ player per lineup
 const TIERS = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Elite'];
-const RP_BY_FINISH = [30, 20, 20, 5, 5, -5, -5, -15, -15, -15];
+const RP_WIN = 20, RP_LOSS = -10;
 const BONUS_STAR = 1; // extra budget a Bonus Star gives for one night
 const SKIP_PENALTY = 3; // RP lost for skipping a game night; never drops a player out of their tier
 const LIVE_DONE = new Set(['STATUS_FINAL', 'STATUS_POSTPONED', 'STATUS_CANCELED', 'STATUS_FORFEIT']);
-// Box score line from the sync job: [min, pts, reb, ast, stl, blk, to]
+// Box score line from the sync job: [min, pts, reb, ast, stl, blk, to, threes, fgm, fga, ftm]
 const fpOf = l => l[1] + 1.2 * l[2] + 1.5 * l[3] + 3 * l[4] + 3 * l[5] - l[6];
+
+/* ---------- Battle rules (keep in step with sync/battle.mjs) ---------- */
+const STAT = { min: 0, pts: 1, reb: 2, ast: 3, stl: 4, blk: 5, to: 6, tpm: 7, fgm: 8, fga: 9, ftm: 10 };
+const CATS = [
+  { key: 'pts', name: 'Points' }, { key: 'reb', name: 'Rebounds' }, { key: 'ast', name: 'Assists' },
+  { key: 'stl', name: 'Steals' }, { key: 'blk', name: 'Blocks' }, { key: 'tpm', name: 'Threes made' },
+  { key: 'fgp', name: 'FG%' }, { key: 'ftm', name: 'Free throws made' }, { key: 'to', name: 'Turnovers', low: true },
+];
+const TYPES = {
+  SS: { name: 'Sharpshooter', boost: 'tpm', icon: '🎯', what: '+10% threes' },
+  RP: { name: 'Rim Protector', boost: 'blk', icon: '🧱', what: '+10% blocks' },
+  FG: { name: 'Floor General', boost: 'ast', icon: '🧠', what: '+10% assists' },
+  SL: { name: 'Slasher', boost: 'ftm', icon: '⚡', what: '+10% free throws made' },
+  LD: { name: 'Lockdown', boost: 'stl', icon: '🔒', what: '+10% steals' },
+};
+const COUNTERS = [
+  { by: 'LD', vs: 'SS', cut: 'tpm', text: 'Lockdown cuts a Sharpshooter’s threes' },
+  { by: 'RP', vs: 'SL', cut: 'fgm', text: 'Rim Protector cuts a Slasher’s FG%' },
+  { by: 'SL', vs: 'RP', cut: 'blk', text: 'Slasher cuts a Rim Protector’s blocks' },
+  { by: 'FG', vs: 'LD', cut: 'stl', text: 'Floor General cuts a Lockdown’s steals' },
+];
+const SYNERGIES = [
+  { id: 'spacing', name: 'Spacing', need: { SS: 2, FG: 1 }, stats: ['ast'], bonus: 0.08, text: '2 Sharpshooters + a Floor General: +8% assists' },
+  { id: 'towers', name: 'Twin Towers', need: { RP: 2 }, stats: ['reb'], bonus: 0.08, text: '2 Rim Protectors: +8% rebounds' },
+  { id: 'wall', name: 'Defensive Wall', need: { LD: 1, RP: 1 }, stats: ['stl', 'blk'], bonus: 0.05, text: 'Lockdown + Rim Protector: +5% steals and blocks' },
+];
+const RARITY = {
+  common: { name: 'Common', bonus: 0 },
+  rare: { name: 'Rare', bonus: 0.03 },
+  epic: { name: 'Epic', bonus: 0.06 },
+  legendary: { name: 'Legendary', bonus: 0.10 },
+};
+const RARITY_RANK = { common: 0, rare: 1, epic: 2, legendary: 3 };
+const BOOST = 0.10, COUNTER = 0.10, STACK_CAP = 0.25;
+const COUNTING = ['pts', 'reb', 'ast', 'stl', 'blk', 'tpm', 'fgm', 'fga', 'ftm', 'to'];
+const STARTER_PACKS = 3;
+
+const synergiesOf = slots => {
+  const n = {};
+  for (const sl of slots) for (const t of sl?.types || []) n[t] = (n[t] || 0) + 1;
+  return SYNERGIES.filter(sy => Object.entries(sy.need).every(([t, k]) => (n[t] || 0) >= k));
+};
+const countersOn = (mine, theirs) => COUNTERS.filter(c => (mine?.types || []).includes(c.by) && (theirs?.types || []).includes(c.vs));
+function sideTotals(slots, opp, results) {
+  const t = Object.fromEntries(COUNTING.map(k => [k, 0]));
+  let fp = 0;
+  slots.forEach((sl, i) => {
+    const L = sl && results[sl.id];
+    if (!L) return;
+    fp += fpOf(L);
+    const cuts = countersOn(opp[i], sl).map(c => c.cut);
+    for (const k of COUNTING) {
+      const v = L[STAT[k]] || 0;
+      if (k === 'fga') { t.fga += v; continue; }
+      const bonus = Math.min(STACK_CAP, (RARITY[sl.rarity]?.bonus || 0) + ((sl.types || []).some(x => TYPES[x]?.boost === k) ? BOOST : 0));
+      let mult = k === 'to' ? 1 - bonus : 1 + bonus;
+      if (cuts.includes(k)) mult *= 1 - COUNTER;
+      t[k] += v * mult;
+    }
+  });
+  for (const sy of synergiesOf(slots)) for (const k of sy.stats) t[k] *= 1 + sy.bonus;
+  t.fgp = t.fga ? (t.fgm / t.fga) * 100 : 0;
+  return { t, fp: Math.round(fp * 10) / 10 };
+}
+function battle(a, b, results) {
+  const A = sideTotals(a, b, results), B = sideTotals(b, a, results);
+  let winsA = 0, winsB = 0;
+  const cats = CATS.map(c => {
+    const va = A.t[c.key], vb = B.t[c.key];
+    const d = Math.round((va - vb) * 1000) / 1000;
+    const w = d === 0 ? null : (c.low ? d < 0 : d > 0) ? 0 : 1;
+    if (w === 0) winsA++; else if (w === 1) winsB++;
+    return { key: c.key, a: Math.round(va * 10) / 10, b: Math.round(vb * 10) / 10, w };
+  });
+  const winner = winsA > winsB ? 0 : winsB > winsA ? 1 : A.fp > B.fp ? 0 : B.fp > A.fp ? 1 : null;
+  return { cats, wins: [winsA, winsB], fp: [A.fp, B.fp], winner, tiebreak: winsA === winsB && winner !== null };
+}
 const tierOf = rp => Math.min(TIERS.length - 1, Math.floor(Math.max(0, rp || 0) / 100));
 const fmt = n => Math.round(n).toLocaleString('en-US');
 const f1 = n => (Math.round(n * 10) / 10).toFixed(1);
@@ -494,9 +669,11 @@ const ordinal = n => n + (['th', 'st', 'nd', 'rd'][(n % 100 - 20) % 10] || ['th'
 const elig = (slot, p) => slot === 'UTIL' || p.pos === slot;
 
 let db = null, auth = null, me = { id: null, email: '' };
-let profile = null, days = new Map(), entries = new Map(), group = null, leaders = [];
-const loaded = { auth: false, profile: false, days: false, entries: false };
-const ui = { view: 'night', sel: null, pos: 'ALL', q: '', sort: 'stars', limit: 80, draft: null, draftCap: null, draftFor: null, save: '', sig: '', auth: '', authEmail: '', open: null, editName: false };
+let profile = null, days = new Map(), entries = new Map(), group = null, match = null, leaders = [];
+// The player's cards, one per player id (the rarest copy), and the league roster for archetypes and ratings.
+let cards = new Map(), roster = new Map();
+const loaded = { auth: false, profile: false, days: false, entries: false, cards: false };
+const ui = { view: 'night', sel: null, pos: 'ALL', q: '', sort: 'stars', limit: 80, draft: null, draftFor: null, save: '', sig: '', auth: '', authEmail: '', open: null, editName: false, reveal: null, opening: false, cardPos: 'ALL' };
 
 // Entry streak rewards (mirrors rewardFor in sync/game.mjs). Rewards can stack on one night.
 function rewardFor(streak) {
@@ -525,8 +702,8 @@ const BADGES = [
   { id: 'first', icon: '🏀', name: 'First Tip-Off', how: 'Finish your first night', on: u => (u.nights || 0) >= 1 },
   { id: 'nights10', icon: '🎟️', name: 'Regular', how: 'Play 10 nights', on: u => (u.nights || 0) >= 10 },
   { id: 'nights50', icon: '🎖️', name: 'Veteran', how: 'Play 50 nights', on: u => (u.nights || 0) >= 50 },
-  { id: 'win1', icon: '🥇', name: 'Group Winner', how: 'Finish 1st in a group', on: u => (u.wins || 0) >= 1 },
-  { id: 'win10', icon: '🏆', name: 'Champion', how: 'Win 10 groups', on: u => (u.wins || 0) >= 10 },
+  { id: 'win1', icon: '🥇', name: 'First Win', how: 'Win a matchup', on: u => (u.wins || 0) >= 1 },
+  { id: 'win10', icon: '🏆', name: 'Champion', how: 'Win 10 matchups', on: u => (u.wins || 0) >= 10 },
   { id: 'score300', icon: '🎯', name: 'Big Night', how: 'Score 300+ in a night', on: u => (u.bestScore || 0) >= 300 },
   { id: 'streak7', icon: '🔥', name: 'Hot Streak', how: 'Reach a 7-night streak', on: u => (u.bestStreak || 0) >= 7 },
   { id: 'streak14', icon: '⚡', name: 'On Fire', how: 'Reach a 14-night streak', on: u => (u.bestStreak || 0) >= 14 },
@@ -537,11 +714,11 @@ const BADGES = [
 const MOMENTS = [
   {id: "blocked_by_james",icon: "🖐️",name: "Blocked by James",how: "LeBron James records a block for you"},
   {id: "splash_brothers",icon: "💦",name: "Splash Brothers",how: "Curry and Klay combine for 6+ threes in your lineup"},
-  {id: "night_night",icon: "😴",name: "Night Night",how: "Captain Curry and he hits 6+ threes"},
+  {id: "night_night",icon: "😴",name: "Night Night",how: "Curry hits 8+ threes for you"},
   {id: "the_klaw",icon: "🦞",name: "The Klaw",how: "Kawhi Leonard gets 3+ steals for you"},
   {id: "greek_freak",icon: "🦌",name: "Greek Freak",how: "Giannis goes for 30+ points and 10+ rebounds"},
   {id: "the_joker",icon: "🃏",name: "The Joker",how: "Jokic posts a triple-double for you"},
-  {id: "luka_magic",icon: "✨",name: "Luka Magic",how: "Captain Luka and he scores 40+"},
+  {id: "luka_magic",icon: "✨",name: "Luka Magic",how: "Luka scores 40+ with 10+ assists for you"},
   {id: "alien_invasion",icon: "👽",name: "Alien Invasion",how: "Wembanyama gets 5+ blocks for you"},
   {id: "dame_time",icon: "⌚",name: "Dame Time",how: "Damian Lillard scores 30+ for you"},
   {id: "easy_money",icon: "💰",name: "Easy Money",how: "Kevin Durant scores 35+ for you"},
@@ -551,7 +728,7 @@ const MOMENTS = [
   {id: "playoff_jimmy",icon: "😤",name: "Playoff Jimmy",how: "Jimmy Butler scores 30+ for you"},
   {id: "mamba_mentality",icon: "🐍",name: "Mamba Mentality",how: "Anyone in your lineup scores 60+"},
   {id: "shaqtin",icon: "🤡",name: "Shaqtin’ a Fool",how: "Someone in your lineup has 8+ turnovers"},
-  {id: "load_management",icon: "🛋️",name: "Load Management",how: "Your captain sits out a game his team played"},
+  {id: "load_management",icon: "🛋️",name: "Load Management",how: "Someone in your lineup sits out a game his team played"},
   {id: "sixth_man",icon: "🪑",name: "Sixth Man of the Year",how: "A 1★ player scores 30+ fantasy points for you"},
 ];
 for (const m of MOMENTS) { m.moment = true; m.on = u => !!u.moments?.[m.id]; BADGES.push(m); }
@@ -584,10 +761,22 @@ function pmap(day) {
 }
 const locked = day => Date.now() >= (day.lockMs || Date.parse(day.lockAt));
 const complete = ids => ids && ids.length === 6 && ids.every(Boolean);
-function cost(ids, captain, day) {
+function cost(ids, day) {
   const m = pmap(day);
-  return ids.reduce((s, id) => s + (id ? m.get(id)?.stars || 0 : 0), 0) + (captain && ids.includes(captain) ? CAPTAIN_EXTRA : 0);
+  return ids.reduce((s, id) => s + (id ? m.get(id)?.stars || 0 : 0), 0);
 }
+const owns = id => cards.has(id);
+const rarityOf = id => cards.get(id)?.rarity || 'common';
+// The night's players the player holds a card for.
+const ownedPool = day => day.players.filter(p => owns(p.id));
+// Open slots some unused card could still fill within the budget. A lineup with none left is ready to enter,
+// even with empty slots, so a small collection can still play a light night.
+function fillableSlots(lu, day) {
+  const left = budget() - cost(lu, day), fiveOk = fiveStars(lu, day) < MAX_FIVE;
+  return SLOTS.map((slot, i) => i).filter(i => !lu[i] && ownedPool(day).some(p => elig(SLOTS[i], p) && !lu.includes(p.id) && p.stars <= left && (fiveOk || p.stars < 5)));
+}
+const ready = (lu, day) => lu.some(Boolean) && !fillableSlots(lu, day).length;
+const draftSlots = (lu, day) => lu.map(id => id ? { id, rarity: rarityOf(id), types: pmap(day).get(id)?.types || [] } : null);
 const fiveStars = (ids, day) => ids.filter(id => id && pmap(day).get(id)?.stars === 5).length;
 const starsHtml = n => `<span class="stars" aria-label="${n} star${n > 1 ? 's' : ''}">${'★'.repeat(n)}<i>${'★'.repeat(5 - n)}</i></span>`;
 function scoreRows(ids, captain, day) {
@@ -603,7 +792,9 @@ const total = rows => Math.round(rows.reduce((a, r) => a + r.fp, 0) * 10) / 10;
 const nightState = day => day.final ? 'final' : locked(day) ? 'live' : 'open';
 
 // Random legal lineups, then greedy upgrades, keeping the best. Mirrors buildLineup in sync/game.mjs.
-function buildLineup(players, { base = SLOTS.map(() => null), captain = null, rnd = Math.random, noise = 0, tries = 120, cap: limit = CAP } = {}) {
+// partial: leave a slot empty when no player fits it (a small card collection), instead of giving up.
+function buildLineup(players, { base = SLOTS.map(() => null), captain = null, rnd = Math.random, noise = 0, tries = 120, cap: limit = CAP, noCaptain = false, partial = false } = {}) {
+  const CAPTAIN_EXTRA = 1;
   const m = new Map(players.map(p => [p.id, p]));
   const pl = players.filter(p => p.gp > 0 && !isOut(p));
   if (!pl.length) return null;
@@ -614,7 +805,7 @@ function buildLineup(players, { base = SLOTS.map(() => null), captain = null, rn
   const v = id => val.get(id) ?? m.get(id)?.avg ?? 0;
   const free = SLOTS.map((_, i) => i).filter(i => !base[i]);
   const fixedCap = captain && base.includes(captain) ? captain : null;
-  const pickCaptain = lu => fixedCap || (lc(lu, null) + CAPTAIN_EXTRA <= limit ? lu.slice().sort((x, y) => v(y) - v(x))[0] : null);
+  const pickCaptain = lu => noCaptain ? null : fixedCap || (lc(lu, null) + CAPTAIN_EXTRA <= limit ? lu.slice().sort((x, y) => v(y) - v(x))[0] : null);
   const legal = (lu, c) => lc(lu, c) <= limit && fives(lu) <= MAX_FIVE;
   const score = (lu, c) => lu.reduce((s, id) => s + v(id), 0) + (c ? v(c) * (CAPTAIN_X - 1) : 0);
   let best = null, bestV = -Infinity;
@@ -625,7 +816,7 @@ function buildLineup(players, { base = SLOTS.map(() => null), captain = null, rn
     for (let k = 0; k < order.length; k++) {
       const i = order[k], room = limit - lc(lu, fixedCap) - (order.length - k - 1), fiveOk = fives(lu) < MAX_FIVE;
       const c = pl.filter(p => elig(SLOTS[i], p) && !lu.includes(p.id) && p.stars <= room && (fiveOk || p.stars < 5));
-      if (!c.length) { ok = false; break; }
+      if (!c.length) { if (partial) continue; ok = false; break; }
       lu[i] = c[Math.floor(rnd() * c.length)].id;
     }
     if (!ok) continue;
@@ -661,7 +852,76 @@ const face = p => `<span class="face" style="--team:${TEAM_COLORS[p.team] || '#5
 const tierBadge = tier => `<span class="tier t${tier}">${TIERS[tier]}</span>`;
 const notice = (eyebrow, title, body) => `<div class="card notice"><div class="eyebrow">${eyebrow}</div><h2>${title}</h2>${body}</div>`;
 const TRASH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
-const legend = `<p class="legend">Scoring: point 1 · rebound 1.2 · assist 1.5 · steal 3 · block 3 · turnover −1. Every player is rated 1–5★ from his fantasy points per game (45+ = 5★, 35+ = 4★, 25+ = 3★, 15+ = 2★). Your six players must fit a ${CAP}★ budget, with at most one 5★ player. Your captain scores 1.5× and costs one extra star. Lineups lock at the night's first tip-off. Then you're placed in a group of 10 at your rank, with computer lineups filling empty seats. Finish 1st: +30 rank points · 2nd–3rd: +20 · 4th–5th: +5 · 6th–7th: −5 · 8th–10th: −15. Every 100 points is a new tier, and you can't drop out of a tier the night after reaching it. Once you've played, skipping a game night costs ${SKIP_PENALTY} RP and your streak, but never your tier. Entering every game night builds a streak: 3 nights +3 RP, 5 nights +5 RP, every 7 a Bonus Star (one night with an extra star, used only if your lineup needs it), every 14 a Streak Saver (covers one skip), 30 a badge on the leaderboard. Data: ESPN public NBA feed.</p>`;
+const legend = `<p class="legend">How a battle works: at the night's first tip-off your lineup is paired with one opponent at your rank (a computer lineup if there's an odd number). Each slot faces the same slot on the other side. Both lineups' real box scores are added up in nine categories: points, rebounds, assists, steals, blocks, threes made, FG%, free throws made, and turnovers (fewer wins). Win more categories to win the night; a tie goes to total fantasy points (point 1 · rebound 1.2 · assist 1.5 · steal 3 · block 3 · turnover −1). Each card's archetype adds 10% to its category, and rarity adds 3% (Rare), 6% (Epic) or 10% (Legendary) to all its stats, capped at +25% together. Counters between facing cards cut 10%: Lockdown cuts a Sharpshooter's threes, a Rim Protector cuts a Slasher's FG%, a Slasher cuts a Rim Protector's blocks, a Floor General cuts a Lockdown's steals. Lineups only use cards you own, fit a ${CAP}★ budget with at most one 5★, and can leave a slot empty when no card fits it. Win: +${RP_WIN} rank points · loss: ${RP_LOSS}. Every 100 points is a new tier, and you can't drop out of a tier the night after reaching it. Once you've played, skipping a game night costs ${SKIP_PENALTY} RP and your streak, but never your tier. Entering every game night builds a streak: 3 nights +3 RP, 5 nights +5 RP, every 7 a Bonus Star (one night with an extra star, used only if your lineup needs it), every 14 a Streak Saver (covers one skip), 30 a badge on the leaderboard. Archetypes are set each month from season stats. Data: ESPN public NBA feed.</p>`;
+
+/* ---------- Cards ---------- */
+const typesOf = id => roster.get(id)?.types || [];
+const typeChip = t => TYPES[t] ? `<span class="arch a-${t}" title="${esc(TYPES[t].name)}: ${esc(TYPES[t].what)}">${TYPES[t].icon} ${esc(TYPES[t].name)}</span>` : '';
+const typeChips = types => (types || []).map(typeChip).join('');
+const rarityTag = r => r && r !== 'common' ? `<span class="rar r-${r}">${RARITY[r].name}</span>` : '';
+// A collectible card: rarity frame, headshot, rating and archetype.
+function cardHtml(c, { fresh = false, i = 0, tonight = false } = {}) {
+  const p = { ...c, ...roster.get(c.pid), id: c.pid };
+  return `<div class="tc r-${c.rarity || 'common'} ${fresh ? 'fresh' : ''}" style="--i:${i}" data-pid="${esc(c.pid)}">
+    <div class="tc-top"><span class="ptag">${esc(p.pos)}</span>${p.stars ? starsHtml(p.stars) : ''}</div>
+    <div class="tc-face">${face(p)}</div>
+    <b class="tc-name">${esc(p.name)}</b>
+    <span class="tc-sub">${esc(p.team)}${p.gp ? ` · ${f1(p.avg)} FPPG` : ''}</span>
+    <div class="tc-types">${typeChips(p.types)}</div>
+    <div class="tc-foot"><span class="tc-rar">${RARITY[c.rarity || 'common'].name}</span>${tonight ? '<span class="badge won">Plays tonight</span>' : ''}</div>
+  </div>`;
+}
+
+async function openPack() {
+  if (ui.opening) return;
+  const no = (profile.starterPacks || 0) + 1;
+  ui.opening = true; ui.sig = ''; render();
+  try {
+    const token = await auth.currentUser.getIdToken();
+    const r = await fetch('/api/packs', { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(body.error || 'That pack didn’t open. Try again.');
+    ui.reveal = body.cards; ui.revealNo = no;
+  } catch (err) {
+    toast(err.message && !/fetch/i.test(err.message) ? err.message : 'That pack didn’t open. Check your connection and try again.');
+  }
+  ui.opening = false; ui.sig = ''; render();
+}
+
+function packView() {
+  // The reveal can land before the profile update that counts the pack.
+  const opened = Math.max(profile.starterPacks || 0, ui.reveal ? ui.revealNo : 0), left = STARTER_PACKS - opened;
+  const intro = `<section class="hero-card"><div><div class="eyebrow">Welcome, ${esc(profile.name)}</div><h1>${ui.reveal ? `Pack ${opened} of ${STARTER_PACKS}` : 'Open your starter packs'}</h1>
+    <p class="hero-sub">${ui.reveal ? (left ? `${left} more to open.` : 'That’s your starting collection: 15 cards.') : `You get ${STARTER_PACKS} free packs of 5 cards: 2 guards, 2 forwards and a center in each. Your lineups are built from the cards you own.`}</p></div></section>`;
+  if (ui.reveal) {
+    return intro + `<section class="panel pack-reveal"><div class="tc-grid">${ui.reveal.map((c, i) => cardHtml(c, { fresh: true, i })).join('')}</div>
+      <div class="row pack-row">${left ? `<button class="btn primary" data-action="pack" ${ui.opening ? 'disabled' : ''}>${ui.opening ? 'Opening…' : `Open pack ${opened + 1}`}</button>` : '<button class="btn primary" data-action="pack-done">Start playing</button>'}</div></section>`;
+  }
+  return intro + `<section class="panel pack-start">
+    <button class="pack ${ui.opening ? 'busy' : ''}" data-action="pack" ${ui.opening ? 'disabled' : ''} aria-label="Open starter pack ${opened + 1} of ${STARTER_PACKS}">
+      <span class="pack-brand">BEST OF <span class="seven">7</span></span><span class="pack-label">Starter pack</span><span class="pack-n">${opened + 1} / ${STARTER_PACKS}</span>
+      <span class="pack-cta">${ui.opening ? 'Opening…' : 'Tap to open'}</span></button>
+    <p class="hint">Starter cards are all Common and leave out the league’s top-rated players. The first pack favours players with a game in the next two days, so you can play right away.</p></section>`;
+}
+
+function cardsView() {
+  const today = days.get(etDay()) || days.get(nextOpenDate() || '');
+  const tonight = new Set((today?.players || []).map(p => p.id));
+  const list = [...cards.values()].filter(c => ui.cardPos === 'ALL' || (roster.get(c.pid)?.pos || c.pos) === ui.cardPos)
+    .sort((a, b) => RARITY_RANK[b.rarity] - RARITY_RANK[a.rarity] || (roster.get(b.pid)?.stars || 0) - (roster.get(a.pid)?.stars || 0) || a.name.localeCompare(b.name));
+  const n = p => p === 'ALL' ? cards.size : [...cards.values()].filter(c => (roster.get(c.pid)?.pos || c.pos) === p).length;
+  const tabs = [['ALL', 'All'], ['G', 'Guards'], ['F', 'Forwards'], ['C', 'Centers']].map(([v, l]) => `<button class="tab" data-action="card-pos" data-v="${v}" aria-pressed="${ui.cardPos === v}">${l} · ${n(v)}</button>`).join('');
+  const arch = Object.entries(TYPES).map(([k, t]) => `<li>${typeChip(k)}<span>${esc(t.what)}</span></li>`).join('');
+  return `<section class="panel"><div class="list-head"><div><h2>My cards</h2><p class="sub">${cards.size} cards. ${today ? `${[...cards.keys()].filter(id => tonight.has(id)).length} of them play ${dayLabel(today.date).split(',')[0]}.` : ''} Tap a card for the player’s profile.</p></div></div>
+      <div class="pool-tools"><div class="tabs">${tabs}</div></div>
+      ${list.length ? `<div class="tc-grid">${list.map(c => cardHtml(c, { tonight: tonight.has(c.pid) })).join('')}</div>` : '<p class="empty">No cards here yet.</p>'}
+    </section>
+    <section class="panel arch-legend"><div class="list-head"><div><h2>Archetypes, counters and combos</h2><p class="sub">Set each month from season stats. The league’s elite players can carry two.</p></div></div>
+      <ul class="arch-list">${arch}</ul>
+      <h3 class="arch-h">Counters (between facing slots, −10%)</h3><ul class="arch-list">${COUNTERS.map(c => `<li>${typeChip(c.by)}<span>${esc(c.text)}</span></li>`).join('')}</ul>
+      <h3 class="arch-h">Combos (whole lineup)</h3><ul class="arch-list">${SYNERGIES.map(sy => `<li><span class="arch syn">${esc(sy.name)}</span><span>${esc(sy.text)}</span></li>`).join('')}</ul>
+    </section>`;
+}
 
 const plink = p => `<button class="plink" data-action="player" data-id="${esc(p.id)}" aria-label="View ${esc(p.name)}’s profile">${esc(p.name)}</button>`;
 
@@ -680,7 +940,7 @@ function renderTop() {
   const nav = (view, label, extra = '') => `<button class="navlink ${ui.view === view ? 'on' : ''}" data-action="view" data-v="${view}" ${ui.view === view ? 'aria-current="page"' : ''} ${extra}>${label}</button>`;
   $('#topbar').innerHTML = `
     <div class="brand">BEST OF <span class="seven">7</span></div>
-    ${me.id && profile?.name ? `<nav class="topnav" aria-label="Sections">${today ? `<button class="navlink ${onToday ? 'on' : ''}" data-action="sel" data-d="${today}" ${onToday ? 'aria-current="page"' : ''}>Today</button>` : ''}${nav('leaders', 'Leaderboard')}${nav('history', 'My nights')}${nav('profile', 'Profile')}</nav>` : ''}
+    ${me.id && profile?.name && (profile.starterPacks || 0) >= STARTER_PACKS && !ui.reveal ? `<nav class="topnav" aria-label="Sections">${today ? `<button class="navlink ${onToday ? 'on' : ''}" data-action="sel" data-d="${today}" ${onToday ? 'aria-current="page"' : ''}>Today</button>` : ''}${nav('cards', 'My cards')}${nav('leaders', 'Leaderboard')}${nav('history', 'My nights')}${nav('profile', 'Profile')}</nav>` : ''}
     <div class="top-right">
       <span class="tchip">NBA · 2026–27</span>
       ${profile?.name ? `<span class="tchip">${avatarHtml(profile, 'sm')}${tierBadge(tier)}<span>${esc(profile.name)} · ${fmt(rp)} RP</span></span>` : ''}
@@ -730,7 +990,7 @@ function rankCard() {
     <div class="capbar"><i style="--w:${top ? 100 : into}%"></i></div>
     <div class="rank-sub">${top ? 'Top tier. Keep climbing the leaderboard.' : `${100 - into} RP to ${TIERS[tier + 1]}`}</div>
     ${profile?.lastSkipRp < 0 && profile.lastSkip > (profile.lastNight || '') ? `<div class="rank-skip">Skipped ${dayLabel(profile.lastSkip)}: ${profile.lastSkipRp} RP</div>` : ''}
-    <div class="rank-stats"><span><b>🔥 ${profile?.streak || 0}</b> streak</span><span><b>${profile?.nights || 0}</b> nights</span><span><b>${profile?.wins || 0}</b> wins</span></div>
+    <div class="rank-stats"><span><b>🔥 ${profile?.streak || 0}</b> streak</span><span><b>${profile?.wins || 0}–${profile?.losses || 0}</b> record</span><span><b>${cards.size}</b> cards</span></div>
   </div>`;
 }
 
@@ -739,7 +999,7 @@ function streakBanner() {
   const open = nextOpenDate();
   const inTonight = !!(open && entries.has(open));
   // Entered nights the sync hasn't scored yet count toward the streak you're on.
-  const pending = [...entries.values()].filter(e => !e.finish && !e.invalid && days.has(e.date)).length;
+  const pending = [...entries.values()].filter(e => !e.finish && !e.result && !e.invalid && days.has(e.date)).length;
   const streak = scored + pending;
   let next = streak + 1;
   while (!rewardFor(next)) next++;
@@ -776,22 +1036,22 @@ function renderSide() {
     const badge = st === 'open' ? (e ? '<span class="badge won">Entered</span>' : '<span class="badge draft">Open</span>')
       : !e ? (profile?.lastSkip === d.date && profile.lastSkipRp < 0 ? `<span class="badge lost">${profile.lastSkipRp} RP</span>` : '<span class="badge">—</span>')
       : st === 'live' ? '<span class="badge live">Live</span>'
-      : e.finish ? `<span class="badge ${e.rpDelta >= 0 ? 'won' : 'lost'}">${ordinal(e.finish)}</span>` : '<span class="badge">Final</span>';
+      : e.result ? resultBadge(e) : e.finish ? `<span class="badge ${e.rpDelta >= 0 ? 'won' : 'lost'}">${ordinal(e.finish)}</span>` : '<span class="badge">Final</span>';
     return `<button class="nav-item" data-action="sel" data-d="${d.date}" aria-pressed="${ui.view === 'night' && ui.sel === d.date}"><span class="gnum">${dateOf(d.date).getDate()}</span><span>${dayLabel(d.date)}</span>${badge}</button>`;
   }).join('');
   let pos = '';
   const day = days.get(ui.sel);
   if (ui.view === 'night' && day && !locked(day)) {
-    const n = p => p === 'ALL' ? day.players.length : day.players.filter(x => x.pos === p).length;
+    const n = p => ownedPool(day).filter(x => p === 'ALL' || x.pos === p).length;
     pos = `<div class="pos-group"><div class="side-label">Positions</div>${[['ALL', 'All players'], ['G', 'Guards'], ['F', 'Forwards'], ['C', 'Centers']].map(([v, l]) => `<button class="nav-item" data-action="pos" data-v="${v}" aria-pressed="${ui.pos === v}"><span class="gnum">${v === 'ALL' ? '★' : v}</span><span>${l}</span><span class="badge tag">${n(v)}</span></button>`).join('')}</div>`;
   }
   $('#side').innerHTML = `${rankCard()}<div class="side-label">Nights</div>${list}${pos}
-    <div class="side-label">Scoring</div><div class="side-note">Point 1 · Rebound 1.2<br>Assist 1.5 · Steal 3<br>Block 3 · Turnover −1<br>Captain ×1.5 · costs +1★<br>Budget ${CAP}★ · one 5★ max</div><i class="sx" aria-hidden="true"></i>`;
+    <div class="side-label">Battles</div><div class="side-note">1 opponent · 9 categories<br>Pts · Reb · Ast · Stl · Blk<br>3PM · FG% · FTM · fewer TO<br>Win +${RP_WIN} RP · loss ${RP_LOSS}<br>Budget ${CAP}★ · one 5★ max</div><i class="sx" aria-hidden="true"></i>`;
 }
 
 /* ---------- Sign-in and profile ---------- */
 function signinView() {
-  const intro = `<section class="hero-card"><div><h1>Best of 7 · NBA</h1><p class="hero-sub">Draft six real NBA players on a star budget any night you like. Beat your group of 10 to climb from Bronze to Elite.</p></div></section>`;
+  const intro = `<section class="hero-card"><div><h1>Best of 7 · NBA</h1><p class="hero-sub">Collect NBA player cards and play them against one opponent on any game night. Real box scores decide nine stat categories. Win the most to climb from Bronze to Elite.</p></div></section>`;
   if (ui.auth === 'confirm') return intro + `<form class="card form" id="confirm-form">
     <div><div class="eyebrow">Almost there</div><h2>Confirm your email</h2></div>
     <p class="hint">You opened the sign-in link on a different device or browser. Enter the email address you used.</p>
@@ -809,7 +1069,7 @@ function nameView() {
   const first = !profile?.name;
   return `<form class="card form" id="name-form">
     <div><div class="eyebrow">${first ? 'One more step' : 'Display name'}</div><h2>${first ? 'Pick your display name' : 'Change your display name'}</h2></div>
-    <p class="hint">Shown on the leaderboard and to the players in your group. 3–16 characters: letters, numbers, spaces, dots, dashes or underscores.</p>
+    <p class="hint">Shown on the leaderboard and to your opponents. 3–16 characters: letters, numbers, spaces, dots, dashes or underscores.</p>
     <div class="form-grid"><div class="field"><label for="name-input">Display name</label><input type="text" id="name-input" required minlength="3" maxlength="16" pattern="[A-Za-z0-9_ .\\-]+" value="${esc(profile?.name || '')}" autocomplete="nickname"></div></div>
     <p class="field-err" id="name-err" role="alert"></p>
     <div class="row"><button type="submit" class="btn primary">${first ? 'Start playing' : 'Save name'}</button>${first ? '' : '<button type="button" class="btn" data-action="name-cancel">Cancel</button>'}</div></form>`;
@@ -850,26 +1110,28 @@ function heroCard(day) {
 
 function renderPool() {
   const day = days.get(ui.sel), lu = ui.draft;
-  const left = budget() - cost(lu, ui.draftCap, day);
+  const left = budget() - cost(lu, day);
   const q = ui.q.trim().toLowerCase();
-  const rows = day.players.filter(p => (ui.pos === 'ALL' || p.pos === ui.pos) && (!q || p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q)));
+  const mine = ownedPool(day);
+  const rows = mine.filter(p => (ui.pos === 'ALL' || p.pos === ui.pos) && (!q || p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q)));
   const key = { stars: p => p.stars + p.avg / 100, avg: p => p.avg, value: p => p.avg / p.stars }[ui.sort];
   rows.sort((a, b) => key(b) - key(a) || b.avg - a.avg);
   const shown = rows.slice(0, ui.limit);
   $('#poolrows').innerHTML = shown.length ? shown.map(p => {
     const inLu = lu.includes(p.id), fiveFull = !inLu && p.stars === 5 && fiveStars(lu, day) >= MAX_FIVE, cant = !inLu && (p.stars > left || fiveFull);
     const tag = isOut(p) ? '<span class="inj out">Out</span>' : isGtd(p) ? `<span class="inj gtd" title="${esc(p.status)}">GTD</span>` : '';
-    return `<div class="runner ${inLu ? 'in' : ''} ${cant ? 'cant' : ''}" data-pid="${esc(p.id)}">
+    return `<div class="runner rc-${rarityOf(p.id)} ${inLu ? 'in' : ''} ${cant ? 'cant' : ''}" data-pid="${esc(p.id)}">
       ${face(p)}
-      <div><div class="r-name">${plink(p)}${tag}</div>
+      <div><div class="r-name">${plink(p)}${rarityTag(rarityOf(p.id))}${tag}</div>
         <div class="r-sub">${esc(p.team)} ${esc(p.opp)}<span class="sep">|</span>${POS_NAME[p.pos]}</div>
-        <div class="r-chips"><span class="chip">FPPG: ${p.gp ? f1(p.avg) : '—'}</span><span class="chip">GP: ${p.gp}</span><span class="chip hide-sm">Pts per ★: ${p.gp ? f1(p.avg / p.stars) : '—'}</span></div></div>
+        <div class="r-chips">${typeChips(p.types)}<span class="chip">FPPG: ${p.gp ? f1(p.avg) : '—'}</span><span class="chip hide-sm">GP: ${p.gp}</span></div></div>
       <div class="r-act">
         <button class="odds ${inLu ? 'on' : ''}" data-action="${inLu ? 'drop' : 'add'}" data-id="${esc(p.id)}" aria-label="${inLu ? 'Remove' : 'Add'} ${esc(p.name)}, ${p.stars} stars">${inLu ? '✓ ' : ''}${starsHtml(p.stars)}</button>
         <span class="r-trail">${fiveFull ? 'You already have a 5★' : cant ? `needs <b>${p.stars - left}★</b> more` : `proj <b>${p.gp ? f1(p.avg) : '0.0'}</b> pts`}</span>
       </div>
     </div>`;
-  }).join('') : `<p class="empty">No players match. Clear the search or pick another position.</p>`;
+  }).join('') : !mine.length ? `<p class="empty">None of your ${cards.size} cards play on ${dayLabel(day.date)}. Check another night.</p>`
+    : `<p class="empty">None of your cards match. Clear the search or pick another position.</p>`;
   $('#poolmore').innerHTML = rows.length > shown.length ? `<div class="more"><button class="btn" data-action="more">Show ${Math.min(80, rows.length - shown.length)} more of ${rows.length - shown.length}</button></div>` : '';
 }
 
@@ -880,9 +1142,9 @@ function renderDock(lu, s, open, day) {
   const m = pmap(day);
   dock.innerHTML = `<span class="dk-slots">${SLOTS.map((slot, i) => {
     const p = lu[i] && m.get(lu[i]);
-    return p ? `<span class="dk-slot ${p.id === ui.draftCap ? 'cap' : ''}">${face(p)}</span>` : `<span class="dk-slot free">${slot === 'UTIL' ? 'U' : slot}</span>`;
+    return p ? `<span class="dk-slot">${face(p)}</span>` : `<span class="dk-slot free">${slot === 'UTIL' ? 'U' : slot}</span>`;
   }).join('')}</span>
-    <span class="dk-info"><b class="${!open && entries.has(ui.sel) ? 'ok' : ''}">${open ? `${6 - open} of 6` : entries.has(ui.sel) ? '✓ Entered' : 'Saving…'}</b><small>${s} of ${budget()}★</small></span>
+    <span class="dk-info"><b class="${entries.has(ui.sel) && ui.save !== 'pending' ? 'ok' : ''}">${!ready(lu, day) ? `${6 - open} of 6` : entries.has(ui.sel) && ui.save !== 'pending' ? '✓ Entered' : 'Saving…'}</b><small>${s} of ${budget()}★</small></span>
     <svg class="dk-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 10l7-7M15 3h6v6M10 14l-7 7M3 15v6h6"/></svg>`;
 }
 
@@ -893,30 +1155,35 @@ function setSheet(open) {
 
 function renderLineup() {
   const day = days.get(ui.sel), lu = ui.draft, m = pmap(day);
-  const s = cost(lu, ui.draftCap, day), left = budget() - s, open = lu.filter(x => !x).length;
+  const s = cost(lu, day), left = budget() - s, open = lu.filter(x => !x).length;
+  const fillable = new Set(fillableSlots(lu, day)), isReady = ready(lu, day);
   const legs = SLOTS.map((slot, i) => {
     const p = lu[i] && m.get(lu[i]);
-    const isCap = !!p && ui.draftCap === p.id;
-    return p ? `<li class="leg ${isCap ? 'cap' : ''}"><button class="x" data-action="remove" data-i="${i}" aria-label="Remove ${esc(p.name)}">✕</button><div>
-        <div class="leg-top"><span class="ptag">${slot}</span><b>${plink(p)}</b><span class="leg-sal">${starsHtml(p.stars)}${isCap ? ' +1' : ''}</span></div>
-        <div class="leg-sub"><span>${esc(p.team)} ${esc(p.opp)} · FPPG ${f1(p.avg)}${isCap ? ` → <b>${f1(p.avg * CAPTAIN_X)}</b>` : ''}${isOut(p) ? ' · <span class="inj out">Out</span>' : ''}</span>
-          <button class="capbtn ${isCap ? 'on' : ''}" data-action="captain" data-id="${esc(p.id)}" aria-pressed="${isCap}" aria-label="${isCap ? 'Remove captain' : 'Make captain'}: ${esc(p.name)}">${isCap ? '★ Captain ×1.5' : 'Captain +1★'}</button></div></div></li>`
-      : `<li class="leg open"><span></span><div class="leg-top"><span class="ptag dim">${slot}</span><span>${SLOT_HINT[slot]}</span><span></span></div></li>`;
+    const notMine = p && !owns(p.id);
+    return p ? `<li class="leg rc-${rarityOf(p.id)} ${notMine ? 'bad' : ''}"><button class="x" data-action="remove" data-i="${i}" aria-label="Remove ${esc(p.name)}">✕</button><div>
+        <div class="leg-top"><span class="ptag">${slot}</span><b>${plink(p)}</b><span class="leg-sal">${starsHtml(p.stars)}</span></div>
+        <div class="leg-sub"><span>${esc(p.team)} ${esc(p.opp)} · FPPG ${f1(p.avg)}${isOut(p) ? ' · <span class="inj out">Out</span>' : ''}${notMine ? ' · <span class="inj out">Not your card</span>' : ''}</span>
+          <span class="leg-types">${rarityTag(rarityOf(p.id))}${typeChips(p.types)}</span></div></div></li>`
+      : `<li class="leg open ${fillable.has(i) ? '' : 'none'}"><span></span><div class="leg-top"><span class="ptag dim">${slot}</span><span>${fillable.has(i) ? SLOT_HINT[slot] : 'No card fits · scores nothing'}</span><span></span></div></li>`;
   }).join('');
-  const proj = lu.reduce((a, id) => a + (id ? (m.get(id)?.avg || 0) * (id === ui.draftCap ? CAPTAIN_X : 1) : 0), 0);
+  const proj = lu.reduce((a, id) => a + (id ? m.get(id)?.avg || 0 : 0), 0);
+  const combos = synergiesOf(draftSlots(lu, day));
   const entered = entries.has(ui.sel);
-  const info = open ? `Fill all six slots to enter. ${open} open · ${left}★ left to spend.${!entered && profile.nights ? ` ${profile.savers ? 'Skipping tonight uses your Streak Saver.' : `Skipping tonight costs ${SKIP_PENALTY} RP and your streak.`}` : ""}`
-    : !ui.draftCap ? (left >= CAPTAIN_EXTRA ? 'Entered. Pick a captain to score his points 1.5×. It costs one extra star.' : 'Entered. A captain costs one extra star, and you have none left.')
-    : `Entered for ${dayLabel(ui.sel)}. At ${timeLabel(day.lockAt)} you’ll join a group of 10 ${TIERS[tierOf(profile?.rp)]} players.`;
-  const cta = open ? `<button class="cta" data-action="auto">Auto-fill ${open} open slot${open > 1 ? 's' : ''}</button>`
+  const skipNote = !entered && profile.nights ? ` ${profile.savers ? 'Skipping tonight uses your Streak Saver.' : `Skipping tonight costs ${SKIP_PENALTY} RP and your streak.`}` : '';
+  const info = lu.some(id => id && !owns(id)) ? 'Remove the players you don’t have a card for. They’d make this lineup invalid.'
+    : !isReady ? `Fill the open slots to enter. ${fillable.size} to fill · ${left}★ left to spend.${skipNote}`
+    : `Entered for ${dayLabel(ui.sel)}${open ? ` with ${open} empty slot${open > 1 ? 's' : ''}` : ''}. At ${timeLabel(day.lockAt)} you’ll face one ${TIERS[tierOf(profile?.rp)]} player, slot against slot.`;
+  const cta = fillable.size ? `<button class="cta" data-action="auto">Auto-fill ${fillable.size} open slot${fillable.size > 1 ? 's' : ''}</button>`
     : ui.save === 'pending' ? '<button class="cta" disabled>Saving…</button>'
     : ui.save === 'err' ? '<button class="cta err" disabled>Couldn’t save. Make any change to retry.</button>'
+    : !lu.some(Boolean) ? '<button class="cta" disabled>No cards play tonight</button>'
     : entered ? `<button class="cta ok" disabled>✓ Entered · edit until ${timeLabel(day.lockAt)}</button>` : '<button class="cta" disabled>Saving…</button>';
   renderDock(lu, s, open, day);
   $('#lineup').innerHTML = `
     <div class="slip-head"><span class="count">${6 - open}</span><h3>Lineup</h3><button class="sheet-x" data-action="sheet-close" aria-label="Close lineup">✕</button></div>
-    <div class="seg"><span class="on">${esc(profile.name)}</span><span>${TIERS[tierOf(profile.rp)]} group</span></div>
+    <div class="seg"><span class="on">${esc(profile.name)}</span><span>${TIERS[tierOf(profile.rp)]} · 1v1</span></div>
     <ul class="legs">${legs}</ul>
+    ${combos.length ? `<div class="combos">${combos.map(sy => `<span class="arch syn" title="${esc(sy.text)}">✦ ${esc(sy.name)}</span>`).join('')}</div>` : ''}
     <div class="slip-foot">
       <div class="capbar"><i style="--w:${Math.min(100, s / budget() * 100)}%"></i></div>
       <dl class="totals"><div><dt>Stars used</dt><dd>${s} of ${budget()}★</dd></div><div><dt>Stars left</dt><dd>${left}★</dd></div><div><dt>Projected</dt><dd>${f1(proj)} pts</dd></div></dl>
@@ -926,6 +1193,8 @@ function renderLineup() {
 }
 
 /* ---------- Group results ---------- */
+// Nights played in groups of 10 before battles: rank points by finish.
+const RP_BY_FINISH = [30, 20, 20, 5, 5, -5, -5, -15, -15, -15];
 function groupRows(day) {
   const res = new Map((group.results || []).map(r => [r.key, r]));
   const rows = group.members.map(mb => {
@@ -999,12 +1268,71 @@ function groupView(day) {
   </section>`;
 }
 
+/* ---------- Battles ---------- */
+const resultBadge = e => `<span class="badge ${e.result === 'W' ? 'won' : e.result === 'L' ? 'lost' : ''}">${e.result === 'W' ? 'Won' : e.result === 'L' ? 'Lost' : 'Tied'} ${e.cats?.[0] ?? ''}–${e.cats?.[1] ?? ''}</span>`;
+const catVal = (key, v) => key === 'fgp' ? (v ? f1(v) + '%' : '—') : f1(v);
+
+function battleSlot(sl, day, side) {
+  if (!sl?.id) return `<div class="bs none ${side}"><span class="bs-name">Empty slot</span><span class="bs-line">Scores nothing</span></div>`;
+  const p = pmap(day).get(sl.id) || { id: sl.id, name: 'Unknown player', team: '', pos: '', stars: 0 };
+  const line = day.results?.[sl.id], st = playerState({ p, line }, day);
+  const stat = line ? `${line[1]} PTS · ${line[2]} REB · ${line[3]} AST · ${line[4]} STL · ${line[5]} BLK · ${line[7]} 3PM` : '';
+  return `<div class="bs ${side} rc-${sl.rarity || 'common'}" data-pid="${esc(p.id)}">${face(p)}
+    <div class="bs-who"><div class="bs-name">${plink(p)}</div>
+      <div class="bs-tags">${rarityTag(sl.rarity)}${typeChips(sl.types)}<span class="pstate ${st.kind}">${esc(st.text)}</span></div>
+      ${stat ? `<div class="bs-line">${stat}</div>` : ''}</div>
+    <span class="sc ${line ? '' : 'zero'}">${line ? f1(fpOf(line)) : '—'}</span></div>`;
+}
+
+function battleView(day) {
+  const k = match.sides.findIndex(x => x.uid === me.id);
+  if (k < 0) return notice('Locked in', 'Matchup not found', '<p>Your lineup isn’t in this matchup. Reload the page to try again.</p>');
+  const mine = match.sides[k], opp = match.sides[1 - k];
+  const r = match.scored && match.result ? match.result : battle(match.sides[0].slots, match.sides[1].slots, day.results || {});
+  const my = i => k === 0 ? i : 1 - i; // flip side 1's view so "a" is always me
+  const wins = [r.wins[my(0)], r.wins[my(1)]], fp = [r.fp[my(0)], r.fp[my(1)]];
+  const won = r.winner === k, lost = r.winner === 1 - k;
+  const e = entries.get(ui.sel);
+  const head = match.scored
+    ? (won ? `You won ${wins[0]}–${wins[1]}` : lost ? `You lost ${wins[0]}–${wins[1]}` : `Tied ${wins[0]}–${wins[1]}`)
+    : wins[0] > wins[1] ? `You lead ${wins[0]}–${wins[1]}` : wins[0] < wins[1] ? `You trail ${wins[0]}–${wins[1]}` : `Level at ${wins[0]}–${wins[1]}`;
+  const tb = r.tiebreak ? ` Categories are level, so fantasy points decide it: ${f1(fp[0])} to ${f1(fp[1])}.` : '';
+  const rp = match.scored && e?.rpDelta != null ? `<span class="badge ${e.rpDelta >= 0 ? 'won' : 'lost'}">${e.rpDelta >= 0 ? '+' : ''}${e.rpDelta} RP</span>`
+    : `<span class="badge">Win +${RP_WIN} · loss ${RP_LOSS} RP</span>`;
+  const who = (sd, mineSide) => {
+    const u = sd.bot ? { name: '#' } : peer(sd.uid) || { name: sd.name };
+    return `<div class="bt-who ${mineSide ? 'me' : ''}">${avatarHtml(u, 'md')}<div><b>${esc(sd.name)}${sd.bot ? '' : badgeMark(peer(sd.uid))}</b>${sd.bot ? '<span class="bot">Computer</span>' : mineSide ? '<span class="you">You</span>' : `<small>${tierBadge(tierOf(sd.rpBefore))}</small>`}</div></div>`;
+  };
+  const cats = CATS.map((c, i) => {
+    const x = r.cats[i], a = k === 0 ? x.a : x.b, b = k === 0 ? x.b : x.a, w = x.w === null ? null : x.w === k ? 'me' : 'them';
+    return `<div class="cat ${w ? 'w-' + w : ''}"><span class="cv a">${catVal(c.key, a)}</span><span class="cn">${c.name}</span><span class="cv b">${catVal(c.key, b)}</span></div>`;
+  }).join('');
+  const slots = SLOTS.map((slot, i) => {
+    const a = mine.slots[i], b = opp.slots[i];
+    const marks = [...countersOn(a, b).map(c => ({ c, mine: true })), ...countersOn(b, a).map(c => ({ c, mine: false }))];
+    return `<div class="bslot"><span class="ptag">${slot}</span>${battleSlot(a, day, 'a')}<span class="vs">vs</span>${battleSlot(b, day, 'b')}
+      ${marks.length ? `<div class="ctr">${marks.map(x => `<span class="ctr-i ${x.mine ? 'good' : 'bad'}">${TYPES[x.c.by].icon} ${esc(x.c.text)}${x.mine ? '' : ' (theirs)'}</span>`).join('')}</div>` : ''}</div>`;
+  }).join('');
+  const combo = sd => synergiesOf(sd.slots).map(sy => `<span class="arch syn" title="${esc(sy.text)}">✦ ${esc(sy.name)}</span>`).join('') || '<span class="dimtxt">No combos</span>';
+  const updated = day.updatedAt ? `Stats as of ${new Date(day.updatedAt).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}.` : '';
+  return `<section class="panel battle">
+    <div class="list-head"><div><div class="eyebrow">${tierBadge(match.tier)} 1v1 · ${dayLabel(day.date)}</div><h2>${head}</h2>
+      <p class="sub">${match.scored ? '' : day.final ? 'All games are final. Rank points are added on the next sync. ' : 'Live stats refresh every minute. '}${updated}${tb}</p></div>${rp}</div>
+    <div class="bt-top">${who(mine, true)}<div class="bt-score"><b>${wins[0]}</b><span>–</span><b>${wins[1]}</b><small>categories</small></div>${who(opp, false)}</div>
+    <div class="cats">${cats}</div>
+    <div class="bt-fp"><span>${f1(fp[0])} fantasy pts</span><span class="dimtxt">tiebreak</span><span>${f1(fp[1])} fantasy pts</span></div>
+    <div class="bt-combos"><div>${combo(mine)}</div><div>${combo(opp)}</div></div>
+    <h3 class="bt-h">Slot by slot</h3>
+    <div class="bslots">${slots}</div>
+  </section>`;
+}
+
 /* ---------- Leaderboard and history ---------- */
 function leadersView() {
   const myRow = leaders.findIndex(u => u.id === me.id);
   const rows = leaders.map((u, i) => `<tr class="${u.id === me.id ? 'me' : ''}"><td class="num">${i + 1}</td><td><span class="lb-who">${avatarHtml(u, 'sm')}<b>${esc(u.name || 'Player')}${badgeMark(u)}</b></span>${u.id === me.id ? ' <span class="you">You</span>' : ''}</td><td>${tierBadge(tierOf(u.rp))}</td><td class="r num">${fmt(u.rp || 0)}</td><td class="r num hide-sm">${u.nights || 0}</td><td class="r num hide-sm">${u.wins || 0}</td></tr>`).join('');
   return `<section class="panel"><div class="list-head"><div><h2>Leaderboard</h2><p class="sub">Top ${leaders.length || 50} players by rank points. Updated after every night is scored.</p></div></div>
-    ${leaders.length ? `<div class="tablewrap"><table class="lb"><thead><tr><th>#</th><th>Player</th><th>Tier</th><th class="r">RP</th><th class="r hide-sm">Nights</th><th class="r hide-sm">Group wins</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p class="empty">No one has finished a night yet. Enter tonight to be first on the board.</p>'}
+    ${leaders.length ? `<div class="tablewrap"><table class="lb"><thead><tr><th>#</th><th>Player</th><th>Tier</th><th class="r">RP</th><th class="r hide-sm">Nights</th><th class="r hide-sm">Wins</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p class="empty">No one has finished a night yet. Enter tonight to be first on the board.</p>'}
     ${leaders.length && myRow < 0 ? `<p class="hint" style="padding:0 22px 18px">You’re not in the top ${leaders.length} yet. You have ${fmt(profile?.rp || 0)} RP.</p>` : ''}
   </section>`;
 }
@@ -1013,15 +1341,18 @@ function historyView() {
   const list = [...entries.values()].sort((a, b) => a.date < b.date ? 1 : -1);
   const rows = list.map(e => {
     const st = e.invalid ? `<span class="badge lost">Invalid: ${esc(e.invalid)}</span>`
-      : e.finish ? `<span class="badge ${e.rpDelta >= 0 ? 'won' : 'lost'}">${e.rpDelta >= 0 ? '+' : ''}${e.rpDelta} RP</span>`
-      : e.group ? '<span class="badge live">In progress</span>' : '<span class="badge draft">Entered</span>';
+      : e.finish || e.result ? `<span class="badge ${e.rpDelta >= 0 ? 'won' : 'lost'}">${e.rpDelta >= 0 ? '+' : ''}${e.rpDelta} RP</span>`
+      : e.group || e.match ? '<span class="badge live">In progress</span>' : '<span class="badge draft">Entered</span>';
+    const sub = e.result ? `${e.result === 'W' ? 'Won' : e.result === 'L' ? 'Lost' : 'Tied'} ${e.cats[0]}–${e.cats[1]} vs ${esc(e.opp)} · ${e.tierName}${e.reward ? ` · 🔥 ${e.streak} nights: ${rewardText(e.reward)}` : ''}`
+      : e.finish ? `${ordinal(e.finish)} of ${e.of} · ${e.tierName}${e.reward ? ` · 🔥 ${e.streak} nights: ${rewardText(e.reward)}` : ''}`
+      : e.match ? 'Matchup set' : e.group ? 'Group formed' : 'Waiting for tip-off';
     const tag = days.has(e.date) ? `button class="runner hist" data-action="sel" data-d="${e.date}"` : 'div class="runner hist"';
     return `<${tag}>
       <span class="gnum">${dateOf(e.date).getDate()}</span>
-      <div><div class="r-name">${dayLabel(e.date)}</div><div class="r-sub">${e.finish ? `${ordinal(e.finish)} of ${e.of} · ${e.tierName}${e.reward ? ` · 🔥 ${e.streak} nights: ${rewardText(e.reward)}` : ''}` : e.group ? 'Group formed' : 'Waiting for tip-off'}</div></div>
+      <div><div class="r-name">${dayLabel(e.date)}</div><div class="r-sub">${sub}</div></div>
       <div class="r-act">${e.score != null ? `<span class="sc">${f1(e.score)}</span>` : ''}${st}</div></${tag.split(' ')[0]}>`;
   }).join('');
-  return `<section class="panel"><div class="list-head"><div><h2>My nights</h2><p class="sub">Every night you entered, newest first. Tap one of the last few nights to see your group.</p></div></div>
+  return `<section class="panel"><div class="list-head"><div><h2>My nights</h2><p class="sub">Every night you entered, newest first. Tap one of the last few nights to see the matchup.</p></div></div>
     ${rows || '<p class="empty">You haven’t entered a night yet.</p>'}</section>`;
 }
 
@@ -1061,7 +1392,7 @@ function profileView() {
   const earned = earnedBadges(u), featured = u.featuredBadge;
   const list = moment => [...BADGES].filter(b => !!b.moment === moment).sort((a, b) => b.on(u) - a.on(u)).map(badge).join('');
   const momentsEarned = MOMENTS.filter(m => m.on(u)).length;
-  const stats = [['Rank points', fmt(rp)], ['Nights played', u.nights || 0], ['Group wins', u.wins || 0], ['Best finish', u.bestFinish ? ordinal(u.bestFinish) : '—'], ['Best score', u.bestScore ? f1(u.bestScore) : '—'], ['Best streak', u.bestStreak || 0]];
+  const stats = [['Rank points', fmt(rp)], ['Nights played', u.nights || 0], ['Record', `${u.wins || 0}–${u.losses || 0}`], ['Cards', cards.size], ['Best score', u.bestScore ? f1(u.bestScore) : '—'], ['Best streak', u.bestStreak || 0]];
   const badge = b => {
     const on = b.on(u), isFeatured = featured === b.id;
     return `<li class="bdg ${on ? '' : 'locked'} ${isFeatured ? 'featured' : ''}"><span class="bdg-icon" aria-hidden="true">${b.icon}</span><b>${esc(b.name)}</b><span class="bdg-how">${esc(b.how)}</span>
@@ -1077,7 +1408,7 @@ function profileView() {
           <button class="btn" data-action="edit-name">Edit name</button>
           <input type="file" id="avatar-file" accept="image/jpeg,image/png,image/webp" hidden>
         </div>
-        <p class="hint">JPG, PNG or WebP. It’s cropped to a square and shown to everyone on the leaderboard and in your group.</p>
+        <p class="hint">JPG, PNG or WebP. It’s cropped to a square and shown to everyone on the leaderboard and to your opponents.</p>
       </div>
     </section>
     <section class="panel pf-stats">${stats.map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join('')}</section>
@@ -1095,15 +1426,17 @@ function slipSummary() {
   const e = entries.get(ui.sel);
   let night = '';
   if (ui.view === 'night' && e) {
-    night = e.finish
+    night = e.result
+      ? `<div class="series-row"><span>Result</span><b>${e.result === 'W' ? 'Won' : e.result === 'L' ? 'Lost' : 'Tied'} ${e.cats[0]}–${e.cats[1]}</b></div><div class="series-row"><span>Opponent</span><b class="small">${esc(e.opp)}</b></div><div class="series-row"><span>Rank points</span><b class="${e.rpDelta >= 0 ? 'up' : 'down'}">${e.rpDelta >= 0 ? '+' : ''}${e.rpDelta}</b></div>`
+      : e.finish
       ? `<div class="series-row"><span>Finish</span><b>${ordinal(e.finish)}</b></div><div class="series-row"><span>Score</span><b>${f1(e.score)}</b></div><div class="series-row"><span>Rank points</span><b class="${e.rpDelta >= 0 ? 'up' : 'down'}">${e.rpDelta >= 0 ? '+' : ''}${e.rpDelta}</b></div>`
-      : `<div class="series-row"><span>Status</span><b class="small">${e.invalid ? 'Invalid' : e.group ? 'Live' : 'Locked'}</b></div>`;
+      : `<div class="series-row"><span>Status</span><b class="small">${e.invalid ? 'Invalid' : e.group || e.match ? 'Live' : 'Locked'}</b></div>`;
   }
   return `<div class="slip-card">
     <div class="slip-head"><span class="count">${tier + 1}</span><h3>${TIERS[tier]}</h3></div>
     ${night}
     <div class="series-row"><span>Rank points</span><b>${fmt(rp)}</b></div>
-    <div class="slip-foot"><div class="info">${tier === TIERS.length - 1 ? 'You’re in the top tier.' : `${100 - (rp - tier * 100)} more RP to reach ${TIERS[tier + 1]}.`} Finish top 3 in your group to climb fastest.</div></div>
+    <div class="slip-foot"><div class="info">${tier === TIERS.length - 1 ? 'You’re in the top tier.' : `${100 - (rp - tier * 100)} more RP to reach ${TIERS[tier + 1]}.`} Win: +${RP_WIN} RP · loss: ${RP_LOSS}.</div></div>
   </div>`;
 }
 
@@ -1143,15 +1476,23 @@ function render() {
     return;
   }
   // A night's draft starts from the saved entry, so wait for entries as well as days.
-  if (!loaded.days || !loaded.entries) return;
+  if (!loaded.days || !loaded.entries || !loaded.cards) return;
+  // New players open their starter packs before anything else.
+  if ((profile.starterPacks || 0) < STARTER_PACKS || ui.reveal) {
+    $('#side').innerHTML = ''; $('#slip').innerHTML = '';
+    const sig = 'packs|' + (profile.starterPacks || 0) + '|' + ui.opening + '|' + (ui.reveal ? ui.revealNo : 0);
+    if (sig !== ui.sig) { ui.sig = sig; $('#main').innerHTML = packView(); }
+    return;
+  }
   if (!ui.sel || !days.has(ui.sel)) {
     const sorted = [...days.keys()].sort();
     ui.sel = (days.has(etDay()) ? etDay() : nextOpenDate()) || sorted.filter(d => entries.has(d)).pop() || sorted.pop() || null;
   }
-  watchGroup();
+  watchGroup(); watchMatch();
   if (ui.view === 'night' && liveSel !== ui.sel) { liveSel = ui.sel; pollLive(); }
   renderSide();
   const m = $('#main');
+  if (ui.view === 'cards') { ui.sig = 'cards'; m.innerHTML = cardsView(); $('#slip').innerHTML = slipSummary(); return; }
   if (ui.view === 'leaders') { ui.sig = 'leaders'; m.innerHTML = leadersView(); $('#slip').innerHTML = slipSummary(); return; }
   if (ui.view === 'profile') { ui.sig = 'profile'; m.innerHTML = profileView(); $('#slip').innerHTML = slipSummary(); return; }
   if (ui.view === 'history') { ui.sig = 'history'; m.innerHTML = historyView(); $('#slip').innerHTML = slipSummary(); return; }
@@ -1160,11 +1501,11 @@ function render() {
   const e = entries.get(ui.sel);
   if (!locked(day)) {
     const sig = 'build|' + ui.sel;
-    if (ui.draftFor !== ui.sel) { ui.draft = (e?.ids || SLOTS.map(() => null)).slice(); ui.draftCap = e?.captain ?? null; ui.draftFor = ui.sel; ui.save = ''; }
+    if (ui.draftFor !== ui.sel) { ui.draft = (e?.ids || SLOTS.map(() => null)).slice(); ui.draftFor = ui.sel; ui.save = ''; }
     if (sig === ui.sig && $('#poolrows')) { renderPool(); renderLineup(); const el = $('#slate'); if (el) keepRacesScroll(() => { el.innerHTML = slateCard(day); }); const st = $('#streak'); if (st) st.innerHTML = streakBanner(); return; }
     ui.sig = sig;
     $('#slip').innerHTML = '<button class="dock" id="dock" data-action="sheet" aria-expanded="false" aria-label="Show your lineup"></button><div class="sheet-bg" data-action="sheet-close"></div><div class="slip-card" id="lineup"></div>';
-    m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day)}<section class="panel"><div class="list-head"><div><h2>${dayLabel(ui.sel)} player pool</h2><p class="sub">Tap a rating to add a player. Fit six within ${budget()}★, with one 5★ at most. The captain costs +1★.</p></div></div><div class="pool-tools">${poolTools()}</div><div id="poolrows"></div><div id="poolmore"></div></section>${legend}`;
+    m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day)}<section class="panel"><div class="list-head"><div><h2>${dayLabel(ui.sel)} · your cards</h2><p class="sub">Your cards with a game this night. Tap a rating to add one. Fit six within ${budget()}★, with one 5★ at most.</p></div></div><div class="pool-tools">${poolTools()}</div><div id="poolrows"></div><div id="poolmore"></div></section>${legend}`;
     renderPool(); renderLineup();
     return;
   }
@@ -1174,9 +1515,10 @@ function render() {
   const next = nextOpenDate();
   const nextBtn = next ? `<div class="row"><button class="btn primary" data-action="sel" data-d="${next}">Enter ${dayLabel(next)}</button></div>` : '';
   if (!e) body = notice('Not entered', 'You sat this night out', `<p>${profile.nights ? `${profile.lastSaved === ui.sel ? 'Your Streak Saver covered this night, so your streak and RP are safe.' : `Skipping a game night costs ${SKIP_PENALTY} RP and your streak, but it can’t drop you out of your tier.`}` : 'Enter a night to get on the board.'}</p>${nextBtn}`);
-  else if (e.invalid) body = notice('Entry not counted', 'This lineup was invalid', `<p>The lineup was rejected (${esc(e.invalid)}), so it wasn’t placed in a group. Nothing changed on your rank.</p>${nextBtn}`);
-  else if (!e.group || !group || group.date !== ui.sel) body = notice('Locked in', 'Forming groups', `<p>Lineups locked at ${timeLabel(day.lockAt)}. Groups of 10 are formed on the next sync, within 30 minutes of tip-off.</p>`);
-  else body = groupView(day);
+  else if (e.invalid) body = notice('Entry not counted', 'This lineup was invalid', `<p>The lineup was rejected (${esc(e.invalid)}), so it wasn’t given an opponent. Nothing changed on your rank.</p>${nextBtn}`);
+  else if (e.group && group && group.date === ui.sel) body = groupView(day);
+  else if (e.match && match && match.date === ui.sel) body = battleView(day);
+  else body = notice('Locked in', 'Finding your opponent', `<p>Lineups locked at ${timeLabel(day.lockAt)}. Opponents are paired on the next sync, within 30 minutes of tip-off. Both lineups are revealed then.</p>`);
   keepRacesScroll(() => { m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day)}${body}${legend}`; });
 }
 
@@ -1197,12 +1539,12 @@ function changed() {
 // An entry exists only while the lineup is complete; emptying a slot withdraws it.
 async function flush() {
   if (saving) { saveAgain = true; return; }
-  const date = ui.draftFor, day = days.get(date), ids = ui.draft.slice(), captain = ids.includes(ui.draftCap) ? ui.draftCap : null;
+  const date = ui.draftFor, day = days.get(date), ids = ui.draft.slice();
   if (!day || locked(day)) { ui.save = 'err'; toast('Lineups are locked for this slate.'); render(); return; }
   saving = true;
   const ref = db.doc(`entries/${date}_${me.id}`);
   try {
-    if (complete(ids)) await ref.set({ uid: me.id, date, ids, captain, at: Date.now() });
+    if (ready(ids, day)) await ref.set({ uid: me.id, date, ids, at: Date.now() });
     else if (entries.has(date)) await ref.delete();
     ui.save = 'ok';
   } catch (err) { ui.save = 'err'; }
@@ -1214,22 +1556,15 @@ async function flush() {
 function addPlayer(id) {
   const day = days.get(ui.sel), lu = ui.draft, p = pmap(day).get(id);
   if (!p || lu.includes(id)) return;
+  if (!owns(id)) return toast(`You don’t have a ${p.name} card.`);
   let i = SLOTS.findIndex((s, k) => s === p.pos && !lu[k]);
   if (i < 0 && !lu[5]) i = 5;
   if (i < 0) return toast(`Your ${p.pos} slots and UTIL are full. Remove someone first.`);
   if (p.stars === 5 && fiveStars(lu, day) >= MAX_FIVE) return toast('You can only have one 5★ player. Remove your other 5★ first.');
-  const over = cost(lu, ui.draftCap, day) + p.stars - budget();
+  const over = cost(lu, day) + p.stars - budget();
   if (over > 0) return toast(`${p.name} is ${p.stars}★. You’d be ${over}★ over your ${budget()}★ budget.`);
   if (isOut(p)) toast(`${p.name} is listed as out. Out players score 0.`);
   lu[i] = id; changed();
-}
-
-function setCaptain(id) {
-  const day = days.get(ui.sel);
-  if (ui.draftCap === id) { ui.draftCap = null; return changed(); }
-  const over = cost(ui.draft, id, day) - budget();
-  if (over > 0) return toast(`A captain costs one extra star, and you have no stars left. Swap someone for a cheaper player first.`);
-  ui.draftCap = id; changed();
 }
 
 document.addEventListener('click', e => {
@@ -1250,17 +1585,20 @@ document.addEventListener('click', e => {
   else if (a === 'auth-reset') { ui.auth = ''; render(); }
   else if (a === 'edit-name') { ui.editName = true; ui.sig = ''; render(); }
   else if (a === 'name-cancel') { ui.editName = false; ui.sig = ''; render(); }
+  else if (a === 'pack') openPack();
+  else if (a === 'pack-done') { ui.reveal = null; ui.sig = ''; render(); window.scrollTo({ top: 0 }); }
+  else if (a === 'card-pos') { ui.cardPos = b.dataset.v; ui.sig = ''; render(); }
   else if (a === 'toggle-row') { ui.open = ui.open === b.dataset.k ? '' : b.dataset.k; ui.sig = ''; render(); }
   else if (!ui.draft || !days.get(ui.sel) || locked(days.get(ui.sel))) return;
   else if (a === 'add') addPlayer(b.dataset.id);
-  else if (a === 'drop') { ui.draft[ui.draft.indexOf(b.dataset.id)] = null; if (ui.draftCap === b.dataset.id) ui.draftCap = null; changed(); }
-  else if (a === 'remove') { if (ui.draftCap === ui.draft[+b.dataset.i]) ui.draftCap = null; ui.draft[+b.dataset.i] = null; changed(); }
-  else if (a === 'clear') { ui.draft = SLOTS.map(() => null); ui.draftCap = null; changed(); }
-  else if (a === 'captain') setCaptain(b.dataset.id);
+  else if (a === 'drop') { ui.draft[ui.draft.indexOf(b.dataset.id)] = null; changed(); }
+  else if (a === 'remove') { ui.draft[+b.dataset.i] = null; changed(); }
+  else if (a === 'clear') { ui.draft = SLOTS.map(() => null); changed(); }
   else if (a === 'auto') {
-    const r = buildLineup(days.get(ui.sel).players, { base: ui.draft, captain: ui.draftCap, noise: 0.05, cap: budget() });
-    if (!r) return toast('No way to fill the open slots within your star budget. Swap out a high-rated player.');
-    ui.draft = r.ids; ui.draftCap = r.captain; changed();
+    const day = days.get(ui.sel), base = ui.draft.map(id => id && owns(id) ? id : null);
+    const r = buildLineup(ownedPool(day), { base, noise: 0.05, cap: budget(), noCaptain: true, partial: true });
+    if (!r || r.ids.filter(Boolean).length <= base.filter(Boolean).length) return toast('None of your other cards fit the open slots within your star budget. Swap out a high-rated card.');
+    ui.draft = r.ids; changed();
   }
   else if (a === 'more') { ui.limit += 80; renderPool(); }
   else if (a === 'pos') { ui.pos = b.dataset.v; ui.limit = 80; document.querySelectorAll('[data-action=pos]').forEach(x => x.setAttribute('aria-pressed', x.dataset.v === ui.pos)); renderPool(); }
@@ -1307,7 +1645,7 @@ document.addEventListener('change', e => {
 
 /* ---------- Boot (Firebase) ---------- */
 const EMAIL_KEY = 'bo7-signin-email';
-let unsubGroup = null, groupKey = '', unsubLeaders = null;
+let unsubGroup = null, groupKey = '', unsubMatch = null, matchKey = '', unsubLeaders = null;
 
 // US Eastern calendar date, offset by whole days, as YYYYMMDD (NBA game days are Eastern dates).
 function etDay(offset = 0) {
@@ -1328,6 +1666,14 @@ function watchGroup() {
   groupKey = key; unsubGroup?.(); group = null;
   if (!key) return;
   unsubGroup = db.doc(`days/${ui.sel}/groups/${e.group}`).onSnapshot(s => { group = s.exists ? s.data() : null; ui.sig = ''; render(); }, () => {});
+}
+
+function watchMatch() {
+  const e = entries.get(ui.sel), key = e?.match ? `${ui.sel}/${e.match}` : '';
+  if (key === matchKey) return;
+  matchKey = key; unsubMatch?.(); match = null;
+  if (!key) return;
+  unsubMatch = db.doc(`days/${ui.sel}/matches/${e.match}`).onSnapshot(s => { match = s.exists ? s.data() : null; ui.sig = ''; render(); }, () => {});
 }
 
 function watchLeaders() {
@@ -1394,7 +1740,7 @@ function renderPlayer(id, p, data, failed) {
   setTimeout(updateScrollCues, 0);
   const a = data?.[0]?.athlete, name = a?.displayName || p?.name || 'Player';
   const day = days.get(ui.sel);
-  const canEdit = ui.view === 'night' && ui.draft && day && !locked(day) && p;
+  const canEdit = ui.view === 'night' && ui.draft && day && !locked(day) && p && owns(id);
   const inLu = canEdit && ui.draft.includes(id);
   const meta = a ? [a.displayJersey, a.position?.displayName, a.team?.displayName, a.displayHeight, a.displayWeight].filter(Boolean).join(' · ') : p ? `${p.team} · ${POS_NAME[p.pos] || ''}` : '';
   $('#pcard').innerHTML = `
@@ -1402,7 +1748,7 @@ function renderPlayer(id, p, data, failed) {
     <div class="pc-head">
       <div class="pc-photo"><img src="https://a.espncdn.com/i/headshots/nba/players/full/${encodeURIComponent(id)}.png" alt="" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>${jersey(p?.team || '')}</span></div>
       <div class="pc-title"><h2 id="pc-name">${esc(name)}</h2><p class="pc-meta">${esc(meta)}</p>
-        ${p ? `<div class="pc-tags">${starsHtml(p.stars)}${p.gp ? `<span class="chip">FPPG ${f1(p.avg)}</span>` : ''}${isOut(p) ? '<span class="inj out">Out</span>' : isGtd(p) ? `<span class="inj gtd">${esc(p.status)}</span>` : ''}${p.opp ? `<span class="chip">${esc(p.opp)}</span>` : ''}</div>` : ''}
+        ${p || roster.has(id) ? `<div class="pc-tags">${owns(id) ? `<span class="rar r-${rarityOf(id)}">${RARITY[rarityOf(id)].name} card</span>` : '<span class="chip">Not in your collection</span>'}${typeChips((p || roster.get(id)).types)}${starsHtml((p || roster.get(id)).stars)}${p?.gp ? `<span class="chip">FPPG ${f1(p.avg)}</span>` : ''}${p && isOut(p) ? '<span class="inj out">Out</span>' : p && isGtd(p) ? `<span class="inj gtd">${esc(p.status)}</span>` : ''}${p?.opp ? `<span class="chip">${esc(p.opp)}</span>` : ''}</div>` : ''}
       </div>
     </div>
     ${failed ? '<p class="empty">Couldn’t load this player’s profile from ESPN. Close this and tap the player to try again.</p>'
@@ -1413,7 +1759,7 @@ function renderPlayer(id, p, data, failed) {
 }
 
 function openPlayer(id) {
-  const dlg = $('#pcard'), p = pmap(days.get(ui.sel) || { players: [] }).get(id);
+  const dlg = $('#pcard'), p = pmap(days.get(ui.sel) || { players: [] }).get(id) || (roster.has(id) ? { ...roster.get(id), opp: '' } : undefined);
   pcardFor = id;
   renderPlayer(id, p);
   if (!dlg.open) dlg.showModal();
@@ -1435,7 +1781,7 @@ const ESPN = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba';
 const live = new Map(), boxCache = new Map();
 let rawDays = new Map(), liveBusy = false, liveSel = null;
 
-// Mirrors boxLines in sync/nba-sync.mjs: { athleteId: [min, pts, reb, ast, stl, blk, to, threes] }
+// Mirrors boxLines in sync/nba-sync.mjs: { athleteId: [min, pts, reb, ast, stl, blk, to, threes, fgm, fga, ftm] }
 function boxLines(box) {
   const out = {};
   for (const t of box.boxscore?.players || []) {
@@ -1445,7 +1791,9 @@ function boxLines(box) {
     for (const a of st.athletes || []) {
       if (a.didNotPlay || !a.stats || !a.stats.length) continue;
       const n = k => { const v = parseFloat(a.stats[L.indexOf(k)]); return isNaN(v) ? 0 : v; };
-      out[a.athlete.id] = [n('MIN'), n('PTS'), n('REB'), n('AST'), n('STL'), n('BLK'), n('TO'), n('3PT')];
+      // "FG" reads "7-15": made, then attempted.
+      const att = k => { const v = parseFloat(String(a.stats[L.indexOf(k)] ?? '').split('-')[1]); return isNaN(v) ? 0 : v; };
+      out[a.athlete.id] = [n('MIN'), n('PTS'), n('REB'), n('AST'), n('STL'), n('BLK'), n('TO'), n('3PT'), n('FG'), att('FG'), n('FT')];
     }
   }
   return out;
@@ -1490,6 +1838,15 @@ function startData() {
   db.doc('users/' + me.id).onSnapshot(s => { profile = s.exists ? s.data() : null; loaded.profile = true; ui.sig = ''; render(); }, fail);
   db.collection('entries').where('uid', '==', me.id)
     .onSnapshot(s => { entries = new Map(s.docs.map(x => [x.data().date, x.data()])); loaded.entries = true; render(); }, () => { loaded.entries = true; render(); });
+  db.collection(`users/${me.id}/cards`).onSnapshot(s => {
+    cards = new Map();
+    for (const d of s.docs) {
+      const c = d.data();
+      if ((RARITY_RANK[c.rarity] ?? 0) >= (RARITY_RANK[cards.get(c.pid)?.rarity] ?? -1)) cards.set(c.pid, c);
+    }
+    loaded.cards = true; ui.sig = ''; render();
+  }, () => { loaded.cards = true; render(); });
+  db.doc('meta/roster').get().then(s => { roster = new Map((s.exists ? s.data().players : []).map(p => [p.id, p])); ui.sig = ''; render(); }, () => {});
 }
 
 async function finishSignIn(email) {

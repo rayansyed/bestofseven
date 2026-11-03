@@ -431,32 +431,57 @@ body.no-slip main { grid-column: 2 / -1; }
 .dimtxt { color: var(--dim); font-size: 12px; }
 
 .tc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 16px; padding: 14px 22px 24px; }
-/* A trading card in a clear sleeve. The frame colour is the rarity: white Common, silver Rare, holo Epic, gold Legendary. */
-.tc { position: relative; aspect-ratio: 5 / 7; padding: 6px; border-radius: 11px; cursor: pointer; transition: transform .2s;
+/* A trading card in a clear sleeve. The frame colour is the rarity: white Common, silver Rare, holo Epic, gold Legendary.
+   Everything inside scales with the card's width (1cqw = 1% of it), so one design fits the grid, the picker and the court. */
+.tc { position: relative; aspect-ratio: 5 / 7; padding: 3.4%; border-radius: 11px; cursor: pointer; transition: transform .2s; container-type: inline-size;
   background: linear-gradient(155deg, rgba(255,255,255,.26), rgba(255,255,255,.07) 45%, rgba(255,255,255,.16));
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.3), 0 10px 22px rgba(0,0,0,.4); }
 .tc:hover { transform: translateY(-3px) rotate(-.6deg); }
-.tc-card { --frame: #F3F1EA; --frame-ink: #1A1D22; position: relative; height: 100%; border-radius: 5px; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto auto; padding: 6px 6px 0; background: var(--frame); color: var(--frame-ink); }
+.tc-card { --frame: #F3F1EA; --frame-ink: #1A1D22; position: relative; height: 100%; border-radius: 3cqw; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto auto; padding: 3.4cqw 3.4cqw 0; background: var(--frame); color: var(--frame-ink); }
 .r-rare .tc-card { --frame: linear-gradient(135deg, #E9ECF0, #9AA3AE 30%, #F7F8FA 52%, #87909C 75%, #DCE0E5); }
 .r-epic .tc-card { --frame: linear-gradient(135deg, #F2C6FF, #A98BFF 25%, #8FE3FF 50%, #FFD48A 75%, #F29BD8); }
 .r-legendary .tc-card { --frame: linear-gradient(135deg, #FFF1B8, #D9A227 28%, #FFE58A 50%, #B8801A 74%, #F7D46B); }
-.tc-art { position: relative; overflow: hidden; border-radius: 3px; isolation: isolate;
+.tc-art { position: relative; overflow: hidden; border-radius: 2cqw; isolation: isolate;
   background: repeating-linear-gradient(135deg, rgba(255,255,255,.06) 0 2px, transparent 2px 9px),
     radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--team) 75%, #fff), var(--team) 48%, color-mix(in srgb, var(--team) 45%, #000)); }
-.tc-mark { position: absolute; left: 0; right: 0; top: 16%; text-align: center; font: 700 64px/1 "Oswald", var(--sans); letter-spacing: -.02em; color: rgba(255,255,255,.16); z-index: -1; }
-.tc-art img { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); height: 82%; width: auto; max-width: none; filter: drop-shadow(0 6px 10px rgba(0,0,0,.35)); }
-.tc-jersey .jersey { position: absolute; left: 50%; bottom: 12%; transform: translateX(-50%); width: 60%; height: auto; }
-.tc-pos { position: absolute; top: 6px; left: 6px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #fff; color: #111; font: 700 12px/1 "Oswald", var(--sans); box-shadow: 0 0 0 2px var(--team); }
-.tc-stars { position: absolute; top: 7px; right: 6px; font-size: 11px; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+.tc-mark { position: absolute; left: 0; right: 0; top: 14%; text-align: center; font: 700 36cqw/1 "Oswald", var(--sans); letter-spacing: -.02em; color: rgba(255,255,255,.16); z-index: -1; }
+.tc-art img { position: absolute; bottom: 0; left: 56%; transform: translateX(-50%); height: 88%; width: auto; max-width: none; filter: drop-shadow(0 6px 10px rgba(0,0,0,.35)); }
+.tc-jersey .jersey { position: absolute; left: 56%; bottom: 12%; transform: translateX(-50%); width: 56%; height: auto; }
+.tc-rate { position: absolute; top: 3cqw; left: 4cqw; z-index: 1; display: grid; justify-items: center; line-height: 1; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.7); }
+.tc-rate b { font: 700 16cqw/.95 "Oswald", var(--sans); }
+.tc-rate small { font: 800 4.2cqw/1.3 var(--sans); letter-spacing: .08em; opacity: .85; }
+.tc-rate i { margin-top: 1cqw; padding: .6cqw 2.6cqw; border-radius: 2cqw; background: rgba(0,0,0,.45); font: 700 7cqw/1.1 "Oswald", var(--sans); font-style: normal; }
+.tc-stars { position: absolute; top: 4cqw; right: 3.4cqw; font-size: 6cqw; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
 .tc-stars .stars { color: #fff; } .tc-stars .stars i { color: rgba(255,255,255,.3); }
-.tc-icons { position: absolute; left: 6px; top: 38px; display: grid; gap: 4px; font-size: 13px; }
-.tc-icons span { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: rgba(0,0,0,.45); }
-.tc-plate { margin: 5px -6px 0; padding: 5px 10px 6px; background: #121418; color: #fff; display: grid; line-height: 1.05; text-align: left; }
-.tc-first { font: 500 10px/1.2 "Oswald", var(--sans); letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.7); min-height: 12px; }
-.tc-last { font: 700 17px/1.05 "Oswald", var(--sans); letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tc-foot { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 5px 2px 6px; font-size: 9.5px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; }
+.tc-icons { position: absolute; left: 4.5cqw; top: 38cqw; display: grid; gap: 2cqw; font-size: 6.5cqw; }
+.tc-icons span { width: 12.5cqw; height: 12.5cqw; border-radius: 50%; display: grid; place-items: center; background: rgba(0,0,0,.45); }
+.tc-plate { margin: 2.8cqw -3.4cqw 0; padding: 2.6cqw 4.5cqw 3cqw; background: #121418; color: #fff; display: grid; line-height: 1.05; text-align: left; }
+.tc-first { font: 500 5.4cqw/1.2 "Oswald", var(--sans); letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.7); min-height: 6.5cqw; }
+.tc-last { font: 700 9.4cqw/1.05 "Oswald", var(--sans); letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tc-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.4cqw 0; margin-top: 2.4cqw; padding-top: 2.4cqw; border-top: 1px solid rgba(255,255,255,.14); }
+.st { display: flex; align-items: baseline; gap: 1.6cqw; min-width: 0; padding-left: 2.4cqw; }
+.st:nth-child(3n+1) { padding-left: 0; }
+.st:not(:nth-child(3n+1)) { border-left: 1px solid rgba(255,255,255,.12); }
+.st b { font: 700 max(9px, 7.6cqw)/1.15 "Oswald", var(--sans); font-variant-numeric: tabular-nums; }
+.st i { font: 700 max(6.5px, 4.4cqw)/1 var(--sans); font-style: normal; letter-spacing: .04em; color: rgba(255,255,255,.6); }
+.st.up b { color: #F5C451; } .st.up i { color: rgba(245,196,81,.8); }
+.tc-foot { display: flex; justify-content: space-between; align-items: center; gap: 3cqw; padding: 2.6cqw 1cqw 3.2cqw; font-size: 5cqw; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; }
 .tc-foot span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-.tc-rar { flex: none; font: 700 9.5px/1 "Oswald", var(--sans); letter-spacing: .12em; }
+.tc-rar { flex: none; font: 700 5cqw/1 "Oswald", var(--sans); letter-spacing: .12em; }
+/* Small cards (on a phone's court): stats stack number-over-label, and the extras drop out. */
+@container (max-width: 125px) {
+  .tc-foot, .tc-first, .tc-rate small, .tc-icons { display: none; }
+  .tc-card { padding-bottom: 3.4cqw; }
+  .tc-plate { margin-bottom: -3.4cqw; padding: 2.4cqw 3cqw 3.4cqw; }
+  .tc-last { font-size: max(8.5px, 10cqw); }
+  .tc-rate b { font-size: max(12px, 17cqw); }
+  .tc-rate i { font-size: max(8px, 8cqw); }
+  .tc-stats { gap: 1cqw 1.5cqw; margin-top: 1.6cqw; padding-top: 1.6cqw; }
+  .st { display: grid; justify-items: center; gap: 0; padding-left: 0; }
+  .st b { font-size: max(9px, 9cqw); }
+  .st i { font-size: max(6.5px, 5.5cqw); }
+}
+
 /* Foil: holo cards catch the light; gold cards shimmer. */
 .r-epic .tc-art::after, .r-legendary .tc-card::after { content: ""; position: absolute; inset: 0; pointer-events: none; }
 .r-epic .tc-art::after { background: linear-gradient(125deg, rgba(255,0,170,.18), rgba(0,220,255,.18), rgba(255,230,0,.18), rgba(140,0,255,.18)); mix-blend-mode: color-dodge; }
@@ -557,20 +582,8 @@ body.no-slip main { grid-column: 2 / -1; }
 .spot { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); z-index: 1; width: 26%;
   border: 0; padding: 0; background: none; color: inherit; container-type: inline-size; pointer-events: none; }
 .spot > * { pointer-events: auto; cursor: pointer; }
-.spot .tc { padding: 3.5cqw; border-radius: 7cqw; box-shadow: inset 0 0 0 1px rgba(255,255,255,.3), 0 8px 18px rgba(0,0,0,.5); }
 .spot:hover .tc, .spot:focus-visible .tc { transform: translateY(-3px); }
-.spot .tc-card { padding: 3.5cqw 3.5cqw 0; border-radius: 4cqw; }
-.spot .tc-mark { font-size: 36cqw; }
-.spot .tc-pos { width: 15cqw; height: 15cqw; top: 3.5cqw; left: 3.5cqw; font-size: 7.5cqw; }
-.spot .tc-stars { font-size: 7cqw; top: 4cqw; right: 3.5cqw; }
-.spot .tc-icons { top: 22cqw; left: 3.5cqw; gap: 2.5cqw; font-size: 7.5cqw; }
-.spot .tc-icons span { width: 14cqw; height: 14cqw; }
-.spot .tc-plate { margin: 3cqw -3.5cqw 0; padding: 3cqw 6cqw 3.5cqw; }
-.spot .tc-first { font-size: 6cqw; min-height: 7cqw; }
-.spot .tc-last { font-size: 11cqw; }
-.spot .tc-foot { font-size: 5.5cqw; padding: 3cqw 1cqw 3.5cqw; }
-.spot .tc-rar { font-size: 5.5cqw; }
-@container (max-width: 125px) { .tc-foot { display: none; } .tc-card { padding-bottom: 3.5cqw; } .tc-plate { margin-bottom: -3.5cqw; } }
+
 .spot-tag { position: absolute; left: 50%; bottom: 0; transform: translate(-50%, 55%); display: inline-flex; align-items: center; gap: 5px;
   padding: 2px 8px; border-radius: 6px; background: #0B0F16; color: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,.18), 0 3px 8px rgba(0,0,0,.5);
   font: 700 max(10px, 8.5cqw)/1.3 "Oswald", var(--sans); letter-spacing: .04em; white-space: nowrap; }
@@ -593,6 +606,7 @@ body.no-slip main { grid-column: 2 / -1; }
 @media (max-width: 700px) {
   .court-bar { padding: 2px 14px 10px; }
   .court { width: calc(100% - 12px); margin-bottom: 18px; border-radius: 10px; }
+  .spot { width: 28%; }
   .court-floor .apron-text { letter-spacing: 4px; }
   .pk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 }
@@ -950,21 +964,30 @@ const typesOf = id => roster.get(id)?.types || [];
 const typeChip = t => TYPES[t] ? `<span class="arch a-${t}" title="${esc(TYPES[t].name)}: ${esc(TYPES[t].what)}">${TYPES[t].icon} ${esc(TYPES[t].name)}</span>` : '';
 const typeChips = types => (types || []).map(typeChip).join('');
 const rarityTag = r => r && r !== 'common' ? `<span class="rar r-${r}">${RARITY[r].name}</span>` : '';
-// A collectible card: rarity frame, headshot, rating and archetype.
+// Card stat labels, in battle category order (the sync's roster stores averages in the same order).
+const STAT_LABEL = { pts: 'PTS', reb: 'REB', ast: 'AST', stl: 'STL', blk: 'BLK', tpm: '3PM', fgp: 'FG%', ftm: 'FTM', to: 'TO' };
+// A collectible card, squad-screen style: fantasy points per game as the rating, then season per-game averages
+// for all nine categories so you can see what a player brings. The category his archetype boosts is gold.
 function cardHtml(c, { fresh = false, i = 0, tonight = false } = {}) {
   const p = { ...c, ...roster.get(c.pid), id: c.pid }, rarity = c.rarity || 'common';
   const [first, ...rest] = String(p.name || '').split(' ');
   const types = (p.types || []).filter(t => TYPES[t]);
+  const boosted = new Set(types.map(t => TYPES[t].boost));
+  const stats = CATS.map((cat, k) => {
+    const v = p.s?.[k];
+    return `<span class="st ${boosted.has(cat.key) ? 'up' : ''}"><b>${v == null ? '–' : cat.key === 'fgp' ? Math.round(v) : v.toFixed(1)}</b><i>${STAT_LABEL[cat.key]}</i></span>`;
+  }).join('');
   return `<div class="tc r-${rarity} ${fresh ? 'fresh' : ''}" style="--i:${i};--team:${TEAM_COLORS[p.team] || '#5B6573'}" data-pid="${esc(c.pid)}" title="${esc(p.name)}">
     <div class="tc-card">
       <div class="tc-art">
         <span class="tc-mark" aria-hidden="true">${esc(p.team)}</span>
         <img src="https://a.espncdn.com/i/headshots/nba/players/full/${encodeURIComponent(c.pid)}.png" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="tc-jersey" hidden>${jersey(p.team)}</span>
-        <span class="tc-pos">${esc(p.pos)}</span>
+        <span class="tc-rate" title="Fantasy points per game"><b>${p.gp ? Math.round(p.avg) : '–'}</b><small>FPPG</small><i>${esc(p.pos)}</i></span>
         ${p.stars ? `<span class="tc-stars">${starsHtml(p.stars)}</span>` : ''}
         <span class="tc-icons">${types.map(t => `<span title="${esc(TYPES[t].name)}: ${esc(TYPES[t].what)}">${TYPES[t].icon}</span>`).join('')}</span>
       </div>
-      <div class="tc-plate"><span class="tc-first">${esc(rest.length ? first : '')}</span><b class="tc-last">${esc(rest.length ? rest.join(' ') : first)}</b></div>
+      <div class="tc-plate"><span class="tc-first">${esc(rest.length ? first : '')}</span><b class="tc-last">${esc(rest.length ? rest.join(' ') : first)}</b>
+        <div class="tc-stats" aria-label="Season averages per game">${stats}</div></div>
       <div class="tc-foot"><span>${esc(p.team)} · ${esc(POS_NAME[p.pos] || p.pos)}${types.length ? ' · ' + types.map(t => esc(TYPES[t].name)).join(' / ') : ''}</span><span class="tc-rar">${RARITY[rarity].name}</span></div>
     </div>
     ${tonight ? '<span class="tc-tonight">Tonight</span>' : ''}
@@ -1212,7 +1235,7 @@ function renderCourt() {
     const warn = isOut(p) ? 'OUT' : !owns(p.id) ? 'NOT YOURS' : '';
     return `<button class="spot filled" style="--x:${x}%;--y:${y}%" data-action="slot" data-i="${i}" aria-label="${spotName(slot)}: ${esc(p.name)}, ${f1(p.avg)} fantasy points per game${warn ? ', ' + warn.toLowerCase() : ''}. Change card">
       ${cardHtml(cards.get(p.id) || { pid: p.id, rarity: 'common', name: p.name, team: p.team, pos: p.pos })}
-      <span class="spot-tag ${warn ? 'warn' : ''}">${spotTag(slot)}<i>${warn || f1(p.avg)}</i></span></button>`;
+      <span class="spot-tag ${warn ? 'warn' : ''}">${spotTag(slot)}${warn ? `<i>${warn}</i>` : ''}</span></button>`;
   }).join('');
   el.innerHTML = `<div class="court-bar"><span class="court-lock">Locks ${timeLabel(day.lockAt)} · ${until(day.lockAt)}</span>${combos.map(sy => `<span class="arch syn" title="${esc(sy.text)}">✦ ${esc(sy.name)}</span>`).join('')}
       <span class="court-act">${lu.some(Boolean) ? '<button class="btn" data-action="clear">Clear</button>' : ''}${fill.size ? `<button class="btn primary" data-action="auto">Auto-fill ${fill.size}</button>` : ''}</span></div>

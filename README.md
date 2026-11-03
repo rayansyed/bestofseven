@@ -49,7 +49,7 @@ Firestore collections:
 - `entries/<YYYYMMDD>_<uid>`: a player's lineup for a night (written by the player until tip-off). The sync adds the matchup, result and rank-point change.
 - `users/<uid>`: display name, picture and featured badge (written by the player), plus RP, tier, record, streak, personal bests and starter packs opened (written by the server)
 - `users/<uid>/cards/<id>`: the player's cards (written by the server only)
-- `meta/season`: running season stat totals · `meta/types`: this month's archetypes · `meta/roster`: every player's team, position, rating and archetypes, read by the page and the pack opener (written by the sync)
+- `meta/season`: running season stat totals · `meta/types`: this month's archetypes · `meta/roster`: every player's team, position, rating, archetypes and per-game averages in the nine categories (shown on cards), read by the page and the pack opener. Team rosters are refetched daily; ratings and averages refresh every run (written by the sync)
 
 ## A week, start to finish
 1. **Day before:** the sync posts the slate with star ratings and archetypes.

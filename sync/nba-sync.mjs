@@ -144,20 +144,35 @@ async function monthlyTypes(db, season, pos) {
 }
 
 // Every active player, for starter packs. Refreshed about once a day.
+// Per-game season averages in the nine categories, in battle order: [pts, reb, ast, stl, blk, threes, FG%, ftm, to].
+function perGame(season, id) {
+  const t = season.p[id], n = t?.[SEASON.n];
+  if (!n) return null;
+  const g = k => Math.round(t[SEASON[k]] / n * 10) / 10;
+  return [g('pts'), g('reb'), g('ast'), g('stl'), g('blk'), g('tpm'), t[SEASON.fga] ? Math.round(t[SEASON.fgm] / t[SEASON.fga] * 1000) / 10 : null, g('ftm'), g('to')];
+}
+
+// Every player's team, position, rating, archetypes and per-game averages, for cards and starter packs.
+// Team rosters are refetched once a day; ratings and averages are refreshed from the season totals every run.
 async function updateRoster(db, season, types) {
   const prev = await db.read('meta/roster');
-  if (prev && Date.now() - Date.parse(prev.updatedAt) < 20 * 36e5) return prev;
-  const teams = (await get(`${API}/teams`)).sports[0].leagues[0].teams.map(x => x.team);
-  const players = [];
-  for (const tm of teams) {
-    for (const p of (await get(`${API}/teams/${tm.id}/roster`)).athletes || []) {
-      const avg = avgOf(season, p.id);
-      players.push({ id: p.id, name: p.displayName, team: tm.abbreviation, pos: normPos(p.position?.abbreviation), avg, gp: season.p[p.id]?.[SEASON.n] || 0, stars: starsOf(avg), types: types[p.id] || [] });
+  const fetchedAt = prev?.fetchedAt || prev?.updatedAt;
+  let base = prev?.players;
+  if (!base || Date.now() - Date.parse(fetchedAt) >= 20 * 36e5) {
+    const teams = (await get(`${API}/teams`)).sports[0].leagues[0].teams.map(x => x.team);
+    base = [];
+    for (const tm of teams) {
+      for (const p of (await get(`${API}/teams/${tm.id}/roster`)).athletes || []) base.push({ id: p.id, name: p.displayName, team: tm.abbreviation, pos: normPos(p.position?.abbreviation) });
     }
+    console.log(`roster: fetched ${base.length} players`);
   }
-  const roster = { updatedAt: new Date().toISOString(), players };
-  await db.write('meta/roster', roster);
-  console.log(`roster: ${players.length} players`);
+  const players = base.map(({ id, name, team, pos }) => {
+    const avg = avgOf(season, id);
+    return { id, name, team, pos, avg, gp: season.p[id]?.[SEASON.n] || 0, stars: starsOf(avg), types: types[id] || [], s: perGame(season, id) };
+  });
+  const same = prev && JSON.stringify(prev.players) === JSON.stringify(players);
+  const roster = { updatedAt: same ? prev.updatedAt : new Date().toISOString(), fetchedAt: base === prev?.players ? fetchedAt : new Date().toISOString(), players };
+  if (!same || roster.fetchedAt !== fetchedAt) await db.write('meta/roster', roster);
   return roster;
 }
 

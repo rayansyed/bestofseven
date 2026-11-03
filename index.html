@@ -566,45 +566,59 @@ button.pod:hover .pod-step { filter: brightness(1.08); }
 }
 @media (prefers-reduced-motion: reduce) { .tc.fresh, .pack.busy, .r-legendary .tc-card::after { animation: none; } }
 
-/* The court: a hardwood half court with a spot for each slot */
+/* The court: maple hardwood, cards in formation like a squad screen */
 .court-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 4px 22px 12px; min-height: 46px; }
+.court-lock { font-size: 12px; font-weight: 700; color: var(--muted); margin-right: 4px; }
 .court-act { margin-left: auto; display: flex; gap: 6px; }
-.court { position: relative; aspect-ratio: 500 / 470; max-width: 640px; margin: 0 auto 22px; width: calc(100% - 44px); border-radius: 14px; overflow: hidden;
-  background:
-    radial-gradient(ellipse at 50% 8%, rgba(255,216,160,.18), transparent 62%),
-    repeating-linear-gradient(90deg, rgba(0,0,0,.2) 0 1px, transparent 1px 31px),
-    repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 2px, transparent 2px 11px),
-    linear-gradient(180deg, #8C5B33, #6F4626 55%, #54331A);
-  box-shadow: inset 0 0 70px rgba(0,0,0,.5), 0 14px 30px rgba(0,0,0,.35); }
-.court-lines { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: rgba(255,255,255,.75); stroke-width: 3; }
-.court-lines .paint { fill: rgba(29,155,240,.26); }
-.court-lines .board { stroke-width: 5; stroke: rgba(255,255,255,.9); }
-.court-lines .rim { stroke: #FF7A1A; stroke-width: 3.5; }
-.spot { --ring: #F3F1EA; position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); z-index: 1;
-  width: 118px; border: 0; padding: 0; background: none; color: #fff; display: grid; justify-items: center; gap: 4px; }
-/* Only the visible ring and labels take taps, so neighbouring spots never steal each other's. */
-.spot { pointer-events: none; } .spot > * { pointer-events: auto; cursor: pointer; }
-.spot-ring { position: relative; width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center;
-  background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--team, #2A2F38) 70%, #fff), var(--team, #2A2F38) 72%);
-  box-shadow: 0 0 0 3px var(--ring), 0 10px 18px rgba(0,0,0,.5); transition: transform .15s; }
-.spot:hover .spot-ring, .spot:focus-visible .spot-ring { transform: scale(1.07); }
-.spot .face { width: 100%; height: 100%; background: none; box-shadow: none; }
-.spot .face .jersey { width: 60%; height: 60%; margin: 20%; }
-.spot-pos { position: absolute; top: -4px; right: -6px; min-width: 26px; height: 26px; padding: 0 4px; border-radius: 13px; display: grid; place-items: center;
-  background: var(--tag); color: var(--tag-ink); font: 700 12px/1 "Oswald", var(--sans); box-shadow: 0 2px 6px rgba(0,0,0,.4); }
-.spot-name { max-width: 118px; padding: 3px 8px; border-radius: 6px; background: rgba(10,12,16,.85); font: 700 13px/1.15 "Oswald", var(--sans);
-  letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.spot-sub { font-size: 11px; font-weight: 700; color: rgba(255,255,255,.9); text-shadow: 0 1px 3px rgba(0,0,0,.9); white-space: nowrap; }
-.spot-sub i { font-style: normal; color: #FF9A9A; }
-.spot.r-rare { --ring: #BFD3E6; } .spot.r-epic { --ring: #B78CFF; }
-.spot.r-legendary { --ring: #F5B83D; } .spot.r-legendary .spot-ring { box-shadow: 0 0 0 3px var(--ring), 0 0 22px rgba(245,184,61,.55), 0 10px 18px rgba(0,0,0,.5); }
-.spot.bad { --ring: var(--bad); }
-.spot.empty .spot-ring { background: rgba(12,14,18,.55); box-shadow: none; border: 2px dashed rgba(255,255,255,.6); }
-.spot.empty .spot-ring b { font: 700 22px/1 "Oswald", var(--sans); color: rgba(255,255,255,.85); }
-.spot.empty .spot-name { font: 700 12px/1.2 var(--sans); text-transform: none; letter-spacing: 0; background: rgba(10,12,16,.7); }
-.spot.empty.open .spot-ring { border-color: #fff; animation: spot-pulse 1.8s ease-in-out infinite; }
-.spot.empty:not(.open) { opacity: .6; }
-@keyframes spot-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(29,155,240,.55); } 50% { box-shadow: 0 0 0 9px rgba(29,155,240,0); } }
+.court { position: relative; aspect-ratio: 540 / 490; width: calc(100% - 44px); max-width: 620px; margin: 0 auto 22px; border-radius: 12px; overflow: hidden;
+  background: #12213D; box-shadow: 0 16px 36px rgba(0,0,0,.45); }
+.court::after { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 60px rgba(40,20,5,.35); }
+.court-floor, .court-links { position: absolute; inset: 0; width: 100%; height: 100%; }
+.court-floor .apron { fill: #12213D; }
+.court-floor .apron-text { font: 700 11px "Oswald", var(--sans); letter-spacing: 6px; fill: #F5B83D; }
+.court-floor .ln { fill: none; stroke: #fff; stroke-width: 3; }
+.court-floor .ln.dash { stroke-dasharray: 9 7; }
+.court-floor .arc3 { fill: none; stroke: #1B4FA8; stroke-width: 4; }
+.court-floor .paint { fill: #1B4FA8; stroke: #fff; stroke-width: 3; }
+.court-floor .board { stroke: #fff; stroke-width: 5; }
+.court-floor .rim { fill: none; stroke: #FF7A1A; stroke-width: 3.5; }
+.court-floor .mid { fill: #1B4FA8; stroke: #fff; stroke-width: 3; }
+.court-floor .mid-7 { font: 700 30px "Oswald", var(--sans); fill: #fff; }
+.court-links .lk { stroke-width: 3; stroke-linecap: round; }
+.court-links .lk.off { stroke: rgba(255,255,255,.35); stroke-dasharray: 2 6; }
+.court-links .lk.mid { stroke: #F59E0B; }
+.court-links .lk.on { stroke: #22C55E; filter: drop-shadow(0 0 3px rgba(34,197,94,.8)); }
+/* A spot is a card; its size and type scale with the court (cqw = 1% of the card's width). */
+.spot { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); z-index: 1; width: 26%;
+  border: 0; padding: 0; background: none; color: inherit; container-type: inline-size; pointer-events: none; }
+.spot > * { pointer-events: auto; cursor: pointer; }
+.spot .tc { padding: 3.5cqw; border-radius: 7cqw; box-shadow: inset 0 0 0 1px rgba(255,255,255,.3), 0 8px 18px rgba(0,0,0,.5); }
+.spot:hover .tc, .spot:focus-visible .tc { transform: translateY(-3px); }
+.spot .tc-card { padding: 3.5cqw 3.5cqw 0; border-radius: 4cqw; }
+.spot .tc-mark { font-size: 36cqw; }
+.spot .tc-pos { width: 15cqw; height: 15cqw; top: 3.5cqw; left: 3.5cqw; font-size: 7.5cqw; }
+.spot .tc-stars { font-size: 7cqw; top: 4cqw; right: 3.5cqw; }
+.spot .tc-icons { top: 22cqw; left: 3.5cqw; gap: 2.5cqw; font-size: 7.5cqw; }
+.spot .tc-icons span { width: 14cqw; height: 14cqw; }
+.spot .tc-plate { margin: 3cqw -3.5cqw 0; padding: 3cqw 6cqw 3.5cqw; }
+.spot .tc-first { font-size: 6cqw; min-height: 7cqw; }
+.spot .tc-last { font-size: 11cqw; }
+.spot .tc-foot { font-size: 5.5cqw; padding: 3cqw 1cqw 3.5cqw; }
+.spot .tc-rar { font-size: 5.5cqw; }
+@container (max-width: 125px) { .tc-foot { display: none; } .tc-card { padding-bottom: 3.5cqw; } .tc-plate { margin-bottom: -3.5cqw; } }
+.spot-tag { position: absolute; left: 50%; bottom: 0; transform: translate(-50%, 55%); display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 8px; border-radius: 6px; background: #0B0F16; color: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,.18), 0 3px 8px rgba(0,0,0,.5);
+  font: 700 max(10px, 8.5cqw)/1.3 "Oswald", var(--sans); letter-spacing: .04em; white-space: nowrap; }
+.spot-tag i { font-style: normal; color: #F5B83D; }
+.spot-tag.warn i { color: #FF8A8A; }
+.slot-card { aspect-ratio: 5 / 7; border-radius: 7cqw; display: grid; place-content: center; justify-items: center; gap: 3cqw; text-align: center;
+  background: rgba(11,15,22,.55); border: 2px dashed rgba(255,255,255,.65); color: #fff; backdrop-filter: blur(2px); }
+.slot-card b { font: 700 30cqw/1 "Oswald", var(--sans); }
+.slot-card span { font: 700 max(10px, 9cqw)/1.2 var(--sans); padding: 0 6cqw; }
+.spot.empty.open .slot-card { border-color: #fff; animation: spot-pulse 1.8s ease-in-out infinite; }
+.spot.empty:not(.open) .slot-card { opacity: .55; }
+@keyframes spot-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(29,155,240,.6); } 50% { box-shadow: 0 0 0 8px rgba(29,155,240,0); } }
+
 .pk-head { display: grid; gap: 4px; padding-right: 40px; }
 .pk-grid { padding: 14px 0 4px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 .pick { border: 0; padding: 0; background: none; color: inherit; text-align: left; display: grid; gap: 7px; align-content: start; }
@@ -612,17 +626,21 @@ button.pod:hover .pod-step { filter: brightness(1.08); }
 .pick-meta { font-size: 12px; color: var(--muted); line-height: 1.35; }
 .pick-meta b { color: var(--accent-2); }
 @media (max-width: 700px) {
-  .court-bar { padding: 4px 16px 10px; }
-  .court { width: calc(100% - 24px); margin-bottom: 14px; }
-  .spot { width: 86px; gap: 3px; }
-  .spot-ring { width: 54px; height: 54px; }
-  .spot-pos { min-width: 22px; height: 22px; font-size: 11px; top: -5px; right: -8px; }
-  .spot-name { max-width: 86px; font-size: 11px; padding: 2px 6px; }
-  .spot-sub { font-size: 9.5px; }
+  .court-bar { padding: 2px 14px 10px; }
+  .court { width: calc(100% - 12px); margin-bottom: 18px; border-radius: 10px; }
+  .court-floor .apron-text { letter-spacing: 4px; }
   .pk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  @media (prefers-reduced-motion: reduce) { .spot.empty.open .spot-ring { animation: none; } }
 }
-@media (prefers-reduced-motion: reduce) { .spot.empty.open .spot-ring { animation: none; } }
+/* Phones: while setting a lineup, the court leads the page, then the week, then everything else. */
+@media (max-width: 860px) {
+  body.drafting .podium { order: 6; }
+  body.drafting .side { order: 5; }
+  body.drafting main > .court-panel { order: -2; }
+  body.drafting main > #week { order: -1; }
+  body.drafting .court-panel .list-head { padding: 14px 14px 6px; }
+}
+@media (max-width: 520px) { .top-right .tchip:first-child { display: none; } }
+@media (prefers-reduced-motion: reduce) { .spot.empty.open .slot-card { animation: none; } }
 
 /* Weekly matchup: category grid above an open night, and the Monday-to-Sunday strip */
 .cats.mini { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 4px 22px 12px; border-top: 0; }
@@ -1215,19 +1233,41 @@ function heroCard(day) {
 }
 
 /* ---------- The court: tap a spot, pick a card ---------- */
-// Half court, hoop at the top (500 × 470 is 50 × 47 feet). Spots are x%, y% for G, G, F, F, C, UTIL:
-// guards on the wings past the arc, forwards on the blocks, the center in the paint, the sixth man at half court.
-const SPOTS = [[24, 67], [76, 67], [21, 38], [79, 38], [50, 27], [50, 84]];
-const COURT_SVG = `<svg class="court-lines" viewBox="0 0 500 470" aria-hidden="true">
-  <rect class="paint" x="170" y="0" width="160" height="190"/>
-  <circle cx="250" cy="190" r="60"/>
-  <path d="M30 0V140A237.5 237.5 0 0 0 470 140V0"/>
-  <path d="M210 52A40 40 0 0 0 290 52"/>
-  <line class="board" x1="220" y1="38" x2="280" y2="38"/>
-  <circle class="rim" cx="250" cy="52" r="8"/>
-  <path d="M190 470A60 60 0 0 1 310 470"/>
-  <rect x="1.5" y="1.5" width="497" height="467"/>
+// A maple half court, hoop at the top: 500 × 470 is 50 × 47 feet, inside a 20-unit apron.
+// Cards line up in formation like a squad screen: the frontcourt (forwards and the center) near the hoop,
+// the backcourt (guards and the sixth man) behind. Spots are x%, y% for G, G, F, F, C, UTIL.
+const SPOTS = [[18, 74], [82, 74], [18, 28], [82, 28], [50, 28], [50, 74]];
+// Links between neighbouring spots, drawn under the cards. They light up when both cards feed an active combo.
+const LINKS = [[2, 4], [4, 3], [0, 5], [5, 1], [2, 0], [3, 1], [4, 5]];
+const COURT_SVG = `<svg class="court-floor" viewBox="0 0 540 490" aria-hidden="true">
+  <defs>
+    <pattern id="planks" width="48" height="216" patternUnits="userSpaceOnUse" x="20" y="20">
+      <rect width="12" height="216" fill="#E0B07A"/><rect x="12" width="12" height="216" fill="#D7A46C"/>
+      <rect x="24" width="12" height="216" fill="#E6BC88"/><rect x="36" width="12" height="216" fill="#DBA972"/>
+      <rect y="70" width="12" height="90" fill="#D39D62"/><rect x="12" y="150" width="12" height="66" fill="#E2B37E"/>
+      <rect x="24" y="20" width="12" height="80" fill="#DCA96F"/><rect x="36" y="120" width="12" height="70" fill="#E5B985"/>
+      <path d="M12 0V216M24 0V216M36 0V216M48 0V216" stroke="#9C6A35" stroke-opacity=".35" stroke-width=".7"/>
+      <path d="M0 70H12M0 160H12M12 40H24M12 150H24M24 20H36M24 100H36M24 190H36M36 120H48M36 190H48" stroke="#8A5A2B" stroke-opacity=".45" stroke-width=".8"/>
+    </pattern>
+    <radialGradient id="gloss" cx="50%" cy="22%" r="75%"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".6" stop-color="#fff" stop-opacity=".04"/><stop offset="1" stop-color="#000" stop-opacity=".12"/></radialGradient>
+  </defs>
+  <rect class="apron" width="540" height="490"/>
+  <text class="apron-text" x="270" y="14.5" text-anchor="middle">BEST OF 7</text>
+  <rect x="20" y="20" width="500" height="470" fill="url(#planks)"/>
+  <rect x="20" y="20" width="500" height="470" fill="url(#gloss)"/>
+  <path class="arc3" d="M50 20V160A237.5 237.5 0 0 0 490 160V20"/>
+  <rect class="paint" x="190" y="20" width="160" height="190"/>
+  <path class="ln" d="M182 90H190M182 100H190M182 130H190M182 160H190M350 90H358M350 100H358M350 130H358M350 160H358"/>
+  <path class="ln" d="M210 210A60 60 0 0 0 330 210"/>
+  <path class="ln dash" d="M210 210A60 60 0 0 1 330 210"/>
+  <path class="ln" d="M230 72A40 40 0 0 0 310 72"/>
+  <line class="board" x1="240" y1="58" x2="300" y2="58"/>
+  <circle class="rim" cx="270" cy="72" r="8"/>
+  <path class="mid" d="M210 490A60 60 0 0 1 330 490"/>
+  <text class="mid-7" x="270" y="486" text-anchor="middle">7</text>
+  <rect class="ln" x="20" y="20" width="500" height="470"/>
 </svg>`;
+
 const spotName = slot => slot === 'UTIL' ? 'Sixth man' : POS_NAME[slot];
 const spotTag = slot => slot === 'UTIL' ? '6th' : slot;
 
@@ -1235,19 +1275,21 @@ function renderCourt() {
   const el = $('#court');
   if (!el) return;
   const day = days.get(ui.sel), lu = ui.draft, m = pmap(day), fill = new Set(fillableSlots(lu, day));
+  const slots = draftSlots(lu, day), combos = synergiesOf(slots);
+  const link = (a, b) => !a || !b ? 'off' : combos.some(sy => a.types.some(t => sy.need[t]) && b.types.some(t => sy.need[t])) ? 'on' : 'mid';
+  const links = LINKS.map(([i, j]) => `<line class="lk ${link(slots[i], slots[j])}" x1="${SPOTS[i][0]}" y1="${SPOTS[i][1]}" x2="${SPOTS[j][0]}" y2="${SPOTS[j][1]}" vector-effect="non-scaling-stroke"/>`).join('');
   const spots = SLOTS.map((slot, i) => {
     const p = lu[i] && m.get(lu[i]), [x, y] = SPOTS[i];
     if (!p) return `<button class="spot empty ${fill.has(i) ? 'open' : ''}" style="--x:${x}%;--y:${y}%" data-action="slot" data-i="${i}" aria-label="${spotName(slot)} spot: ${fill.has(i) ? 'choose a card' : 'none of your cards fit tonight'}">
-      <span class="spot-ring"><b>${spotTag(slot)}</b></span><span class="spot-name">${fill.has(i) ? `+ ${spotName(slot)}` : 'No card fits'}</span></button>`;
-    const last = p.name.split(' ').slice(1).join(' ') || p.name;
-    return `<button class="spot filled r-${rarityOf(p.id)} ${owns(p.id) ? '' : 'bad'}" style="--x:${x}%;--y:${y}%;--team:${TEAM_COLORS[p.team] || '#5B6573'}" data-action="slot" data-i="${i}" aria-label="${spotName(slot)}: ${esc(p.name)}. Change card">
-      <span class="spot-ring">${face(p)}<span class="spot-pos">${spotTag(slot)}</span></span>
-      <span class="spot-name">${esc(last)}</span><span class="spot-sub">${p.stars}★ · ${f1(p.avg)} FPPG${isOut(p) ? ' · <i>Out</i>' : !owns(p.id) ? ' · <i>Not your card</i>' : ''}</span></button>`;
+      <span class="slot-card"><b>+</b><span>${fill.has(i) ? spotName(slot) : 'No card fits'}</span></span><span class="spot-tag">${spotTag(slot)}</span></button>`;
+    const warn = isOut(p) ? 'OUT' : !owns(p.id) ? 'NOT YOURS' : '';
+    return `<button class="spot filled" style="--x:${x}%;--y:${y}%" data-action="slot" data-i="${i}" aria-label="${spotName(slot)}: ${esc(p.name)}, ${f1(p.avg)} fantasy points per game${warn ? ', ' + warn.toLowerCase() : ''}. Change card">
+      ${cardHtml(cards.get(p.id) || { pid: p.id, rarity: 'common', name: p.name, team: p.team, pos: p.pos })}
+      <span class="spot-tag ${warn ? 'warn' : ''}">${spotTag(slot)}<i>${warn || f1(p.avg)}</i></span></button>`;
   }).join('');
-  const combos = synergiesOf(draftSlots(lu, day));
-  el.innerHTML = `<div class="court-bar">${combos.length ? combos.map(sy => `<span class="arch syn" title="${esc(sy.text)}">✦ ${esc(sy.name)}</span>`).join('') : '<span class="dimtxt">Combos light up here when your archetypes line up.</span>'}
+  el.innerHTML = `<div class="court-bar"><span class="court-lock">Locks ${timeLabel(day.lockAt)} · ${until(day.lockAt)}</span>${combos.map(sy => `<span class="arch syn" title="${esc(sy.text)}">✦ ${esc(sy.name)}</span>`).join('')}
       <span class="court-act">${lu.some(Boolean) ? '<button class="btn" data-action="clear">Clear</button>' : ''}${fill.size ? `<button class="btn primary" data-action="auto">Auto-fill ${fill.size}</button>` : ''}</span></div>
-    <div class="court">${COURT_SVG}${spots}</div>`;
+    <div class="court">${COURT_SVG}<svg class="court-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${links}</svg>${spots}</div>`;
 }
 
 // The cards that can play a spot tonight, best first. Picking one already on the court moves it here.
@@ -1649,6 +1691,8 @@ function afterRender() {
   afterRenderQueued = false;
   const docked = !!$('#dock');
   document.body.classList.toggle('has-dock', docked);
+  // On phones the court moves to the top of the page while a lineup is being set.
+  document.body.classList.toggle('drafting', !!$('#court'));
   if (!docked) document.body.classList.remove('sheet-open');
   updateScrollCues();
 }
@@ -1700,7 +1744,7 @@ function render() {
     if (sig === ui.sig && $('#court')) { renderCourt(); renderLineup(); const wk = $('#week'); if (wk) wk.innerHTML = weekPanel(); const el = $('#slate'); if (el) keepRacesScroll(() => { el.innerHTML = slateCard(day); }); const st = $('#streak'); if (st) st.innerHTML = streakBanner(); return; }
     ui.sig = sig;
     $('#slip').innerHTML = '<button class="dock" id="dock" data-action="sheet" aria-expanded="false" aria-label="Show your lineup"></button><div class="sheet-bg" data-action="sheet-close"></div><div class="slip-card" id="lineup"></div>';
-    m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day)}<div id="week">${weekPanel()}</div><section class="panel court-panel"><div class="list-head"><div><h2>${dayLabel(ui.sel)} · assemble your lineup</h2><p class="sub">Tap a spot on the court to send in one of your cards. ${ownedPool(day).length} of your ${cards.size} cards have a game this night.</p></div></div><div id="court"></div></section>${legend}`;
+    m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day)}<div id="week">${weekPanel()}</div><section class="panel court-panel"><div class="list-head"><div><div class="eyebrow">${dayLabel(ui.sel)}</div><h2>Assemble your lineup</h2><p class="sub">Tap a spot to send in a card. ${ownedPool(day).length} of your ${cards.size} cards have a game this night.</p></div></div><div id="court"></div></section>${legend}`;
     renderCourt(); renderLineup();
     return;
   }

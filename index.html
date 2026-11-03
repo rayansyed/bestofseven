@@ -626,6 +626,7 @@ body.no-slip main { grid-column: 2 / -1; }
 .tchip.coin:hover { background: var(--chip-2); }
 .coin-total { font-size: 30px; font-variant-numeric: tabular-nums; }
 .shop { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; padding: 8px 22px 22px; }
+.shop-odds { padding: 0 22px 20px; }
 .shop-item { display: grid; gap: 8px; justify-items: center; text-align: center; }
 .shop .pack { width: 100%; max-width: 220px; height: auto; aspect-ratio: 3 / 4; }
 .shop .pack-n { font-size: 32px; }
@@ -1129,7 +1130,8 @@ function packsView() {
   return `${reveal}
     <section class="panel shop-head"><div class="list-head"><div><div class="eyebrow">Your coins</div><h2 class="coin-total">🪙 ${fmt(coins)}</h2>
       <p class="sub">Win the night against your weekly opponent +${COINS.nightWin} · each category you win that night +${COINS.category} · win the week +${COINS.weekWin}.</p></div></div>
-      <div class="shop">${SHOP.map(tile).join('')}</div></section>
+      <div class="shop">${SHOP.map(tile).join('')}</div>
+      <p class="hint shop-odds">Rarer cards are better players: Common 1–2★ · Rare 2–3★ · Epic 3–4★ · Legendary 5★ only. Players who average under 12 minutes stay out of packs.</p></section>
     <section class="panel"><div class="list-head"><div><h2>Boosters · ${boosters.length}</h2><p class="sub">Tap a card on the court, then pick a booster. It lifts that player for that night’s game and is used up when the night locks.</p></div></div>
       ${boosters.length ? `<div class="tc-grid">${boosters.map(b => boosterHtml(b, { tag: reserved.has(b.id) ? [`Set for ${dayLabel(reserved.get(b.id)).split(',')[0]}`, 'set'] : null })).join('')}</div>` : '<p class="empty">No boosters yet. Every pack has at least one.</p>'}</section>
     <section class="panel"><div class="list-head"><div><h2>Duplicates · ${dupes.length}</h2><p class="sub">Extra copies of players you already have. Your best card of each player is kept.</p></div>

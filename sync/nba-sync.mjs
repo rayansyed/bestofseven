@@ -169,7 +169,9 @@ async function updateRoster(db, season, types) {
   }
   const players = base.map(({ id, name, team, pos }) => {
     const avg = avgOf(season, id);
-    return { id, name, team, pos, avg, gp: season.p[id]?.[SEASON.n] || 0, stars: starsOf(avg), types: types[id] || [], s: perGame(season, id) };
+    const t = season.p[id], gp = t?.[SEASON.n] || 0;
+    // Minutes per game keeps players who barely play out of packs.
+    return { id, name, team, pos, avg, gp, mpg: gp ? Math.round(t[SEASON.min] / gp * 10) / 10 : 0, stars: starsOf(avg), types: types[id] || [], s: perGame(season, id) };
   });
   const same = prev && JSON.stringify(prev.players) === JSON.stringify(players);
   const roster = { updatedAt: same ? prev.updatedAt : new Date().toISOString(), fetchedAt: base === prev?.players ? fetchedAt : new Date().toISOString(), players };

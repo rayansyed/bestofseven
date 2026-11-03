@@ -3,6 +3,9 @@ const STARTER_PACKS = 3;
 const STARTER_SHAPE = ['G', 'G', 'F', 'F', 'C'];
 // Starters leave out the league's best players, so earned packs stay worth chasing.
 const STARTER_MAX_STARS = 3;
+// Players who barely get on the floor never turn up in packs. A roster without minutes yet lets everyone in.
+const MIN_MPG = 12;
+const plays = p => p.gp > 0 && (p.mpg ?? MIN_MPG) >= MIN_MPG;
 
 /**
  * Five cards for a new player's starter pack: 2 G, 2 F and 1 C, all Common, none they already own.
@@ -11,7 +14,7 @@ const STARTER_MAX_STARS = 3;
  */
 function makeStarterPack({ roster, owned, packNo, upcomingTeams, rnd = Math.random }) {
   const taken = new Set(owned);
-  const base = roster.filter(p => p.gp > 0 && p.stars <= STARTER_MAX_STARS && !taken.has(p.id));
+  const base = roster.filter(p => plays(p) && p.stars <= STARTER_MAX_STARS && !taken.has(p.id));
   const cards = [];
   for (const pos of STARTER_SHAPE) {
     const fits = p => p.pos === pos && !taken.has(p.id);
@@ -56,8 +59,9 @@ const BOOSTERS = [
 // Coins for selling a card. Mostly for duplicates.
 const SELL_VALUE = { common: 10, rare: 30, epic: 75, legendary: 200 };
 const RANK = { common: 0, rare: 1, epic: 2, legendary: 3 };
-// Lower-rated players turn up more often.
-const STAR_WEIGHT = { 1: 5, 2: 5, 3: 4, 4: 2, 5: 1 };
+const RARITIES = ['common', 'rare', 'epic', 'legendary'];
+// Rarer cards are better players: the star ratings each rarity draws from. A Legendary is always a 5★ star.
+const RARITY_STARS = { common: [1, 2], rare: [2, 3], epic: [3, 4], legendary: [5, 5] };
 
 function weighted(list, weight, rnd) {
   const total = list.reduce((s, x) => s + weight(x), 0);
@@ -73,20 +77,27 @@ function pickRarity(odds, rnd) {
 
 /**
  * A shop pack: player cards (duplicates allowed, which is what selling is for) plus booster cards.
- * teams limits the players to those teams, for the daily pack's "plays tonight" cards.
+ * Each card's rarity is rolled first, then a player rated for that rarity is drawn. teams limits players to
+ * those teams, for the daily pack's "plays tonight" cards; if none of them fit a rarity, the card drops a rarity.
  * @param {{ roster: Array, kind: 'daily'|'standard'|'premium', teams?: Set<string>|null, rnd?: () => number }} o
  */
 function makePack({ roster, kind, teams = null, rnd = Math.random }) {
   const def = PACKS[kind];
-  let pool = roster.filter(p => p.gp > 0 && (!teams || teams.has(p.team)));
-  if (pool.length < def.players) pool = roster.filter(p => p.gp > 0);
+  let pool = roster.filter(p => plays(p) && (!teams || teams.has(p.team)));
+  if (pool.length < def.players) pool = roster.filter(plays);
+  const rarities = Array.from({ length: def.players }, () => pickRarity(def.odds, rnd));
+  if (def.guarantee && !rarities.some(r => RANK[r] >= RANK[def.guarantee])) rarities[rarities.length - 1] = def.guarantee;
   const used = new Set(), cards = [];
-  for (let n = 0; n < def.players && pool.length > used.size; n++) {
-    const p = weighted(pool.filter(x => !used.has(x.id)), x => STAR_WEIGHT[x.stars] || 1, rnd);
+  for (let rarity of rarities) {
+    const fits = r => pool.filter(p => !used.has(p.id) && p.stars >= RARITY_STARS[r][0] && p.stars <= RARITY_STARS[r][1]);
+    let options = fits(rarity);
+    while (!options.length && RANK[rarity] > 0) { rarity = RARITIES[RANK[rarity] - 1]; options = fits(rarity); }
+    if (!options.length) options = pool.filter(p => !used.has(p.id));
+    if (!options.length) break;
+    const p = options[Math.floor(rnd() * options.length)];
     used.add(p.id);
-    cards.push({ pid: p.id, name: p.name, team: p.team, pos: p.pos, rarity: pickRarity(def.odds, rnd), source: kind });
+    cards.push({ pid: p.id, name: p.name, team: p.team, pos: p.pos, rarity, source: kind });
   }
-  if (def.guarantee && cards.length && !cards.some(c => RANK[c.rarity] >= RANK[def.guarantee])) cards[cards.length - 1].rarity = def.guarantee;
   const boosters = Array.from({ length: def.boosters }, () => {
     const { weight, ...b } = weighted(BOOSTERS, x => x.weight, rnd);
     return { ...b, source: kind };
@@ -94,4 +105,4 @@ function makePack({ roster, kind, teams = null, rnd = Math.random }) {
   return { cards, boosters };
 }
 
-module.exports = { makeStarterPack, STARTER_PACKS, PACKS, BOOSTERS, SELL_VALUE, makePack };
+module.exports = { makeStarterPack, STARTER_PACKS, PACKS, BOOSTERS, SELL_VALUE, RARITY_STARS, MIN_MPG, makePack };

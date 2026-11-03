@@ -130,7 +130,6 @@ main { display: grid; gap: 16px; min-width: 0; }
 .runner.in { background: linear-gradient(90deg, var(--accent-soft), transparent 60%); }
 .more { padding: 14px; text-align: center; border-top: 1px solid var(--line); }
 .empty { padding: 28px 22px; color: var(--muted); text-align: center; }
-.legend { font-size: 12px; color: var(--muted); padding: 0 4px; line-height: 1.6; }
 
 .finals { display: flex; gap: 14px; flex-wrap: wrap; }
 .final { background: rgba(36,42,51,.65); border-radius: 12px; padding: 14px 18px; display: grid; gap: 2px; min-width: 160px; }
@@ -143,6 +142,8 @@ main { display: grid; gap: 16px; min-width: 0; }
 
 /* Right rail: lineup slip */
 .slip { position: sticky; top: 86px; }
+.slip:empty { display: none; }
+body.no-slip main { grid-column: 2 / -1; }
 .slip-card { background: var(--panel); border-radius: 16px; overflow: hidden; }
 .slip-head { padding: 18px 18px 12px; display: flex; align-items: center; gap: 10px; }
 .count { width: 26px; height: 26px; border-radius: 50%; background: var(--chip); display: grid; place-items: center; font-size: 12px; font-weight: 800; }
@@ -226,6 +227,7 @@ main { display: grid; gap: 16px; min-width: 0; }
 
 @media (max-width: 1180px) {
   .app { grid-template-columns: minmax(0, 1fr) 340px; }
+  body.no-slip main { grid-column: 1 / -1; }
   .side { grid-column: 1 / -1; position: static; display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
   .side-label, .side-status, .side-note, .side .pos-group { display: none; }
   .nav-item { width: auto; flex: 0 0 auto; grid-template-columns: 22px auto auto; background: var(--panel); }
@@ -977,7 +979,6 @@ const face = p => `<span class="face" style="--team:${TEAM_COLORS[p.team] || '#5
 const tierBadge = tier => `<span class="tier t${tier}">${TIERS[tier]}</span>`;
 const notice = (eyebrow, title, body) => `<div class="card notice"><div class="eyebrow">${eyebrow}</div><h2>${title}</h2>${body}</div>`;
 const TRASH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
-const legend = `<p class="legend">How a week works: each week, Monday to Sunday, you face one opponent at your rank. The first night you enter in a week pairs you (a computer takes an odd seat and sets a new lineup every night). Every game night you both set a lineup from your cards, locked at that night's first tip-off, and each slot faces the same slot on the other side. Each night's real box scores add to nine category totals for the week: points, rebounds, assists, steals, blocks, threes made, FG%, free throws made, and turnovers (fewer wins). A night you skip adds nothing. After Sunday's games, whoever wins more categories wins the week; a tie goes to total fantasy points (point 1 · rebound 1.2 · assist 1.5 · steal 3 · block 3 · turnover −1). Each card's archetype adds 10% to its category, and rarity adds 3% (Rare), 6% (Epic) or 10% (Legendary) to all its stats, capped at +25% together. Counters between facing cards cut 10%: Lockdown cuts a Sharpshooter's threes, a Rim Protector cuts a Slasher's FG%, a Slasher cuts a Rim Protector's blocks, a Floor General cuts a Lockdown's steals. Lineups can use any mix of cards you own, and can leave a slot empty when no card fits it. Win the week: +${RP_WIN} rank points · loss: ${RP_LOSS}. Every 100 points is a new tier, and you can't drop out of a tier the week after reaching it. Once you've played, skipping a game night costs ${SKIP_PENALTY} RP and your streak, but never your tier. Entering every game night builds a streak: 3 nights +3 RP, 5 nights +5 RP, every 7 nights +7 RP, every 14 a Streak Saver (covers one skip), 30 a badge on the leaderboard. Archetypes are set each month from season stats. Data: ESPN public NBA feed.</p>`;
 
 /* ---------- Cards ---------- */
 const typesOf = id => roster.get(id)?.types || [];
@@ -1171,8 +1172,7 @@ function renderSide() {
       : e.scored ? `<span class="badge won">${f1(e.score)}</span>` : e.finish ? `<span class="badge ${e.rpDelta >= 0 ? 'won' : 'lost'}">${ordinal(e.finish)}</span>` : '<span class="badge">Final</span>';
     return `<button class="nav-item" data-action="sel" data-d="${d.date}" aria-pressed="${ui.view === 'night' && ui.sel === d.date}"><span class="gnum">${dateOf(d.date).getDate()}</span><span>${dayLabel(d.date)}</span>${badge}</button>`;
   }).join('');
-  $('#side').innerHTML = `${rankCard()}<div class="side-label">Nights</div>${list}
-    <div class="side-label">Battles</div><div class="side-note">1 opponent a week, Mon–Sun<br>9 categories, weekly totals<br>Pts · Reb · Ast · Stl · Blk<br>3PM · FG% · FTM · fewer TO<br>Win the week +${RP_WIN} RP · loss ${RP_LOSS}<br>Any mix of your cards</div><i class="sx" aria-hidden="true"></i>`;
+  $('#side').innerHTML = `${rankCard()}<div class="side-label">Nights</div>${list}<i class="sx" aria-hidden="true"></i>`;
 }
 
 /* ---------- Sign-in and profile ---------- */
@@ -1648,27 +1648,6 @@ function profileView() {
 }
 
 /* ---------- Right rail ---------- */
-function slipSummary() {
-  const rp = profile?.rp || 0, tier = tierOf(rp);
-  const e = entries.get(ui.sel), wm = ui.view === 'night' && ui.sel ? weekMatch(weekOf(ui.sel)) : null;
-  let night = '';
-  if (wm) {
-    const w = weekState(wm);
-    night = `<div class="series-row"><span>This week</span><b class="small">vs ${esc(w.opp.name)}</b></div><div class="series-row"><span>Categories</span><b>${w.r.wins[0]}–${w.r.wins[1]}</b></div>`
-      + (wm.scored && w.mine.rpDelta != null ? `<div class="series-row"><span>Week result</span><b class="${w.mine.rpDelta >= 0 ? 'up' : 'down'}">${w.mine.rpDelta >= 0 ? '+' : ''}${w.mine.rpDelta} RP</b></div>` : '');
-  } else if (ui.view === 'night' && e) {
-    night = e.finish
-      ? `<div class="series-row"><span>Finish</span><b>${ordinal(e.finish)}</b></div><div class="series-row"><span>Score</span><b>${f1(e.score)}</b></div><div class="series-row"><span>Rank points</span><b class="${e.rpDelta >= 0 ? 'up' : 'down'}">${e.rpDelta >= 0 ? '+' : ''}${e.rpDelta}</b></div>`
-      : `<div class="series-row"><span>Status</span><b class="small">${e.invalid ? 'Invalid' : e.group || e.match ? 'Live' : 'Locked'}</b></div>`;
-  }
-  return `<div class="slip-card">
-    <div class="slip-head"><span class="count">${tier + 1}</span><h3>${TIERS[tier]}</h3></div>
-    ${night}
-    <div class="series-row"><span>Rank points</span><b>${fmt(rp)}</b></div>
-    <div class="slip-foot"><div class="info">${tier === TIERS.length - 1 ? 'You’re in the top tier.' : `${100 - (rp - tier * 100)} more RP to reach ${TIERS[tier + 1]}.`} Win a week: +${RP_WIN} RP · loss: ${RP_LOSS}.</div></div>
-  </div>`;
-}
-
 /* ---------- Render ---------- */
 function nextOpenDate() {
   return [...days.values()].sort((a, b) => a.date < b.date ? -1 : 1).find(d => !locked(d))?.date || null;
@@ -1685,6 +1664,7 @@ function afterRender() {
   document.body.classList.toggle('has-dock', docked);
   // On phones the court moves to the top of the page while a lineup is being set.
   document.body.classList.toggle('drafting', !!$('#court'));
+  document.body.classList.toggle('no-slip', !$('#slip').innerHTML.trim());
   if (!docked) document.body.classList.remove('sheet-open');
   updateScrollCues();
 }
@@ -1723,12 +1703,12 @@ function render() {
   if (ui.view === 'night' && liveSel !== ui.sel) { liveSel = ui.sel; pollLive(); }
   renderSide();
   const m = $('#main');
-  if (ui.view === 'cards') { ui.sig = 'cards'; m.innerHTML = cardsView(); $('#slip').innerHTML = slipSummary(); return; }
-  if (ui.view === 'leaders') { ui.sig = 'leaders'; m.innerHTML = leadersView(); $('#slip').innerHTML = slipSummary(); return; }
-  if (ui.view === 'profile') { ui.sig = 'profile'; m.innerHTML = profileView(); $('#slip').innerHTML = slipSummary(); return; }
-  if (ui.view === 'history') { ui.sig = 'history'; m.innerHTML = historyView(); $('#slip').innerHTML = slipSummary(); return; }
+  if (ui.view === 'cards') { ui.sig = 'cards'; m.innerHTML = cardsView(); $('#slip').innerHTML = ''; return; }
+  if (ui.view === 'leaders') { ui.sig = 'leaders'; m.innerHTML = leadersView(); $('#slip').innerHTML = ''; return; }
+  if (ui.view === 'profile') { ui.sig = 'profile'; m.innerHTML = profileView(); $('#slip').innerHTML = ''; return; }
+  if (ui.view === 'history') { ui.sig = 'history'; m.innerHTML = historyView(); $('#slip').innerHTML = ''; return; }
   const day = days.get(ui.sel);
-  if (!day) { ui.sig = 'noslate'; m.innerHTML = notice('Tonight', 'Waiting for the next slate', '<p>The next NBA game day hasn’t been posted yet. The sync posts slates a day ahead.</p>'); $('#slip').innerHTML = slipSummary(); return; }
+  if (!day) { ui.sig = 'noslate'; m.innerHTML = notice('Tonight', 'Waiting for the next slate', '<p>The next NBA game day hasn’t been posted yet. The sync posts slates a day ahead.</p>'); $('#slip').innerHTML = ''; return; }
   const e = entries.get(ui.sel);
   if (!locked(day)) {
     const sig = 'build|' + ui.sel;
@@ -1736,12 +1716,12 @@ function render() {
     if (sig === ui.sig && $('#court')) { renderCourt(); renderLineup(); const wk = $('#week'); if (wk) wk.innerHTML = weekPanel(); const el = $('#slate'); if (el) keepRacesScroll(() => { el.innerHTML = slateCard(day); }); const st = $('#streak'); if (st) st.innerHTML = streakBanner(); return; }
     ui.sig = sig;
     $('#slip').innerHTML = '<button class="dock" id="dock" data-action="sheet" aria-expanded="false" aria-label="Show your lineup"></button><div class="sheet-bg" data-action="sheet-close"></div><div class="slip-card" id="lineup"></div>';
-    m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day)}<div id="week">${weekPanel()}</div><section class="panel court-panel"><div class="list-head"><div><div class="eyebrow">${dayLabel(ui.sel)}</div><h2>Assemble your lineup</h2><p class="sub">Tap a spot to send in a card. ${ownedPool(day).length} of your ${cards.size} cards have a game this night.</p></div></div><div id="court"></div></section>${legend}`;
+    m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day)}<div id="week">${weekPanel()}</div><section class="panel court-panel"><div class="list-head"><div><div class="eyebrow">${dayLabel(ui.sel)}</div><h2>Assemble your lineup</h2><p class="sub">Tap a spot to send in a card. ${ownedPool(day).length} of your ${cards.size} cards have a game this night.</p></div></div><div id="court"></div></section>`;
     renderCourt(); renderLineup();
     return;
   }
   ui.sig = 'night|' + ui.sel;
-  $('#slip').innerHTML = slipSummary();
+  $('#slip').innerHTML = '';
   let body;
   const next = nextOpenDate();
   const nextBtn = next ? `<div class="row"><button class="btn primary" data-action="sel" data-d="${next}">Enter ${dayLabel(next)}</button></div>` : '';
@@ -1752,7 +1732,7 @@ function render() {
   else if (wm) body = (e ? '' : sat) + weekView(day, wm);
   else if (!e) body = sat;
   else body = notice('Locked in', 'Finding your opponent', `<p>Lineups locked at ${timeLabel(day.lockAt)}. Your opponent for the week is set on the next sync, within 30 minutes of tip-off, and both lineups are revealed then.</p>`);
-  keepRacesScroll(() => { m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day)}${body}${legend}`; });
+  keepRacesScroll(() => { m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day)}${body}`; });
 }
 
 /* ---------- Edits ---------- */

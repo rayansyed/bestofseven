@@ -4,7 +4,7 @@
 const { initializeApp, cert, getApps } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 const { getFirestore } = require('firebase-admin/firestore');
-const { makeStarterPack, STARTER_PACKS, PACKS, makePack } = require('./_packs.js');
+const { makeStarterPack, STARTER_PACKS, PACKS, makePack, openSlateTeams } = require('./_packs.js');
 
 function admin() {
   if (!getApps().length) initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)) });
@@ -35,12 +35,12 @@ module.exports = async (req, res) => {
       const u = user.data(), opened = u.starterPacks || 0;
       const [roster, ...days] = await Promise.all([tx.get(db.doc('meta/roster')), tx.get(db.doc('days/' + etDay(0))), tx.get(db.doc('days/' + etDay(1))), tx.get(db.doc('days/' + etDay(2)))]);
       if (!roster.exists) throw new HttpError(503, 'Cards aren’t ready yet. Try again after the next sync.');
-      const teamsOf = d => new Set((d.data().games || []).flatMap(g => [g.away, g.home]));
+      const open = openSlateTeams(days.map(d => d.exists ? d.data() : null));
       let pack, update;
       if (type === 'starter') {
         if (opened >= STARTER_PACKS) throw new HttpError(409, 'You’ve opened all your starter packs.');
         const owned = await tx.get(cardsRef);
-        const upcomingTeams = new Set(days.slice(0, 2).filter(d => d.exists).flatMap(d => [...teamsOf(d)]));
+        const upcomingTeams = new Set(open.slice(0, 2).flatMap(t => [...t]));
         pack = { cards: makeStarterPack({ roster: roster.data().players, owned: new Set(owned.docs.map(d => d.data().pid)), packNo: opened, upcomingTeams }), boosters: [] };
         update = { starterPacks: opened + 1 };
       } else {
@@ -48,9 +48,8 @@ module.exports = async (req, res) => {
         if (opened < STARTER_PACKS) throw new HttpError(409, 'Open your starter packs first.');
         if (type === 'daily' && u.dailyPack === today) throw new HttpError(409, 'You’ve opened today’s free pack. A new one comes tomorrow.');
         if (coins < def.price) throw new HttpError(409, `You need ${def.price - coins} more coins for a ${def.name}.`);
-        // The daily pack's players have a game on the next game day: today, or the next slate posted.
-        const slate = type === 'daily' ? days.find(d => d.exists && (d.data().games || []).length) : null;
-        pack = makePack({ roster: roster.data().players, kind: type, teams: slate ? teamsOf(slate) : null });
+        // The daily pack's players have a game on the next slate that's still open.
+        pack = makePack({ roster: roster.data().players, kind: type, teams: type === 'daily' ? open[0] || null : null });
         update = type === 'daily' ? { dailyPack: today } : { coins: coins - def.price };
       }
       const at = Date.now();

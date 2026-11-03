@@ -1200,7 +1200,9 @@ function packView() {
 }
 
 function cardsView() {
-  const today = days.get(etDay()) || days.get(nextOpenDate() || '');
+  // The next slate you can still enter: tonight's if it hasn't tipped off, otherwise the next one.
+  const today = days.get(nextOpenDate() || '');
+  const when = today ? (today.date === etDay() ? 'Tonight' : dayLabel(today.date).split(',')[0]) : '';
   const tonight = new Set((today?.players || []).map(p => p.id));
   const list = [...cards.values()].filter(c => ui.cardPos === 'ALL' || (roster.get(c.pid)?.pos || c.pos) === ui.cardPos)
     .sort((a, b) => RARITY_RANK[b.rarity] - RARITY_RANK[a.rarity] || (roster.get(b.pid)?.stars || 0) - (roster.get(a.pid)?.stars || 0) || String(roster.get(a.pid)?.name || a.name || '').localeCompare(roster.get(b.pid)?.name || b.name || ''));
@@ -1209,7 +1211,7 @@ function cardsView() {
   const arch = Object.entries(TYPES).map(([k, t]) => `<li>${typeChip(k)}<span>${esc(t.what)}</span></li>`).join('');
   return `<section class="panel"><div class="list-head"><div><h2>My cards</h2><p class="sub">${cards.size} cards. ${today ? `${[...cards.keys()].filter(id => tonight.has(id)).length} of them play ${dayLabel(today.date).split(',')[0]}.` : ''} Tap a card for the player’s profile.</p></div></div>
       <div class="pool-tools"><div class="tabs">${tabs}</div></div>
-      ${list.length ? `<div class="tc-grid">${list.map(c => cardHtml(c, { tonight: tonight.has(c.pid) })).join('')}</div>` : '<p class="empty">No cards here yet.</p>'}
+      ${list.length ? `<div class="tc-grid">${list.map(c => cardHtml(c, { tag: tonight.has(c.pid) ? [when, 'play'] : null })).join('')}</div>` : '<p class="empty">No cards here yet.</p>'}
     </section>
     <section class="panel arch-legend"><div class="list-head"><div><h2>Archetypes, counters and combos</h2><p class="sub">Set each month from season stats. The league’s elite players can carry two.</p></div></div>
       <ul class="arch-list">${arch}</ul>

@@ -32,6 +32,13 @@ function makeStarterPack({ roster, owned, packNo, upcomingTeams, rnd = Math.rand
   return cards;
 }
 
+// Teams on the slates you can still enter, soonest first. A slate whose first tip-off has passed is skipped, so
+// "plays tonight" cards are ones you can actually use. days holds slate documents (null for a day with none).
+function openSlateTeams(days, now = Date.now()) {
+  return days.filter(d => d && (d.games || []).length && now < (d.lockMs || Date.parse(d.lockAt)))
+    .map(d => new Set(d.games.flatMap(g => [g.away, g.home])));
+}
+
 /* ---------- The pack shop ---------- */
 // Rarity odds per pack, best last: [chance, rarity].
 const PACKS = {
@@ -105,4 +112,4 @@ function makePack({ roster, kind, teams = null, rnd = Math.random }) {
   return { cards, boosters };
 }
 
-module.exports = { makeStarterPack, STARTER_PACKS, PACKS, BOOSTERS, SELL_VALUE, RARITY_STARS, MIN_MPG, makePack };
+module.exports = { makeStarterPack, STARTER_PACKS, PACKS, BOOSTERS, SELL_VALUE, RARITY_STARS, MIN_MPG, makePack, openSlateTeams };

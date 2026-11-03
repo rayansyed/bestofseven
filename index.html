@@ -573,7 +573,7 @@ button.pod:hover .pod-step { filter: brightness(1.08); }
 .court { position: relative; aspect-ratio: 540 / 490; width: calc(100% - 44px); max-width: 620px; margin: 0 auto 22px; border-radius: 12px; overflow: hidden;
   background: #12213D; box-shadow: 0 16px 36px rgba(0,0,0,.45); }
 .court::after { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 60px rgba(40,20,5,.35); }
-.court-floor, .court-links { position: absolute; inset: 0; width: 100%; height: 100%; }
+.court-floor { position: absolute; inset: 0; width: 100%; height: 100%; }
 .court-floor .apron { fill: #12213D; }
 .court-floor .apron-text { font: 700 11px "Oswald", var(--sans); letter-spacing: 6px; fill: #F5B83D; }
 .court-floor .ln { fill: none; stroke: #fff; stroke-width: 3; }
@@ -584,10 +584,6 @@ button.pod:hover .pod-step { filter: brightness(1.08); }
 .court-floor .rim { fill: none; stroke: #FF7A1A; stroke-width: 3.5; }
 .court-floor .mid { fill: #1B4FA8; stroke: #fff; stroke-width: 3; }
 .court-floor .mid-7 { font: 700 30px "Oswald", var(--sans); fill: #fff; }
-.court-links .lk { stroke-width: 3; stroke-linecap: round; }
-.court-links .lk.off { stroke: rgba(255,255,255,.35); stroke-dasharray: 2 6; }
-.court-links .lk.mid { stroke: #F59E0B; }
-.court-links .lk.on { stroke: #22C55E; filter: drop-shadow(0 0 3px rgba(34,197,94,.8)); }
 /* A spot is a card; its size and type scale with the court (cqw = 1% of the card's width). */
 .spot { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); z-index: 1; width: 26%;
   border: 0; padding: 0; background: none; color: inherit; container-type: inline-size; pointer-events: none; }
@@ -1237,8 +1233,6 @@ function heroCard(day) {
 // Cards line up in formation like a squad screen: the frontcourt (forwards and the center) near the hoop,
 // the backcourt (guards and the sixth man) behind. Spots are x%, y% for G, G, F, F, C, UTIL.
 const SPOTS = [[18, 74], [82, 74], [18, 28], [82, 28], [50, 28], [50, 74]];
-// Links between neighbouring spots, drawn under the cards. They light up when both cards feed an active combo.
-const LINKS = [[2, 4], [4, 3], [0, 5], [5, 1], [2, 0], [3, 1], [4, 5]];
 const COURT_SVG = `<svg class="court-floor" viewBox="0 0 540 490" aria-hidden="true">
   <defs>
     <pattern id="planks" width="48" height="216" patternUnits="userSpaceOnUse" x="20" y="20">
@@ -1275,9 +1269,7 @@ function renderCourt() {
   const el = $('#court');
   if (!el) return;
   const day = days.get(ui.sel), lu = ui.draft, m = pmap(day), fill = new Set(fillableSlots(lu, day));
-  const slots = draftSlots(lu, day), combos = synergiesOf(slots);
-  const link = (a, b) => !a || !b ? 'off' : combos.some(sy => a.types.some(t => sy.need[t]) && b.types.some(t => sy.need[t])) ? 'on' : 'mid';
-  const links = LINKS.map(([i, j]) => `<line class="lk ${link(slots[i], slots[j])}" x1="${SPOTS[i][0]}" y1="${SPOTS[i][1]}" x2="${SPOTS[j][0]}" y2="${SPOTS[j][1]}" vector-effect="non-scaling-stroke"/>`).join('');
+  const combos = synergiesOf(draftSlots(lu, day));
   const spots = SLOTS.map((slot, i) => {
     const p = lu[i] && m.get(lu[i]), [x, y] = SPOTS[i];
     if (!p) return `<button class="spot empty ${fill.has(i) ? 'open' : ''}" style="--x:${x}%;--y:${y}%" data-action="slot" data-i="${i}" aria-label="${spotName(slot)} spot: ${fill.has(i) ? 'choose a card' : 'none of your cards fit tonight'}">
@@ -1289,7 +1281,7 @@ function renderCourt() {
   }).join('');
   el.innerHTML = `<div class="court-bar"><span class="court-lock">Locks ${timeLabel(day.lockAt)} · ${until(day.lockAt)}</span>${combos.map(sy => `<span class="arch syn" title="${esc(sy.text)}">✦ ${esc(sy.name)}</span>`).join('')}
       <span class="court-act">${lu.some(Boolean) ? '<button class="btn" data-action="clear">Clear</button>' : ''}${fill.size ? `<button class="btn primary" data-action="auto">Auto-fill ${fill.size}</button>` : ''}</span></div>
-    <div class="court">${COURT_SVG}<svg class="court-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${links}</svg>${spots}</div>`;
+    <div class="court">${COURT_SVG}${spots}</div>`;
 }
 
 // The cards that can play a spot tonight, best first. Picking one already on the court moves it here.

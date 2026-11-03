@@ -56,7 +56,8 @@ async function store() {
     return {
       read, write, list,
       query: async (coll, field, value) => (await list(coll)).filter(d => d.data[field] === value),
-      batch: async writes => { for (const w of writes) await write(w.path, w.data, w.merge); },
+      // A write with del: true removes the document (a used booster card, for example).
+      batch: async writes => { for (const w of writes) w.del ? fs.rmSync(file(w.path), { force: true }) : await write(w.path, w.data, w.merge); },
     };
   }
   const { initializeApp, cert } = await import('firebase-admin/app');
@@ -74,7 +75,7 @@ async function store() {
     batch: async writes => {
       for (let i = 0; i < writes.length; i += 400) {
         const b = fsdb.batch();
-        for (const w of writes.slice(i, i + 400)) b.set(fsdb.doc(w.path), w.data, { merge: !!w.merge });
+        for (const w of writes.slice(i, i + 400)) w.del ? b.delete(fsdb.doc(w.path)) : b.set(fsdb.doc(w.path), w.data, { merge: !!w.merge });
         await b.commit();
       }
     },

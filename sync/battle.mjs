@@ -67,6 +67,9 @@ export function sideTotals(slots, opp, results) {
       const bonus = Math.min(STACK_CAP, (RARITY[s.rarity]?.bonus || 0) + ((s.types || []).some(x => TYPES[x]?.boost === k) ? BOOST : 0));
       let mult = k === 'to' ? 1 - bonus : 1 + bonus;
       if (cuts.includes(k)) mult *= 1 - COUNTER;
+      // A booster card lifts one stat (or all of them) for this game, on top of the capped bonuses.
+      const bo = s.boost;
+      if (bo && (bo.stat === k || bo.stat === 'all')) mult *= k === 'to' ? 1 - bo.pct : 1 + bo.pct;
       t[k] += v * mult;
     }
   });

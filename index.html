@@ -488,6 +488,7 @@ body.no-slip main { grid-column: 2 / -1; }
 .r-legendary .tc-card::after { background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.45) 50%, transparent 62%); background-size: 260% 100%; animation: tc-shine 3.6s ease-in-out infinite; mix-blend-mode: overlay; }
 .r-legendary { box-shadow: inset 0 0 0 1px rgba(255,255,255,.3), 0 10px 26px rgba(245,184,61,.28); }
 @keyframes tc-shine { from { background-position: 130% 0; } to { background-position: -130% 0; } }
+.tc-tonight.t-new { background: var(--accent); color: #fff; } .tc-tonight.t-dupe { background: var(--live); color: #2A1A02; } .tc-tonight.t-set { background: #B78CFF; color: #1E0B3A; }
 .tc-tonight { position: absolute; top: -7px; right: 12px; font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 3px 7px; border-radius: 6px; background: var(--good); color: #062411; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
 .tc.fresh { animation: tc-in .5s cubic-bezier(.2,.8,.3,1.2) both; animation-delay: calc(var(--i) * 120ms); }
 @keyframes tc-in { from { opacity: 0; transform: translateY(18px) rotateY(80deg) scale(.9); } to { opacity: 1; transform: none; } }
@@ -620,6 +621,53 @@ body.no-slip main { grid-column: 2 / -1; }
 @media (max-width: 520px) { .top-right .tchip:first-child { display: none; } }
 @media (prefers-reduced-motion: reduce) { .spot.empty.open .slot-card { animation: none; } }
 
+/* Packs page: the shop, booster cards and selling */
+.tchip.coin { border: 0; cursor: pointer; color: var(--tag); font-variant-numeric: tabular-nums; }
+.tchip.coin:hover { background: var(--chip-2); }
+.coin-total { font-size: 30px; font-variant-numeric: tabular-nums; }
+.shop { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; padding: 8px 22px 22px; }
+.shop-item { display: grid; gap: 8px; justify-items: center; text-align: center; }
+.shop .pack { width: 100%; max-width: 220px; height: auto; aspect-ratio: 3 / 4; }
+.shop .pack-n { font-size: 32px; }
+.pack.p-daily { background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.2), transparent 45%), linear-gradient(150deg, #22C55E, #0E7A3A 60%, #0A3D20); box-shadow: 0 18px 40px rgba(34,197,94,.22), inset 0 0 0 2px rgba(255,255,255,.12); }
+.pack.p-premium { background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.28), transparent 45%), linear-gradient(150deg, #F5C451, #B8801A 55%, #3A2606); box-shadow: 0 18px 40px rgba(245,184,61,.28), inset 0 0 0 2px rgba(255,255,255,.18); }
+.pack.p-premium .pack-brand .seven { color: #B8801A; }
+.pack:disabled { opacity: .5; cursor: not-allowed; }
+.bc .bc-card { height: 100%; border-radius: 3cqw; display: grid; align-content: center; justify-items: center; gap: 3cqw; padding: 8cqw 6cqw; text-align: center; color: #fff;
+  background: radial-gradient(circle at 50% 32%, rgba(94,234,212,.35), transparent 55%), linear-gradient(160deg, #123B5C, #0B1E36 60%, #081424); box-shadow: inset 0 0 0 2px rgba(94,234,212,.55); }
+.bc.s-all .bc-card { background: radial-gradient(circle at 50% 32%, rgba(245,196,81,.4), transparent 55%), linear-gradient(160deg, #4A3410, #22170A 60%, #140D05); box-shadow: inset 0 0 0 2px rgba(245,196,81,.7); }
+.bc-kind { font: 700 max(8px, 5.5cqw)/1 "Oswald", var(--sans); letter-spacing: .22em; text-transform: uppercase; color: rgba(94,234,212,.9); }
+.bc.s-all .bc-kind { color: #F5C451; }
+.bc-icon { font-size: 28cqw; line-height: 1.1; filter: drop-shadow(0 4px 10px rgba(0,0,0,.5)); }
+.bc-name { font: 700 max(11px, 9.5cqw)/1.1 "Oswald", var(--sans); text-transform: uppercase; letter-spacing: .03em; }
+.bc-fx { font: 700 max(12px, 11cqw)/1 "Oswald", var(--sans); color: #5EEAD4; }
+.bc.s-all .bc-fx { color: #F5C451; }
+.bc-game { font-size: max(9px, 5.6cqw); color: rgba(255,255,255,.7); line-height: 1.3; }
+.bst-chip { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: rgba(94,234,212,.16); color: #5EEAD4; white-space: nowrap; }
+.spot-boost { position: absolute; left: 50%; top: 0; z-index: 2; transform: translate(-50%, -55%); padding: 2px 7px; border-radius: 6px; white-space: nowrap;
+  background: #0B1E36; color: #5EEAD4; box-shadow: 0 0 0 1px rgba(94,234,212,.6), 0 3px 8px rgba(0,0,0,.5); font: 700 max(9px, 8cqw)/1.3 "Oswald", var(--sans); }
+.pk-sub { font-size: 15px; margin: 18px 0 8px; }
+.bst-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.bst { display: grid; grid-template-columns: auto 1fr; column-gap: 8px; align-items: center; text-align: left; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--chip-2); background: var(--panel-2); color: var(--ink); font-size: 18px; }
+.bst b { font-size: 13px; } .bst small { grid-column: 2; font-size: 11.5px; color: var(--muted); font-weight: 600; }
+.bst:hover:not(:disabled) { border-color: #5EEAD4; }
+.bst.on { border-color: #5EEAD4; background: rgba(94,234,212,.1); }
+.bst:disabled { opacity: .5; cursor: not-allowed; }
+.bst { grid-template-rows: auto auto; } .bst-i { grid-row: 1 / span 2; font-size: 20px; }
+.pc-sell { justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.btn.danger { background: var(--bad); color: #2A0606; }
+@media (max-width: 700px) {
+  .shop { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 6px 14px 16px; }
+  .shop-item, .shop .pack { min-width: 0; }
+  .shop .pack { border-radius: 12px; gap: 6px; padding: 8px 4px; overflow: hidden; }
+  .shop .pack-label { text-align: center; line-height: 1.2; }
+  .shop .pack-brand { font-size: 12px; gap: 3px; }
+  .shop .pack-brand .seven { width: 16px; height: 16px; border-radius: 4px; }
+  .shop .pack-label { font-size: 8.5px; letter-spacing: .06em; }
+  .shop .pack-n { font-size: 18px; }
+  .shop .pack-cta { font-size: 9.5px; padding: 4px 6px; }
+  .shop-item .hint { font-size: 11px; }
+}
 /* Weekly matchup: category grid above an open night, and the Monday-to-Sunday strip */
 .cats.mini { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 4px 22px 12px; border-top: 0; }
 .mc { background: var(--panel-2); border-radius: 9px; padding: 7px 10px; display: grid; gap: 1px; box-shadow: inset 3px 0 0 var(--chip-2); }
@@ -669,6 +717,7 @@ const SLOT_HINT = { G: 'Pick a guard', F: 'Pick a forward', C: 'Pick a center', 
 const CAPTAIN_X = 1.5;   // nights scored in groups had a captain worth 1.5×; battles have none
 const TIERS = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Elite'];
 const RP_WIN = 40, RP_LOSS = -20; // a weekly matchup's win or loss
+const COINS = { nightWin: 20, category: 2, weekWin: 100 }; // keep in step with sync/game.mjs
 const SKIP_PENALTY = 3; // RP lost for skipping a game night; never drops a player out of their tier
 const LIVE_DONE = new Set(['STATUS_FINAL', 'STATUS_POSTPONED', 'STATUS_CANCELED', 'STATUS_FORFEIT']);
 // Box score line from the sync job: [min, pts, reb, ast, stl, blk, to, threes, fgm, fga, ftm]
@@ -730,6 +779,9 @@ function sideTotals(slots, opp, results) {
       const bonus = Math.min(STACK_CAP, (RARITY[sl.rarity]?.bonus || 0) + ((sl.types || []).some(x => TYPES[x]?.boost === k) ? BOOST : 0));
       let mult = k === 'to' ? 1 - bonus : 1 + bonus;
       if (cuts.includes(k)) mult *= 1 - COUNTER;
+      // A booster card lifts one stat (or all of them) for this game, on top of the capped bonuses.
+      const bo = sl.boost;
+      if (bo && (bo.stat === k || bo.stat === 'all')) mult *= k === 'to' ? 1 - bo.pct : 1 + bo.pct;
       t[k] += v * mult;
     }
   });
@@ -784,8 +836,10 @@ let db = null, auth = null, me = { id: null, email: '' };
 let profile = null, days = new Map(), entries = new Map(), group = null, myMatches = [], leaders = [];
 // The player's cards, one per player id (the rarest copy), and the league roster for archetypes and ratings.
 let cards = new Map(), roster = new Map();
+// Every card copy (for duplicates and selling) and the player's unused booster cards.
+let allCards = [], boosters = [];
 const loaded = { auth: false, profile: false, days: false, entries: false, cards: false };
-const ui = { view: 'night', sel: null, draft: null, draftFor: null, pickSlot: null, save: '', sig: '', auth: '', authEmail: '', open: null, editName: false, reveal: null, opening: false, cardPos: 'ALL' };
+const ui = { view: 'night', sel: null, draft: null, draftFor: null, pickSlot: null, draftBoosts: {}, packReveal: null, selling: false, sellConfirm: null, save: '', sig: '', auth: '', authEmail: '', open: null, editName: false, reveal: null, opening: false, cardPos: 'ALL' };
 
 // Entry streak rewards (mirrors rewardFor in sync/game.mjs). Rewards can stack on one night.
 function rewardFor(streak) {
@@ -968,7 +1022,7 @@ const rarityTag = r => r && r !== 'common' ? `<span class="rar r-${r}">${RARITY[
 const STAT_LABEL = { pts: 'PTS', reb: 'REB', ast: 'AST', stl: 'STL', blk: 'BLK', tpm: '3PM', fgp: 'FG%', ftm: 'FTM', to: 'TO' };
 // A collectible card, squad-screen style: fantasy points per game as the rating, then season per-game averages
 // for all nine categories so you can see what a player brings. The category his archetype boosts is gold.
-function cardHtml(c, { fresh = false, i = 0, tonight = false } = {}) {
+function cardHtml(c, { fresh = false, i = 0, tonight = false, tag = null } = {}) {
   const p = { ...c, ...roster.get(c.pid), id: c.pid }, rarity = c.rarity || 'common';
   const [first, ...rest] = String(p.name || '').split(' ');
   const types = (p.types || []).filter(t => TYPES[t]);
@@ -990,24 +1044,141 @@ function cardHtml(c, { fresh = false, i = 0, tonight = false } = {}) {
         <div class="tc-stats" aria-label="Season averages per game">${stats}</div></div>
       <div class="tc-foot"><span>${esc(p.team)} · ${esc(POS_NAME[p.pos] || p.pos)}${types.length ? ' · ' + types.map(t => esc(TYPES[t].name)).join(' / ') : ''}</span><span class="tc-rar">${RARITY[rarity].name}</span></div>
     </div>
-    ${tonight ? '<span class="tc-tonight">Tonight</span>' : ''}
+    ${tag ? `<span class="tc-tonight t-${tag[1]}">${esc(tag[0])}</span>` : tonight ? '<span class="tc-tonight">Tonight</span>' : ''}
   </div>`;
 }
 
-async function openPack() {
-  if (ui.opening) return;
-  const no = (profile.starterPacks || 0) + 1;
-  ui.opening = true; ui.sig = ''; render();
+/* ---------- Boosters ---------- */
+const BOOST_STAT = { pts: 'PTS', reb: 'REB', ast: 'AST', stl: 'STL', blk: 'BLK', tpm: '3PM', fgm: 'FG%', ftm: 'FTM', to: 'TO', all: 'all stats' };
+const BOOST_ICON = { pts: '🔥', reb: '🧲', ast: '🤝', stl: '🖐️', blk: '🚫', tpm: '💧', fgm: '🪶', ftm: '🎯', to: '🔐', all: '⭐' };
+const BOOST_WORD = { pts: 'points', reb: 'rebounds', ast: 'assists', stl: 'steals', blk: 'blocks', tpm: 'threes', ftm: 'free throws made' };
+const boostLabel = b => `${b.stat === 'to' ? '−' : '+'}${Math.round(b.pct * 100)}% ${BOOST_STAT[b.stat] || b.stat}`;
+const boostText = b => { const n = Math.round(b.pct * 100); return b.stat === 'all' ? `Lifts all of a player’s stats by ${n}% for one game.` : b.stat === 'to' ? `Cuts a player’s turnovers by ${n}% for one game.` : b.stat === 'fgm' ? `Lifts a player’s made shots, and so his FG%, by ${n}% for one game.` : `Lifts a player’s ${BOOST_WORD[b.stat]} by ${n}% for one game.`; };
+const boostChip = b => b ? `<span class="bst-chip" title="${esc(b.name)}: ${esc(boostText(b))}">${BOOST_ICON[b.stat] || '⚡'} ${boostLabel(b)}</span>` : '';
+const boostOn = i => boosters.find(x => x.id === ui.draftBoosts[i]) || null;
+function boosterHtml(b, { fresh = false, i = 0, tag = null } = {}) {
+  return `<div class="tc bc s-${esc(b.stat)} ${fresh ? 'fresh' : ''}" style="--i:${i}" title="${esc(boostText(b))}">
+    <div class="bc-card"><span class="bc-kind">Booster</span><span class="bc-icon" aria-hidden="true">${BOOST_ICON[b.stat] || '⚡'}</span>
+      <b class="bc-name">${esc(b.name)}</b><span class="bc-fx">${boostLabel(b)}</span><span class="bc-game">${esc(boostText(b))}</span></div>
+    ${tag ? `<span class="tc-tonight t-${tag[1]}">${esc(tag[0])}</span>` : ''}
+  </div>`;
+}
+// Boosters already set on another open night's saved lineup.
+function reservedBoosters() {
+  const out = new Map();
+  for (const e of entries.values()) {
+    const d = days.get(e.date);
+    if (e.date === ui.sel || !d || locked(d)) continue;
+    for (const bid of Object.values(e.boosts || {})) out.set(bid, e.date);
+  }
+  return out;
+}
+
+// The booster choices for the card in a spot, inside its picker.
+function boosterPick(i) {
+  const here = ui.draftBoosts[i], reserved = reservedBoosters();
+  const elsewhere = id => Object.entries(ui.draftBoosts).find(([k, v]) => v === id && +k !== i)?.[0];
+  const row = (b, action, note, off) => `<button class="bst ${action === 'unboost' ? 'on' : ''}" ${off ? 'disabled' : `data-action="${action}" data-id="${esc(b.id)}" data-i="${i}"`}><span class="bst-i" aria-hidden="true">${BOOST_ICON[b.stat] || '⚡'}</span><b>${esc(b.name)}</b><small>${boostLabel(b)}${note}</small></button>`;
+  const list = boosters.map(b => reserved.has(b.id) ? row(b, '', ` · set for ${dayLabel(reserved.get(b.id)).split(',')[0]}`, true)
+    : here === b.id ? row(b, 'unboost', ' · on this card, tap to take off')
+    : row(b, 'boost', elsewhere(b.id) != null ? ` · moves from ${spotTag(SLOTS[elsewhere(b.id)])}` : '')).join('');
+  return `<h3 class="pk-sub">Booster for this game</h3>${boosters.length ? `<div class="bst-row">${list}</div>` : '<p class="hint">No boosters yet. Every pack on the Packs page has one.</p>'}`;
+}
+
+/* ---------- Packs: the shop, boosters and selling ---------- */
+// Mirrors PACKS and SELL_VALUE in api/_packs.js; the server decides what a pack holds and costs.
+const SHOP = [
+  { type: 'daily', name: 'Daily pack', price: 0, what: '3 players with a game on the next slate, plus a booster' },
+  { type: 'standard', name: 'Standard pack', price: 150, what: '4 players plus a booster' },
+  { type: 'premium', name: 'Premium pack', price: 400, what: '5 players with at least one Rare, plus 2 boosters' },
+];
+const SELL_VALUE = { common: 10, rare: 30, epic: 75, legendary: 200 };
+
+// Time until the next US Eastern day, when the daily pack resets.
+function untilTomorrow() {
+  const [h, m] = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: 'numeric', hourCycle: 'h23' }).format(new Date()).split(':').map(Number);
+  const left = 24 * 60 - (h * 60 + m);
+  return `${Math.floor(left / 60)}h ${left % 60}m`;
+}
+
+function packsView() {
+  const coins = profile.coins || 0, dailyDone = profile.dailyPack === etDay(), r = ui.packReveal;
+  const tile = t => {
+    const daily = t.type === 'daily', can = daily ? !dailyDone : coins >= t.price, busy = ui.opening === t.type;
+    const cta = busy ? 'Opening…' : daily ? (dailyDone ? `New pack in ${untilTomorrow()}` : 'Open free') : can ? 'Open' : `Need 🪙 ${t.price - coins} more`;
+    return `<div class="shop-item"><button class="pack p-${t.type} ${busy ? 'busy' : ''}" data-action="buy" data-t="${t.type}" ${!can || ui.opening ? 'disabled' : ''} aria-label="${t.name}, ${t.price ? t.price + ' coins' : 'free'}: ${t.what}">
+      <span class="pack-brand">BEST OF <span class="seven">7</span></span><span class="pack-label">${t.name}</span><span class="pack-n">${t.price ? `🪙 ${t.price}` : 'FREE'}</span><span class="pack-cta">${cta}</span></button>
+      <p class="hint">${t.what}.</p></div>`;
+  };
+  // Extra copies of a player beyond your best card of him.
+  const groups = new Map();
+  for (const c of allCards) { if (!groups.has(c.pid)) groups.set(c.pid, []); groups.get(c.pid).push(c); }
+  for (const g of groups.values()) g.sort((a, b) => RARITY_RANK[b.rarity] - RARITY_RANK[a.rarity]);
+  const dupes = [...groups.values()].flatMap(g => g.slice(1));
+  const dupeValue = dupes.reduce((s, c) => s + SELL_VALUE[c.rarity || 'common'], 0);
+  const dupeRows = dupes.map(c => {
+    const p = { ...c, ...roster.get(c.pid), id: c.pid };
+    return `<div class="runner sub" data-pid="${esc(c.pid)}">${face(p)}
+      <div><div class="r-name">${plink(p)}${rarityTag(c.rarity) || '<span class="rar r-common">Common</span>'}</div><div class="r-sub">${esc(p.team)} · ${POS_NAME[p.pos] || ''} · you keep your ${RARITY[groups.get(c.pid)[0].rarity || 'common'].name} card</div></div>
+      <div class="r-act"><button class="btn" data-action="sell" data-id="${esc(c.id)}" ${ui.selling ? 'disabled' : ''}>Sell · 🪙 ${SELL_VALUE[c.rarity || 'common']}</button></div></div>`;
+  }).join('');
+  const reserved = reservedBoosters();
+  const reveal = r ? `<section class="panel pack-reveal"><div class="list-head"><div><div class="eyebrow">${SHOP.find(t => t.type === r.type)?.name || 'Pack'}</div>
+      <h2>${r.cards.length} players and ${r.boosters.length} booster${r.boosters.length === 1 ? '' : 's'}</h2></div><button class="btn" data-action="reveal-done">Done</button></div>
+    <div class="tc-grid">${r.cards.map((c, i) => cardHtml(c, { fresh: true, i, tag: r.had.has(c.pid) ? ['Duplicate', 'dupe'] : ['New', 'new'] })).join('')}${r.boosters.map((b, j) => boosterHtml(b, { fresh: true, i: r.cards.length + j })).join('')}</div></section>` : '';
+  return `${reveal}
+    <section class="panel shop-head"><div class="list-head"><div><div class="eyebrow">Your coins</div><h2 class="coin-total">🪙 ${fmt(coins)}</h2>
+      <p class="sub">Win the night against your weekly opponent +${COINS.nightWin} · each category you win that night +${COINS.category} · win the week +${COINS.weekWin}.</p></div></div>
+      <div class="shop">${SHOP.map(tile).join('')}</div></section>
+    <section class="panel"><div class="list-head"><div><h2>Boosters · ${boosters.length}</h2><p class="sub">Tap a card on the court, then pick a booster. It lifts that player for that night’s game and is used up when the night locks.</p></div></div>
+      ${boosters.length ? `<div class="tc-grid">${boosters.map(b => boosterHtml(b, { tag: reserved.has(b.id) ? [`Set for ${dayLabel(reserved.get(b.id)).split(',')[0]}`, 'set'] : null })).join('')}</div>` : '<p class="empty">No boosters yet. Every pack has at least one.</p>'}</section>
+    <section class="panel"><div class="list-head"><div><h2>Duplicates · ${dupes.length}</h2><p class="sub">Extra copies of players you already have. Your best card of each player is kept.</p></div>
+      ${dupes.length ? `<button class="btn primary" data-action="sell-dupes" ${ui.selling ? 'disabled' : ''}>Sell all · 🪙 ${dupeValue}</button>` : ''}</div>
+      ${dupeRows || '<p class="empty">No duplicates right now.</p>'}</section>`;
+}
+
+// Selling from a player's profile: the lowest copy goes first, and selling your only copy takes a second tap.
+function sellFoot(pid) {
+  const copies = allCards.filter(c => c.pid === pid).sort((a, b) => RARITY_RANK[a.rarity] - RARITY_RANK[b.rarity]);
+  if (!copies.length) return '';
+  const c = copies[0], v = SELL_VALUE[c.rarity || 'common'], last = copies.length === 1, sure = ui.sellConfirm === c.id;
+  const label = !last ? `Sell a ${RARITY[c.rarity || 'common'].name} copy · 🪙 ${v}` : sure ? `Tap again to sell your only card · 🪙 ${v}` : `Sell this card · 🪙 ${v}`;
+  return `<div class="pc-foot pc-sell"><span class="pc-dim">You have ${copies.length} card${copies.length > 1 ? 's' : ''} of him</span>
+    <button class="btn ${sure ? 'danger' : ''}" data-action="sell-one" data-id="${esc(c.id)}" data-pid="${esc(pid)}" data-last="${last}" ${ui.selling ? 'disabled' : ''}>${label}</button></div>`;
+}
+
+// The pack and sell endpoints (api/*.js), signed in as the player.
+async function api(path, body) {
+  let r;
   try {
     const token = await auth.currentUser.getIdToken();
-    const r = await fetch('/api/packs', { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
-    const body = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(body.error || 'That pack didn’t open. Try again.');
-    ui.reveal = body.cards; ui.revealNo = no;
-  } catch (err) {
-    toast(err.message && !/fetch/i.test(err.message) ? err.message : 'That pack didn’t open. Check your connection and try again.');
-  }
+    r = await fetch(path, { method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+  } catch (err) { throw new Error('That didn’t go through. Check your connection and try again.'); }
+  const out = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(out.error || 'That didn’t work. Try again.');
+  return out;
+}
+
+async function openPack(type) {
+  if (ui.opening) return;
+  const no = (profile.starterPacks || 0) + 1, had = new Set(cards.keys());
+  ui.opening = type; ui.sig = ''; render();
+  try {
+    const out = await api('/api/packs', { type });
+    if (type === 'starter') { ui.reveal = out.cards; ui.revealNo = no; }
+    else { ui.packReveal = { type, cards: out.cards, boosters: out.boosters || [], had }; window.scrollTo({ top: 0 }); }
+  } catch (err) { toast(err.message); }
   ui.opening = false; ui.sig = ''; render();
+}
+
+async function sellCards(ids) {
+  if (ui.selling || !ids.length) return;
+  ui.selling = true; ui.sig = ''; render();
+  try {
+    const out = await api('/api/sell', { ids });
+    toast(`Sold ${out.sold} card${out.sold > 1 ? 's' : ''} for 🪙 ${out.coins}.`);
+  } catch (err) { toast(err.message); }
+  ui.selling = false; ui.sellConfirm = null; ui.sig = ''; render();
 }
 
 function packView() {
@@ -1062,10 +1233,10 @@ function renderTop() {
   const nav = (view, label, extra = '') => `<button class="navlink ${ui.view === view ? 'on' : ''}" data-action="view" data-v="${view}" ${ui.view === view ? 'aria-current="page"' : ''} ${extra}>${label}</button>`;
   $('#topbar').innerHTML = `
     <div class="brand">BEST OF <span class="seven">7</span></div>
-    ${me.id && profile?.name && (profile.starterPacks || 0) >= STARTER_PACKS && !ui.reveal ? `<nav class="topnav" aria-label="Sections">${today ? `<button class="navlink ${onToday ? 'on' : ''}" data-action="sel" data-d="${today}" ${onToday ? 'aria-current="page"' : ''}>Today</button>` : ''}${nav('cards', 'My cards')}${nav('leaders', 'Leaderboard')}${nav('history', 'My nights')}${nav('profile', 'Profile')}</nav>` : ''}
+    ${me.id && profile?.name && (profile.starterPacks || 0) >= STARTER_PACKS && !ui.reveal ? `<nav class="topnav" aria-label="Sections">${today ? `<button class="navlink ${onToday ? 'on' : ''}" data-action="sel" data-d="${today}" ${onToday ? 'aria-current="page"' : ''}>Today</button>` : ''}${nav('cards', 'My cards')}${nav('packs', 'Packs')}${nav('leaders', 'Leaderboard')}${nav('history', 'My nights')}${nav('profile', 'Profile')}</nav>` : ''}
     <div class="top-right">
       <span class="tchip">NBA · 2026–27</span>
-      ${profile?.name ? `<span class="tchip">${avatarHtml(profile, 'sm')}${tierBadge(tier)}<span>${esc(profile.name)} · ${fmt(rp)} RP</span></span>` : ''}
+      ${profile?.name ? `<span class="tchip">${avatarHtml(profile, 'sm')}${tierBadge(tier)}<span>${esc(profile.name)} · ${fmt(rp)} RP</span></span><button class="tchip coin" data-action="view" data-v="packs" title="Coins: spend them on packs">🪙 ${fmt(profile.coins || 0)}</button>` : ''}
       ${me.id ? `<button class="btn" data-action="signout" title="Signed in as ${esc(me.email)}">Sign out</button>` : ''}
     </div>`;
 }
@@ -1234,6 +1405,7 @@ function renderCourt() {
       <span class="slot-card"><b>+</b><span>${fill.has(i) ? spotName(slot) : 'No card fits'}</span></span><span class="spot-tag">${spotTag(slot)}</span></button>`;
     const warn = isOut(p) ? 'OUT' : !owns(p.id) ? 'NOT YOURS' : '';
     return `<button class="spot filled" style="--x:${x}%;--y:${y}%" data-action="slot" data-i="${i}" aria-label="${spotName(slot)}: ${esc(p.name)}, ${f1(p.avg)} fantasy points per game${warn ? ', ' + warn.toLowerCase() : ''}. Change card">
+      ${boostOn(i) ? `<span class="spot-boost" title="${esc(boostOn(i).name)}">${BOOST_ICON[boostOn(i).stat] || '⚡'} ${boostLabel(boostOn(i))}</span>` : ''}
       ${cardHtml(cards.get(p.id) || { pid: p.id, rarity: 'common', name: p.name, team: p.team, pos: p.pos })}
       <span class="spot-tag ${warn ? 'warn' : ''}">${spotTag(slot)}${warn ? `<i>${warn}</i>` : ''}</span></button>`;
   }).join('');
@@ -1257,6 +1429,7 @@ function openPicker(i) {
         ${cardHtml(cards.get(p.id) || { pid: p.id, rarity: 'common', name: p.name, team: p.team, pos: p.pos })}
         <span class="pick-meta">${esc(p.opp)} · ${f1(p.avg)} FPPG${isOut(p) ? ' · <span class="inj out">Out</span>' : isGtd(p) ? ' · <span class="inj gtd">GTD</span>' : ''}${where(p.id)}</span></button>`).join('')}</div>`
       : `<p class="empty">None of your cards that can play ${label} have a game on ${dayLabel(ui.sel)}.</p>`}
+    ${cur ? boosterPick(i) : ''}
     ${cur ? `<div class="pc-foot"><button class="btn" data-action="unslot" data-i="${i}">Take ${esc(pmap(day).get(cur)?.name || 'this card')} out</button></div>` : ''}`;
   if (!dlg.open) dlg.showModal();
 }
@@ -1289,7 +1462,7 @@ function renderLineup() {
     return p ? `<li class="leg rc-${rarityOf(p.id)} ${notMine ? 'bad' : ''}"><button class="x" data-action="remove" data-i="${i}" aria-label="Remove ${esc(p.name)}">✕</button><div>
         <div class="leg-top"><span class="ptag">${slot}</span><b>${plink(p)}</b><span class="leg-sal">${starsHtml(p.stars)}</span></div>
         <div class="leg-sub"><span>${esc(p.team)} ${esc(p.opp)} · FPPG ${f1(p.avg)}${isOut(p) ? ' · <span class="inj out">Out</span>' : ''}${notMine ? ' · <span class="inj out">Not your card</span>' : ''}</span>
-          <span class="leg-types">${rarityTag(rarityOf(p.id))}${typeChips(p.types)}</span></div></div></li>`
+          <span class="leg-types">${boostChip(boostOn(i))}${rarityTag(rarityOf(p.id))}${typeChips(p.types)}</span></div></div></li>`
       : `<li class="leg open ${fillable.has(i) ? '' : 'none'}"><span></span><div class="leg-top"><span class="ptag dim">${slot}</span><span>${fillable.has(i) ? SLOT_HINT[slot] : 'No card fits · scores nothing'}</span><span></span></div></li>`;
   }).join('');
   const proj = projected(lu, day);
@@ -1405,7 +1578,7 @@ function battleSlot(sl, day, side) {
   const stat = line ? `${line[1]} PTS · ${line[2]} REB · ${line[3]} AST · ${line[4]} STL · ${line[5]} BLK · ${line[7]} 3PM` : '';
   return `<div class="bs ${side} rc-${sl.rarity || 'common'}" data-pid="${esc(p.id)}">${face(p)}
     <div class="bs-who"><div class="bs-name">${plink(p)}</div>
-      <div class="bs-tags">${rarityTag(sl.rarity)}${typeChips(sl.types)}<span class="pstate ${st.kind}">${esc(st.text)}</span></div>
+      <div class="bs-tags">${boostChip(sl.boost)}${rarityTag(sl.rarity)}${typeChips(sl.types)}<span class="pstate ${st.kind}">${esc(st.text)}</span></div>
       ${stat ? `<div class="bs-line">${stat}</div>` : ''}</div>
     <span class="sc ${line ? '' : 'zero'}">${line ? f1(fpOf(line)) : '—'}</span></div>`;
 }
@@ -1512,7 +1685,7 @@ function historyView() {
   const weeks = myMatches.map(m => {
     const w = weekState(m), [a, b] = w.r.wins;
     const st = m.scored
-      ? `<span class="badge ${w.r.winner === 0 ? 'won' : w.r.winner === 1 ? 'lost' : ''}">${w.r.winner === 0 ? 'Won' : w.r.winner === 1 ? 'Lost' : 'Tied'} ${a}–${b}</span>${w.mine.rpDelta != null ? `<span class="badge ${w.mine.rpDelta >= 0 ? 'won' : 'lost'}">${w.mine.rpDelta >= 0 ? '+' : ''}${w.mine.rpDelta} RP</span>` : ''}`
+      ? `<span class="badge ${w.r.winner === 0 ? 'won' : w.r.winner === 1 ? 'lost' : ''}">${w.r.winner === 0 ? 'Won' : w.r.winner === 1 ? 'Lost' : 'Tied'} ${a}–${b}</span>${w.mine.rpDelta != null ? `<span class="badge ${w.mine.rpDelta >= 0 ? 'won' : 'lost'}">${w.mine.rpDelta >= 0 ? '+' : ''}${w.mine.rpDelta} RP</span>` : ''}${w.mine.coins ? `<span class="badge tag">+${w.mine.coins} coins</span>` : ''}`
       : `<span class="badge live">${a}–${b} so far</span>`;
     const last = w.nights.map(n => n.date).filter(d => days.has(d)).pop();
     const tag = last ? `button class="runner hist" data-action="sel" data-d="${last}"` : 'div class="runner hist"';
@@ -1527,7 +1700,7 @@ function historyView() {
       : e.scored ? '<span class="badge won">Added to week</span>'
       : e.group || e.match ? '<span class="badge live">In progress</span>' : '<span class="badge draft">Entered</span>';
     const sub = e.finish ? `${ordinal(e.finish)} of ${e.of} · ${e.tierName}${e.reward ? ` · 🔥 ${e.streak} nights: ${rewardText(e.reward)}` : ''}`
-      : e.scored ? `Week of ${weekLabel(e.week || weekOf(e.date))}${e.reward ? ` · 🔥 ${e.streak} nights: ${rewardText(e.reward)}` : ''}`
+      : e.scored ? `${e.nightResult ? `${e.nightResult === 'W' ? 'Won' : e.nightResult === 'L' ? 'Lost' : 'Tied'} the night ${e.nightCats[0]}–${e.nightCats[1]} · +${e.coins || 0} coins · ` : ''}Week of ${weekLabel(e.week || weekOf(e.date))}${e.reward ? ` · 🔥 ${e.streak} nights: ${rewardText(e.reward)}` : ''}`
       : e.match ? 'In your weekly matchup' : e.group ? 'Group formed' : 'Waiting for tip-off';
     const tag = days.has(e.date) ? `button class="runner hist" data-action="sel" data-d="${e.date}"` : 'div class="runner hist"';
     return `<${tag}>
@@ -1577,7 +1750,7 @@ function profileView() {
   const earned = earnedBadges(u), featured = u.featuredBadge;
   const list = moment => [...BADGES].filter(b => !!b.moment === moment).sort((a, b) => b.on(u) - a.on(u)).map(badge).join('');
   const momentsEarned = MOMENTS.filter(m => m.on(u)).length;
-  const stats = [['Rank points', fmt(rp)], ['Nights played', u.nights || 0], ['Record', `${u.wins || 0}–${u.losses || 0}`], ['Cards', cards.size], ['Best score', u.bestScore ? f1(u.bestScore) : '—'], ['Best streak', u.bestStreak || 0]];
+  const stats = [['Rank points', fmt(rp)], ['Nights played', u.nights || 0], ['Record', `${u.wins || 0}–${u.losses || 0}`], ['Cards', cards.size], ['Coins', fmt(u.coins || 0)], ['Best score', u.bestScore ? f1(u.bestScore) : '—'], ['Best streak', u.bestStreak || 0]];
   const badge = b => {
     const on = b.on(u), isFeatured = featured === b.id;
     return `<li class="bdg ${on ? '' : 'locked'} ${isFeatured ? 'featured' : ''}"><span class="bdg-icon" aria-hidden="true">${b.icon}</span><b>${esc(b.name)}</b><span class="bdg-how">${esc(b.how)}</span>
@@ -1661,6 +1834,7 @@ function render() {
   renderSide();
   const m = $('#main');
   if (ui.view === 'cards') { ui.sig = 'cards'; m.innerHTML = cardsView(); $('#slip').innerHTML = ''; return; }
+  if (ui.view === 'packs') { ui.sig = 'packs'; m.innerHTML = packsView(); $('#slip').innerHTML = ''; return; }
   if (ui.view === 'leaders') { ui.sig = 'leaders'; m.innerHTML = leadersView(); $('#slip').innerHTML = ''; return; }
   if (ui.view === 'profile') { ui.sig = 'profile'; m.innerHTML = profileView(); $('#slip').innerHTML = ''; return; }
   if (ui.view === 'history') { ui.sig = 'history'; m.innerHTML = historyView(); $('#slip').innerHTML = ''; return; }
@@ -1669,7 +1843,7 @@ function render() {
   const e = entries.get(ui.sel);
   if (!locked(day)) {
     const sig = 'build|' + ui.sel;
-    if (ui.draftFor !== ui.sel) { ui.draft = (e?.ids || SLOTS.map(() => null)).slice(); ui.draftFor = ui.sel; ui.save = ''; }
+    if (ui.draftFor !== ui.sel) { ui.draft = (e?.ids || SLOTS.map(() => null)).slice(); ui.draftBoosts = { ...(e?.boosts || {}) }; ui.draftFor = ui.sel; ui.save = ''; }
     if (sig === ui.sig && $('#court')) { renderCourt(); renderLineup(); const wk = $('#week'); if (wk) wk.innerHTML = weekPanel(); const el = $('#slate'); if (el) keepRacesScroll(() => { el.innerHTML = slateCard(day); }); const st = $('#streak'); if (st) st.innerHTML = streakBanner(); return; }
     ui.sig = sig;
     $('#slip').innerHTML = '<button class="dock" id="dock" data-action="sheet" aria-expanded="false" aria-label="Show your lineup"></button><div class="sheet-bg" data-action="sheet-close"></div><div class="slip-card" id="lineup"></div>';
@@ -1714,7 +1888,9 @@ async function flush() {
   saving = true;
   const ref = db.doc(`entries/${date}_${me.id}`);
   try {
-    if (ready(ids, day)) await ref.set({ uid: me.id, date, ids, at: Date.now() });
+    // Boosters ride along on the entry, one per filled slot; the sync applies and uses them up at lock.
+    const boosts = Object.fromEntries(Object.entries(ui.draftBoosts).filter(([i, bid]) => ids[+i] && boosters.some(b => b.id === bid)));
+    if (ready(ids, day)) await ref.set({ uid: me.id, date, ids, at: Date.now(), ...(Object.keys(boosts).length ? { boosts } : {}) });
     else if (entries.has(date)) await ref.delete();
     ui.save = 'ok';
   } catch (err) { ui.save = 'err'; }
@@ -1751,15 +1927,30 @@ document.addEventListener('click', e => {
   else if (a === 'auth-reset') { ui.auth = ''; render(); }
   else if (a === 'edit-name') { ui.editName = true; ui.sig = ''; render(); }
   else if (a === 'name-cancel') { ui.editName = false; ui.sig = ''; render(); }
-  else if (a === 'pack') openPack();
+  else if (a === 'pack') openPack('starter');
+  else if (a === 'buy') openPack(b.dataset.t);
+  else if (a === 'reveal-done') { ui.packReveal = null; ui.sig = ''; render(); }
+  else if (a === 'sell') sellCards([b.dataset.id]);
+  else if (a === 'sell-dupes') sellCards([...document.querySelectorAll('[data-action=sell]')].map(x => x.dataset.id));
+  else if (a === 'sell-one') {
+    if (b.dataset.last === 'true' && ui.sellConfirm !== b.dataset.id) { ui.sellConfirm = b.dataset.id; openPlayer(b.dataset.pid); return; }
+    $('#pcard').close(); sellCards([b.dataset.id]);
+  }
   else if (a === 'pack-done') { ui.reveal = null; ui.sig = ''; render(); window.scrollTo({ top: 0 }); }
   else if (a === 'card-pos') { ui.cardPos = b.dataset.v; ui.sig = ''; render(); }
   else if (a === 'toggle-row') { ui.open = ui.open === b.dataset.k ? '' : b.dataset.k; ui.sig = ''; render(); }
   else if (!ui.draft || !days.get(ui.sel) || locked(days.get(ui.sel))) return;
   else if (a === 'add') addPlayer(b.dataset.id);
-  else if (a === 'drop') { ui.draft[ui.draft.indexOf(b.dataset.id)] = null; changed(); }
-  else if (a === 'remove') { ui.draft[+b.dataset.i] = null; changed(); }
-  else if (a === 'clear') { ui.draft = SLOTS.map(() => null); changed(); }
+  else if (a === 'drop') { const at = ui.draft.indexOf(b.dataset.id); ui.draft[at] = null; delete ui.draftBoosts[at]; changed(); }
+  else if (a === 'remove') { ui.draft[+b.dataset.i] = null; delete ui.draftBoosts[+b.dataset.i]; changed(); }
+  else if (a === 'clear') { ui.draft = SLOTS.map(() => null); ui.draftBoosts = {}; changed(); }
+  else if (a === 'boost') {
+    // One booster per card: putting it here takes it off any other card.
+    const i = +b.dataset.i;
+    for (const k of Object.keys(ui.draftBoosts)) if (ui.draftBoosts[k] === b.dataset.id) delete ui.draftBoosts[k];
+    ui.draftBoosts[i] = b.dataset.id; changed(); openPicker(i);
+  }
+  else if (a === 'unboost') { delete ui.draftBoosts[+b.dataset.i]; changed(); openPicker(+b.dataset.i); }
   else if (a === 'auto') {
     const day = days.get(ui.sel), base = ui.draft.map(id => id && owns(id) ? id : null);
     const r = buildLineup(ownedPool(day), { base, noise: 0.05, noCaptain: true, partial: true });
@@ -1772,9 +1963,12 @@ document.addEventListener('click', e => {
     if (i == null || !owns(id)) return;
     const at = lu.indexOf(id);
     if (at >= 0) lu[at] = null;
+    // A booster stays with the card it was put on, so it leaves a spot when that card does.
+    if (at >= 0) { if (ui.draftBoosts[at] != null) ui.draftBoosts[i] = ui.draftBoosts[at]; else delete ui.draftBoosts[i]; delete ui.draftBoosts[at]; }
+    else delete ui.draftBoosts[i];
     lu[i] = id; $('#pcard').close(); changed();
   }
-  else if (a === 'unslot') { ui.draft[+b.dataset.i] = null; $('#pcard').close(); changed(); }
+  else if (a === 'unslot') { ui.draft[+b.dataset.i] = null; delete ui.draftBoosts[+b.dataset.i]; $('#pcard').close(); changed(); }
 });
 
 document.addEventListener('submit', async e => {
@@ -1920,11 +2114,13 @@ function renderPlayer(id, p, data, failed) {
       : !data ? '<p class="empty">Loading profile…</p>'
       : `<p class="pc-bio">${esc(describe(a, p))}</p><h3>Last 5 games</h3>${gamesTable(lastGames(data[1]))}`}
     ${canEdit ? `<div class="pc-foot"><button class="btn ${inLu ? '' : 'primary'}" data-action="${inLu ? 'drop' : 'add'}" data-id="${esc(id)}" data-pclose>${inLu ? 'Remove from lineup' : `Add to lineup · ${p.stars}★`}</button></div>` : ''}
+    ${sellFoot(id)}
     <p class="pc-src">Photo and stats: ESPN</p>`;
 }
 
 function openPlayer(id) {
   const dlg = $('#pcard'), p = pmap(days.get(ui.sel) || { players: [] }).get(id) || (roster.has(id) ? { ...roster.get(id), opp: '' } : undefined);
+  if (pcardFor !== id) ui.sellConfirm = null;
   pcardFor = id;
   renderPlayer(id, p);
   if (!dlg.open) dlg.showModal();
@@ -2005,12 +2201,17 @@ function startData() {
     .onSnapshot(s => { entries = new Map(s.docs.map(x => [x.data().date, x.data()])); loaded.entries = true; render(); }, () => { loaded.entries = true; render(); });
   db.collection(`users/${me.id}/cards`).onSnapshot(s => {
     cards = new Map();
+    allCards = s.docs.map(d => ({ id: d.id, ...d.data() }));
     for (const d of s.docs) {
       const c = d.data();
       if ((RARITY_RANK[c.rarity] ?? 0) >= (RARITY_RANK[cards.get(c.pid)?.rarity] ?? -1)) cards.set(c.pid, c);
     }
     loaded.cards = true; ui.sig = ''; render();
   }, () => { loaded.cards = true; render(); });
+  db.collection(`users/${me.id}/boosters`).onSnapshot(s => {
+    boosters = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.name.localeCompare(b.name));
+    ui.sig = ''; render();
+  }, () => {});
   // Every weekly matchup the player has been in, newest first.
   db.collection('matches').where('uids', 'array-contains', me.id).onSnapshot(s => {
     myMatches = s.docs.map(d => d.data()).sort((a, b) => a.week < b.week ? 1 : -1);

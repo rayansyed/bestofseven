@@ -14,6 +14,8 @@ export const RP_BY_FINISH = [30, 20, 20, 5, 5, -5, -5, -15, -15, -15];
 export const SKIP_PENALTY = 3; // RP lost for skipping a game night; never drops a player out of their tier
 // Rank points for a weekly matchup, paid once the week's last game is final. A tie changes nothing.
 export const RP_WIN = 40, RP_LOSS = -20;
+// Coins, spent on packs: a night won against your weekly opponent, each category won that night, and the week.
+export const COINS = { nightWin: 20, category: 2, weekWin: 100 };
 
 // Entry streak rewards, paid when a night is scored. Rewards can stack on one night.
 export function rewardFor(streak) {

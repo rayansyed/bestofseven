@@ -51,6 +51,11 @@ service cloud.firestore {
         allow read: if signedIn();
         allow write: if false;
       }
+      // A player's unused booster cards. Created by /api/packs, used up by the sync at lock.
+      match /boosters/{bid} {
+        allow read: if signedIn() && request.auth.uid == uid;
+        allow write: if false;
+      }
     }
 
     // One entry per player per night: entries/<date>_<uid>. Editable until the first tip-off.
@@ -61,7 +66,8 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.date is string
         && eid == request.resource.data.date + '_' + request.auth.uid
-        && request.resource.data.keys().hasOnly(['uid', 'date', 'ids', 'captain', 'at'])
+        && request.resource.data.keys().hasOnly(['uid', 'date', 'ids', 'captain', 'at', 'boosts'])
+        && (!('boosts' in request.resource.data) || (request.resource.data.boosts is map && request.resource.data.boosts.size() <= 6))
         && request.resource.data.ids is list && request.resource.data.ids.size() == 6
         && request.time.toMillis() < lockMs(request.resource.data.date);
       allow delete: if signedIn() && resource.data.uid == request.auth.uid

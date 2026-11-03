@@ -4,8 +4,8 @@
 // are final its stats are added to every matchup that week, and once the week's last game is final the nine
 // categories over the whole week decide each matchup and rank points are applied.
 // Nights grouped before matchups existed are scored by ranked-groups.mjs.
-import { RP_WIN, RP_LOSS, SKIP_PENALTY, TIERS, tierOf, invalidReason, rewardFor, momentBadges, buildLineup, seeded, botName, botNoise } from './game.mjs';
-import { sideTotals, weekResult, weekOf, weekDates } from './battle.mjs';
+import { RP_WIN, RP_LOSS, SKIP_PENALTY, COINS, TIERS, tierOf, invalidReason, rewardFor, momentBadges, buildLineup, seeded, botName, botNoise } from './game.mjs';
+import { sideTotals, decide, addTotals, weekResult, weekOf, weekDates } from './battle.mjs';
 
 const RANK = { common: 0, rare: 1, epic: 2, legendary: 3 };
 
@@ -50,6 +50,18 @@ export async function lockNight(db, day) {
       || (e.ids.some(pid => pid && !owned.has(pid)) ? 'player not in your collection' : null);
     if (bad) { writes.push({ path: 'entries/' + id, data: { invalid: bad }, merge: true }); continue; }
     const h = { entryId: id, uid: e.uid, name: user.name || 'Player', rp: user.rp || 0, slots: slotsOf(e.ids, pid => owned.get(pid)) };
+    // Booster cards attached to slots apply to tonight's game and are used up.
+    const boosts = Object.entries(e.boosts || {});
+    if (boosts.length) {
+      const mine = new Map((await db.list(`users/${e.uid}/boosters`)).map(b => [b.id, b.data]));
+      for (const [i, bid] of boosts) {
+        const b = mine.get(bid), sl = h.slots[+i];
+        if (!b || !sl || sl.boost) continue;
+        sl.boost = { name: b.name, stat: b.stat, pct: b.pct };
+        mine.delete(bid);
+        writes.push({ path: `users/${e.uid}/boosters/${bid}`, del: true });
+      }
+    }
     lineups.push(h);
     if (!seat.has(e.uid)) unpaired.push(h);
   }
@@ -98,10 +110,14 @@ export async function scoreNight(db, day) {
     night.sides[0].tot = a ? sideTotals(a, b || [], results) : null;
     night.sides[1].tot = b ? sideTotals(b, a || [], results) : null;
     writes.push({ path: 'matches/' + mid, data: { nights: m.nights }, merge: true });
+    // Tonight's head-to-head pays coins: a night win, plus every category won. A missing lineup counts as zeros.
+    const zero = addTotals([]), night1 = decide(night.sides[0].tot || zero, night.sides[1].tot || zero);
     for (let k = 0; k < 2; k++) {
       const me = m.sides[k];
       if (me.bot || !night.sides[k].slots) continue;
       const user = (await db.read('users/' + me.uid)) || {};
+      const coins = (night1.winner === k ? COINS.nightWin : 0) + COINS.category * night1.wins[k];
+      const nightResult = night1.winner === k ? 'W' : night1.winner === 1 - k ? 'L' : 'T';
       const fp = night.sides[k].tot.fp, ids = night.sides[k].slots.map(s => s?.id || null);
       // The streak grows on every scored entry.
       const streak = (user.streak || 0) + 1, reward = rewardFor(streak);
@@ -109,12 +125,12 @@ export async function scoreNight(db, day) {
       const fresh = momentBadges(ids, null, day).filter(id => !user.moments?.[id]);
       writes.push({ path: 'users/' + me.uid, data: {
         ...(fresh.length ? { moments: { ...user.moments, ...Object.fromEntries(fresh.map(id => [id, date])) }, lastMoments: { date, ids: fresh } } : {}),
-        rp, tier: tierOf(rp), nights: (user.nights || 0) + 1, lastNight: date,
+        rp, tier: tierOf(rp), nights: (user.nights || 0) + 1, lastNight: date, coins: (user.coins || 0) + coins,
         streak, bestStreak: Math.max(user.bestStreak || 0, streak), lastStreak: 0,
         bestTier: Math.max(user.bestTier || 0, tierOf(rp)), bestScore: Math.max(user.bestScore || 0, fp),
         ...(reward ? { savers: (user.savers || 0) + reward.saver, badge: !!user.badge || reward.badge, lastReward: { date, streak, ...reward } } : {}),
       }, merge: true });
-      writes.push({ path: `entries/${date}_${me.uid}`, data: { score: fp, scored: true, streak, reward: reward || null }, merge: true });
+      writes.push({ path: `entries/${date}_${me.uid}`, data: { score: fp, scored: true, streak, reward: reward || null, nightResult, nightCats: [night1.wins[k], night1.wins[1 - k]], coins }, merge: true });
     }
     scored++;
   }
@@ -142,12 +158,14 @@ export async function scoreWeeks(db, today) {
       // A player can't drop out of a tier the week after reaching it.
       if (user.shield && tierOf(after) < tierBefore) after = tierBefore * 100;
       const promoted = tierOf(after) > tierBefore;
-      const res = { week: m.week, mid, result: won ? 'W' : lost ? 'L' : 'T', cats: [r.wins[k], r.wins[1 - k]], opp: opp.name, rpDelta: after - before, rpAfter: after };
+      const coins = won ? COINS.weekWin : 0;
+      const res = { week: m.week, mid, result: won ? 'W' : lost ? 'L' : 'T', cats: [r.wins[k], r.wins[1 - k]], opp: opp.name, rpDelta: after - before, rpAfter: after, coins };
       writes.push({ path: 'users/' + me.uid, data: {
+        coins: (user.coins || 0) + coins,
         rp: after, tier: tierOf(after), shield: promoted ? 1 : 0, bestTier: Math.max(user.bestTier || 0, tierOf(after)),
         wins: (user.wins || 0) + (won ? 1 : 0), losses: (user.losses || 0) + (lost ? 1 : 0), lastWeek: res,
       }, merge: true });
-      m.sides[k] = { ...me, rpDelta: res.rpDelta };
+      m.sides[k] = { ...me, rpDelta: res.rpDelta, coins };
     }
     writes.push({ path: 'matches/' + mid, data: { scored: true, result: r, sides: m.sides }, merge: true });
     done++;

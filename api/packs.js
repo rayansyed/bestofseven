@@ -1,10 +1,10 @@
-// POST /api/packs — opens one of a player's free starter packs.
-// Cards are created here, on the server, so nobody can hand themselves cards from the browser.
+// POST /api/packs — opens a pack: { type: 'starter' | 'daily' | 'standard' | 'premium' } (starter if omitted).
+// Cards are created here, on the server, so nobody can hand themselves cards or coins from the browser.
 // Needs the FIREBASE_SERVICE_ACCOUNT environment variable in Vercel (the same JSON as the GitHub secret).
 const { initializeApp, cert, getApps } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 const { getFirestore } = require('firebase-admin/firestore');
-const { makeStarterPack, STARTER_PACKS } = require('./_packs.js');
+const { makeStarterPack, STARTER_PACKS, PACKS, makePack } = require('./_packs.js');
 
 function admin() {
   if (!getApps().length) initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)) });
@@ -20,27 +20,46 @@ module.exports = async (req, res) => {
   try {
     if (req.method !== 'POST') throw new HttpError(405, 'Use POST.');
     if (!process.env.FIREBASE_SERVICE_ACCOUNT) throw new HttpError(500, 'The server is missing FIREBASE_SERVICE_ACCOUNT. See README step 8.');
+    const type = (req.body && req.body.type) || 'starter';
+    if (type !== 'starter' && !PACKS[type]) throw new HttpError(400, 'Unknown pack.');
     const { auth, db } = admin();
     const token = (req.headers.authorization || '').replace(/^Bearer /, '');
     if (!token) throw new HttpError(401, 'Sign in first.');
     const { uid } = await auth.verifyIdToken(token);
 
-    const userRef = db.doc('users/' + uid), cardsRef = db.collection(`users/${uid}/cards`);
-    const cards = await db.runTransaction(async tx => {
+    const userRef = db.doc('users/' + uid), cardsRef = db.collection(`users/${uid}/cards`), boostersRef = db.collection(`users/${uid}/boosters`);
+    const today = etDay();
+    const out = await db.runTransaction(async tx => {
       const user = await tx.get(userRef);
       if (!user.exists) throw new HttpError(400, 'Pick a display name first.');
-      const opened = user.data().starterPacks || 0;
-      if (opened >= STARTER_PACKS) throw new HttpError(409, 'You’ve opened all your starter packs.');
-      const [owned, roster, ...days] = await Promise.all([tx.get(cardsRef), tx.get(db.doc('meta/roster')), tx.get(db.doc('days/' + etDay(0))), tx.get(db.doc('days/' + etDay(1)))]);
+      const u = user.data(), opened = u.starterPacks || 0;
+      const [roster, ...days] = await Promise.all([tx.get(db.doc('meta/roster')), tx.get(db.doc('days/' + etDay(0))), tx.get(db.doc('days/' + etDay(1))), tx.get(db.doc('days/' + etDay(2)))]);
       if (!roster.exists) throw new HttpError(503, 'Cards aren’t ready yet. Try again after the next sync.');
-      const upcomingTeams = new Set(days.filter(d => d.exists).flatMap(d => (d.data().games || []).flatMap(g => [g.away, g.home])));
-      const pack = makeStarterPack({ roster: roster.data().players, owned: new Set(owned.docs.map(d => d.data().pid)), packNo: opened, upcomingTeams });
+      const teamsOf = d => new Set((d.data().games || []).flatMap(g => [g.away, g.home]));
+      let pack, update;
+      if (type === 'starter') {
+        if (opened >= STARTER_PACKS) throw new HttpError(409, 'You’ve opened all your starter packs.');
+        const owned = await tx.get(cardsRef);
+        const upcomingTeams = new Set(days.slice(0, 2).filter(d => d.exists).flatMap(d => [...teamsOf(d)]));
+        pack = { cards: makeStarterPack({ roster: roster.data().players, owned: new Set(owned.docs.map(d => d.data().pid)), packNo: opened, upcomingTeams }), boosters: [] };
+        update = { starterPacks: opened + 1 };
+      } else {
+        const def = PACKS[type], coins = u.coins || 0;
+        if (opened < STARTER_PACKS) throw new HttpError(409, 'Open your starter packs first.');
+        if (type === 'daily' && u.dailyPack === today) throw new HttpError(409, 'You’ve opened today’s free pack. A new one comes tomorrow.');
+        if (coins < def.price) throw new HttpError(409, `You need ${def.price - coins} more coins for a ${def.name}.`);
+        // The daily pack's players have a game on the next game day: today, or the next slate posted.
+        const slate = type === 'daily' ? days.find(d => d.exists && (d.data().games || []).length) : null;
+        pack = makePack({ roster: roster.data().players, kind: type, teams: slate ? teamsOf(slate) : null });
+        update = type === 'daily' ? { dailyPack: today } : { coins: coins - def.price };
+      }
       const at = Date.now();
-      for (const c of pack) tx.set(cardsRef.doc(), { ...c, at });
-      tx.update(userRef, { starterPacks: opened + 1 });
-      return pack;
+      const cards = pack.cards.map(c => { const ref = cardsRef.doc(); tx.set(ref, { ...c, at }); return { id: ref.id, ...c }; });
+      const boosters = pack.boosters.map(b => { const ref = boostersRef.doc(); tx.set(ref, { ...b, at }); return { id: ref.id, ...b }; });
+      tx.update(userRef, update);
+      return { cards, boosters };
     });
-    res.status(200).json({ cards });
+    res.status(200).json(out);
   } catch (err) {
     const status = err.status || (err.code === 'auth/argument-error' || err.code === 'auth/id-token-expired' ? 401 : 500);
     if (status === 500) console.error(err);

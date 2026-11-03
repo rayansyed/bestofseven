@@ -15,6 +15,10 @@ An NBA card battler played in weekly head-to-head matchups. Collect player cards
 | Counters | between facing slots, −10%: Lockdown cuts a Sharpshooter's threes · Rim Protector cuts a Slasher's FG% · Slasher cuts a Rim Protector's blocks · Floor General cuts a Lockdown's steals |
 | Combos | Spacing (2 Sharpshooters + a Floor General): +8% assists · Twin Towers (2 Rim Protectors): +8% rebounds · Defensive Wall (Lockdown + Rim Protector): +5% steals and blocks |
 | Rarity | Common +0 · Rare +3% · Epic +6% · Legendary +10% to all of a card's stats (and fewer turnovers). Rarity and archetype stack up to +25%. |
+| Coins | earned against your weekly opponent: win the night **+20** · each category you win that night **+2** · win the week **+100**. A night your opponent sits out counts as zeros on their side. Spent on packs. |
+| Packs | the Packs page. **Daily:** free once a day (US Eastern), 3 players with a game on the next slate plus a booster. **Standard:** 150 coins, 4 players plus a booster. **Premium:** 400 coins, 5 players with at least one Rare or better, plus 2 boosters. Better packs have better rarity odds, lower-rated players turn up more often, and packs can hold duplicates. |
+| Selling | sell any card for coins: Common 10 · Rare 30 · Epic 75 · Legendary 200. The Packs page lists your duplicates (your best card of each player is kept). You can’t sell your last card of a player who’s in one of your lineups for today or later. |
+| Boosters | booster cards lift one stat for one game, such as +15% points, +20% blocks or −20% turnovers, or every stat by 8%. Put one on a card from that spot’s picker before tip-off. It applies to that night’s game on top of the +25% cap and is used up when the night locks. |
 | Rank points | win the week **+40** · lose it **−20** · tie 0. Paid once all of the week's games are final. |
 | Tiers | 100 RP each. You can't drop out of a tier the week after reaching it. RP never goes below 0. |
 | Skipping | once you have played a night, each game night you skip costs **3 RP** and resets your streak. It can never drop you out of your tier, and nights with no NBA games don't count. |
@@ -34,7 +38,8 @@ The Profile tab holds a player's picture, stats and badges. Pictures are center-
 | `index.html` | The game. A static page hosted on Vercel. |
 | `config.js` | Your Firebase web config (public values). |
 | `firestore.rules` | Who can read and write what. Lineups lock at tip-off, and only the server can create cards or change ranks. |
-| `api/packs.js` | A Vercel function that opens a player's starter packs. `api/_packs.js` picks the cards. |
+| `api/packs.js` | A Vercel function that opens a player's starter, daily and shop packs and charges coins. `api/_packs.js` holds the packs, odds, boosters and sell values. |
+| `api/sell.js` | A Vercel function that sells cards for coins. |
 | `package.json` | The function's one dependency, `firebase-admin`. |
 | `sync/nba-sync.mjs` | Pulls ESPN's NBA scoreboard, rosters, injuries and box scores into Firestore, then runs the ranked steps. |
 | `sync/ranked.mjs` | At each lock, adds every lineup to its owner's weekly matchup and pairs new entrants (a computer takes an odd seat). Adds each final night to the week, and decides finished weeks into rank points. `sync/ranked-groups.mjs` scores nights from before battles. |
@@ -46,9 +51,10 @@ Firestore collections:
 - `days/<YYYYMMDD>`: a night's best three squads, games, player pool (with star ratings and archetypes), injury tags and box scores (written by the sync)
 - `matches/<week>_m<n>`: a weekly matchup (`week` is its Monday): both players, each night's two lineups with every card's rarity and archetypes, each night's category totals, and the week's result (written by the sync)
 - `days/<YYYYMMDD>/groups/<tier>-<n>`: groups of ten from before battles
-- `entries/<YYYYMMDD>_<uid>`: a player's lineup for a night (written by the player until tip-off). The sync adds the matchup, result and rank-point change.
-- `users/<uid>`: display name, picture and featured badge (written by the player), plus RP, tier, record, streak, personal bests and starter packs opened (written by the server)
-- `users/<uid>/cards/<id>`: the player's cards (written by the server only)
+- `entries/<YYYYMMDD>_<uid>`: a player's lineup for a night (written by the player until tip-off). Boosters ride along as `boosts` (slot → booster). The sync adds the matchup, the night's result and coins, and rank-point change.
+- `users/<uid>`: display name, picture and featured badge (written by the player), plus RP, tier, record, streak, personal bests, coins, today's daily pack and starter packs opened (written by the server)
+- `users/<uid>/cards/<id>`: the player's cards, one document per copy (written by the server only)
+- `users/<uid>/boosters/<id>`: the player's unused booster cards (created by `/api/packs`, used up by the sync at lock)
 - `meta/season`: running season stat totals · `meta/types`: this month's archetypes · `meta/roster`: every player's team, position, rating, archetypes and per-game averages in the nine categories (shown on cards), read by the page and the pack opener. Team rosters are refetched daily; ratings and averages refresh every run (written by the sync)
 
 ## A week, start to finish

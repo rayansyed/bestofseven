@@ -1123,17 +1123,17 @@ function packsView() {
       <div><div class="r-name">${plink(p)}${rarityTag(c.rarity) || '<span class="rar r-common">Common</span>'}</div><div class="r-sub">${esc(p.team)} · ${POS_NAME[p.pos] || ''} · you keep your ${RARITY[groups.get(c.pid)[0].rarity || 'common'].name} card</div></div>
       <div class="r-act"><button class="btn" data-action="sell" data-id="${esc(c.id)}" ${ui.selling ? 'disabled' : ''}>Sell · 🪙 ${SELL_VALUE[c.rarity || 'common']}</button></div></div>`;
   }).join('');
-  const reserved = reservedBoosters();
+  // The flip-in plays once: the cards, boosters and coins that arrive just after opening redraw the page.
+  const fresh = !!r && !r.played;
+  if (r) r.played = true;
   const reveal = r ? `<section class="panel pack-reveal"><div class="list-head"><div><div class="eyebrow">${SHOP.find(t => t.type === r.type)?.name || 'Pack'}</div>
       <h2>${r.cards.length} players and ${r.boosters.length} booster${r.boosters.length === 1 ? '' : 's'}</h2></div><button class="btn" data-action="reveal-done">Done</button></div>
-    <div class="tc-grid">${r.cards.map((c, i) => cardHtml(c, { fresh: true, i, tag: r.had.has(c.pid) ? ['Duplicate', 'dupe'] : ['New', 'new'] })).join('')}${r.boosters.map((b, j) => boosterHtml(b, { fresh: true, i: r.cards.length + j })).join('')}</div></section>` : '';
+    <div class="tc-grid">${r.cards.map((c, i) => cardHtml(c, { fresh, i, tag: r.had.has(c.pid) ? ['Duplicate', 'dupe'] : ['New', 'new'] })).join('')}${r.boosters.map((b, j) => boosterHtml(b, { fresh, i: r.cards.length + j })).join('')}</div></section>` : '';
   return `${reveal}
     <section class="panel shop-head"><div class="list-head"><div><div class="eyebrow">Your coins</div><h2 class="coin-total">🪙 ${fmt(coins)}</h2>
       <p class="sub">Win the night against your weekly opponent +${COINS.nightWin} · each category you win that night +${COINS.category} · win the week +${COINS.weekWin}.</p></div></div>
       <div class="shop">${SHOP.map(tile).join('')}</div>
       <p class="hint shop-odds">Rarer cards are better players: Common 1–2★ · Rare 2–3★ · Epic 3–4★ · Legendary 5★ only. Players who average under 12 minutes stay out of packs.</p></section>
-    <section class="panel"><div class="list-head"><div><h2>Boosters · ${boosters.length}</h2><p class="sub">Tap a card on the court, then pick a booster. It lifts that player for that night’s game and is used up when the night locks.</p></div></div>
-      ${boosters.length ? `<div class="tc-grid">${boosters.map(b => boosterHtml(b, { tag: reserved.has(b.id) ? [`Set for ${dayLabel(reserved.get(b.id)).split(',')[0]}`, 'set'] : null })).join('')}</div>` : '<p class="empty">No boosters yet. Every pack has at least one.</p>'}</section>
     <section class="panel"><div class="list-head"><div><h2>Duplicates · ${dupes.length}</h2><p class="sub">Extra copies of players you already have. Your best card of each player is kept.</p></div>
       ${dupes.length ? `<button class="btn primary" data-action="sell-dupes" ${ui.selling ? 'disabled' : ''}>Sell all · 🪙 ${dupeValue}</button>` : ''}</div>
       ${dupeRows || '<p class="empty">No duplicates right now.</p>'}</section>`;
@@ -1167,7 +1167,7 @@ async function openPack(type) {
   ui.opening = type; ui.sig = ''; render();
   try {
     const out = await api('/api/packs', { type });
-    if (type === 'starter') { ui.reveal = out.cards; ui.revealNo = no; }
+    if (type === 'starter') { ui.reveal = out.cards; ui.revealNo = no; ui.revealPlayed = false; }
     else { ui.packReveal = { type, cards: out.cards, boosters: out.boosters || [], had }; window.scrollTo({ top: 0 }); }
   } catch (err) { toast(err.message); }
   ui.opening = false; ui.sig = ''; render();
@@ -1189,7 +1189,10 @@ function packView() {
   const intro = `<section class="hero-card"><div><div class="eyebrow">Welcome, ${esc(profile.name)}</div><h1>${ui.reveal ? `Pack ${opened} of ${STARTER_PACKS}` : 'Open your starter packs'}</h1>
     <p class="hero-sub">${ui.reveal ? (left ? `${left} more to open.` : 'That’s your starting collection: 15 cards.') : `You get ${STARTER_PACKS} free packs of 5 cards: 2 guards, 2 forwards and a center in each. Your lineups are built from the cards you own.`}</p></div></section>`;
   if (ui.reveal) {
-    return intro + `<section class="panel pack-reveal"><div class="tc-grid">${ui.reveal.map((c, i) => cardHtml(c, { fresh: true, i })).join('')}</div>
+    // As on the Packs page, the flip-in plays only on the reveal's first draw.
+    const fresh = !ui.revealPlayed;
+    ui.revealPlayed = true;
+    return intro + `<section class="panel pack-reveal"><div class="tc-grid">${ui.reveal.map((c, i) => cardHtml(c, { fresh, i })).join('')}</div>
       <div class="row pack-row">${left ? `<button class="btn primary" data-action="pack" ${ui.opening ? 'disabled' : ''}>${ui.opening ? 'Opening…' : `Open pack ${opened + 1}`}</button>` : '<button class="btn primary" data-action="pack-done">Start playing</button>'}</div></section>`;
   }
   return intro + `<section class="panel pack-start">
@@ -1209,10 +1212,13 @@ function cardsView() {
   const n = p => p === 'ALL' ? cards.size : [...cards.values()].filter(c => (roster.get(c.pid)?.pos || c.pos) === p).length;
   const tabs = [['ALL', 'All'], ['G', 'Guards'], ['F', 'Forwards'], ['C', 'Centers']].map(([v, l]) => `<button class="tab" data-action="card-pos" data-v="${v}" aria-pressed="${ui.cardPos === v}">${l} · ${n(v)}</button>`).join('');
   const arch = Object.entries(TYPES).map(([k, t]) => `<li>${typeChip(k)}<span>${esc(t.what)}</span></li>`).join('');
+  const reserved = reservedBoosters();
   return `<section class="panel"><div class="list-head"><div><h2>My cards</h2><p class="sub">${cards.size} cards. ${today ? `${[...cards.keys()].filter(id => tonight.has(id)).length} of them play ${dayLabel(today.date).split(',')[0]}.` : ''} Tap a card for the player’s profile.</p></div></div>
       <div class="pool-tools"><div class="tabs">${tabs}</div></div>
       ${list.length ? `<div class="tc-grid">${list.map(c => cardHtml(c, { tag: tonight.has(c.pid) ? [when, 'play'] : null })).join('')}</div>` : '<p class="empty">No cards here yet.</p>'}
     </section>
+    <section class="panel"><div class="list-head"><div><h2>Boosters · ${boosters.length}</h2><p class="sub">Tap a card on the court, then pick a booster. It lifts that player for that night’s game and is used up when the night locks.</p></div></div>
+      ${boosters.length ? `<div class="tc-grid">${boosters.map(b => boosterHtml(b, { tag: reserved.has(b.id) ? [`Set for ${dayLabel(reserved.get(b.id)).split(',')[0]}`, 'set'] : null })).join('')}</div>` : '<p class="empty">No boosters yet. Every pack has at least one.</p>'}</section>
     <section class="panel arch-legend"><div class="list-head"><div><h2>Archetypes, counters and combos</h2><p class="sub">Set each month from season stats. The league’s elite players can carry two.</p></div></div>
       <ul class="arch-list">${arch}</ul>
       <h3 class="arch-h">Counters (between facing slots, −10%)</h3><ul class="arch-list">${COUNTERS.map(c => `<li>${typeChip(c.by)}<span>${esc(c.text)}</span></li>`).join('')}</ul>

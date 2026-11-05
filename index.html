@@ -450,7 +450,6 @@ body.no-slip main { grid-column: 2 / -1; }
 .tc-rate { position: absolute; top: 3cqw; left: 4cqw; z-index: 1; display: grid; justify-items: center; line-height: 1; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.7); }
 .tc-rate b { font: 700 16cqw/.95 "Oswald", var(--sans); }
 .tc-rate small { font: 800 4.2cqw/1.3 var(--sans); letter-spacing: .08em; opacity: .85; }
-.tc-rate i { margin-top: 1cqw; padding: .6cqw 2.6cqw; border-radius: 2cqw; background: rgba(0,0,0,.45); font: 700 7cqw/1.1 "Oswald", var(--sans); font-style: normal; }
 .tc-stars { position: absolute; top: 4cqw; right: 3.4cqw; font-size: 6cqw; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
 .tc-stars .stars { color: #fff; } .tc-stars .stars i { color: rgba(255,255,255,.3); }
 .tc-plate { padding: 2.6cqw 3.4cqw 3cqw; border-radius: 0 0 2cqw 2cqw; background: #121418; color: #fff; display: grid; line-height: 1.05; text-align: left; }
@@ -473,7 +472,6 @@ body.no-slip main { grid-column: 2 / -1; }
   .tc-plate { padding: 2.4cqw 2.4cqw 3cqw; }
   .tc-last { font-size: max(8.5px, 10cqw); }
   .tc-rate b { font-size: max(12px, 17cqw); }
-  .tc-rate i { font-size: max(8px, 8cqw); }
   .tc-stats { gap: 1cqw 1.5cqw; margin-top: 1.6cqw; padding-top: 1.6cqw; }
   .st { display: grid; justify-items: center; gap: 0; padding-left: 0; }
   .st b { font-size: max(9px, 9cqw); }
@@ -490,7 +488,6 @@ body.no-slip main { grid-column: 2 / -1; }
   radial-gradient(circle at 50% 28%, #4A3810, #16120A 52%, #050505); }
 .r-legendary .tc-mark { color: rgba(245,196,81,.2); }
 .r-legendary .tc-rate, .r-legendary .tc-stars .stars { color: #F5C451; }
-.r-legendary .tc-rate i { background: rgba(0,0,0,.6); box-shadow: inset 0 0 0 1px rgba(245,196,81,.5); }
 .r-legendary .tc-stars .stars i { color: rgba(245,196,81,.3); }
 .r-legendary .tc-plate { background: #080808; box-shadow: inset 0 0 0 1px rgba(245,196,81,.4); }
 .r-legendary .tc-first, .r-legendary .st i { color: rgba(245,196,81,.7); }
@@ -1051,7 +1048,7 @@ function cardHtml(c, { fresh = false, i = 0, tonight = false, tag = null } = {})
       <div class="tc-art">
         <span class="tc-mark" aria-hidden="true">${esc(p.team)}</span>
         <img src="https://a.espncdn.com/i/headshots/nba/players/full/${encodeURIComponent(c.pid)}.png" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="tc-jersey" hidden>${jersey(p.team)}</span>
-        <span class="tc-rate" title="Fantasy points per game"><b>${p.gp ? Math.round(p.avg) : '–'}</b><small>FPPG</small><i>${esc(p.pos)}</i></span>
+        <span class="tc-rate" title="Fantasy points per game"><b>${p.gp ? Math.round(p.avg) : '–'}</b><small>FPPG</small></span>
         ${p.stars ? `<span class="tc-stars">${starsHtml(p.stars)}</span>` : ''}
       </div>
       <div class="tc-plate"><span class="tc-first">${esc(rest.length ? first : '')}</span><b class="tc-last">${esc(rest.length ? rest.join(' ') : first)}</b>

@@ -441,7 +441,7 @@ body.no-slip main { grid-column: 2 / -1; }
 .r-rare .tc-card { --frame: linear-gradient(135deg, #E9ECF0, #9AA3AE 30%, #F7F8FA 52%, #87909C 75%, #DCE0E5); }
 .r-epic .tc-card { --frame: linear-gradient(135deg, #F2C6FF, #A98BFF 25%, #8FE3FF 50%, #FFD48A 75%, #F29BD8); }
 .r-legendary .tc-card { --frame: linear-gradient(135deg, #FFF1B8, #D9A227 28%, #FFE58A 50%, #B8801A 74%, #F7D46B); }
-.tc-art { position: relative; overflow: hidden; border-radius: 2cqw; isolation: isolate;
+.tc-art { position: relative; overflow: hidden; border-radius: 2cqw 2cqw 0 0; isolation: isolate;
   background: repeating-linear-gradient(135deg, rgba(255,255,255,.06) 0 2px, transparent 2px 9px),
     radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--team) 75%, #fff), var(--team) 48%, color-mix(in srgb, var(--team) 45%, #000)); }
 .tc-mark { position: absolute; left: 0; right: 0; top: 14%; text-align: center; font: 700 36cqw/1 "Oswald", var(--sans); letter-spacing: -.02em; color: rgba(255,255,255,.16); z-index: -1; }
@@ -453,7 +453,7 @@ body.no-slip main { grid-column: 2 / -1; }
 .tc-rate i { margin-top: 1cqw; padding: .6cqw 2.6cqw; border-radius: 2cqw; background: rgba(0,0,0,.45); font: 700 7cqw/1.1 "Oswald", var(--sans); font-style: normal; }
 .tc-stars { position: absolute; top: 4cqw; right: 3.4cqw; font-size: 6cqw; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
 .tc-stars .stars { color: #fff; } .tc-stars .stars i { color: rgba(255,255,255,.3); }
-.tc-plate { margin-top: 2.8cqw; padding: 2.6cqw 3.4cqw 3cqw; border-radius: 2cqw; background: #121418; color: #fff; display: grid; line-height: 1.05; text-align: left; }
+.tc-plate { padding: 2.6cqw 3.4cqw 3cqw; border-radius: 0 0 2cqw 2cqw; background: #121418; color: #fff; display: grid; line-height: 1.05; text-align: left; }
 .tc-first { font: 500 5.4cqw/1.2 "Oswald", var(--sans); letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.7); min-height: 6.5cqw; }
 .tc-last { font: 700 9.4cqw/1.05 "Oswald", var(--sans); letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tc-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.4cqw 0; margin-top: 2.4cqw; padding-top: 2.4cqw; border-top: 1px solid rgba(255,255,255,.14); }

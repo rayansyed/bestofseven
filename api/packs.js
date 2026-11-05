@@ -1,4 +1,5 @@
-// POST /api/packs — opens a pack: { type: 'starter' | 'daily' | 'standard' | 'premium' } (starter if omitted).
+// POST /api/packs — opens a pack: { type: 'starter' | 'daily' | 'standard' | 'premium', gift?: true } (starter if
+// omitted). gift opens one of the player's gifted packs instead of paying coins.
 // Cards are created here, on the server, so nobody can hand themselves cards or coins from the browser.
 // Needs the FIREBASE_SERVICE_ACCOUNT environment variable in Vercel (the same JSON as the GitHub secret).
 const { initializeApp, cert, getApps } = require('firebase-admin/app');
@@ -20,7 +21,7 @@ module.exports = async (req, res) => {
   try {
     if (req.method !== 'POST') throw new HttpError(405, 'Use POST.');
     if (!process.env.FIREBASE_SERVICE_ACCOUNT) throw new HttpError(500, 'The server is missing FIREBASE_SERVICE_ACCOUNT. See README step 8.');
-    const type = (req.body && req.body.type) || 'starter';
+    const type = (req.body && req.body.type) || 'starter', gift = !!(req.body && req.body.gift) && type !== 'starter';
     if (type !== 'starter' && !PACKS[type]) throw new HttpError(400, 'Unknown pack.');
     const { auth, db } = admin();
     const token = (req.headers.authorization || '').replace(/^Bearer /, '');
@@ -44,13 +45,16 @@ module.exports = async (req, res) => {
         pack = { cards: makeStarterPack({ roster: roster.data().players, owned: new Set(owned.docs.map(d => d.data().pid)), packNo: opened, upcomingTeams }), boosters: [] };
         update = { starterPacks: opened + 1 };
       } else {
-        const def = PACKS[type], coins = u.coins || 0;
+        const def = PACKS[type], coins = u.coins || 0, gifts = (u.giftPacks || {})[type] || 0;
         if (opened < STARTER_PACKS) throw new HttpError(409, 'Open your starter packs first.');
-        if (type === 'daily' && u.dailyPack === today) throw new HttpError(409, 'You’ve opened today’s free pack. A new one comes tomorrow.');
-        if (coins < def.price) throw new HttpError(409, `You need ${def.price - coins} more coins for a ${def.name}.`);
+        // A gifted pack (giftPacks.<type> on the user, set by hand in the Firebase console) is free and
+        // doesn't count as the day's daily pack.
+        if (gift && gifts < 1) throw new HttpError(409, `You don’t have a gifted ${def.name}.`);
+        if (!gift && type === 'daily' && u.dailyPack === today) throw new HttpError(409, 'You’ve opened today’s free pack. A new one comes tomorrow.');
+        if (!gift && coins < def.price) throw new HttpError(409, `You need ${def.price - coins} more coins for a ${def.name}.`);
         // The daily pack's players have a game on the next slate that's still open.
         pack = makePack({ roster: roster.data().players, kind: type, teams: type === 'daily' ? open[0] || null : null });
-        update = type === 'daily' ? { dailyPack: today } : { coins: coins - def.price };
+        update = gift ? { [`giftPacks.${type}`]: gifts - 1 } : type === 'daily' ? { dailyPack: today } : { coins: coins - def.price };
       }
       const at = Date.now();
       const cards = pack.cards.map(c => { const ref = cardsRef.doc(); tx.set(ref, { ...c, at }); return { id: ref.id, ...c }; });

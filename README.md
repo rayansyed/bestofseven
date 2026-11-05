@@ -93,6 +93,7 @@ Import the repo with **Framework preset: Other** and no build command.
 In Vercel, open the project's **Settings → Environment Variables**, add `FIREBASE_SERVICE_ACCOUNT` with the same service-account JSON as the GitHub secret (make a new key in step 5 if you deleted it), and redeploy. Then open the site, sign in with your email, pick a display name, open your starter packs and enter tonight.
 
 ## Notes
+- **Gifting packs:** in the Firebase console, open `users/<uid>` and add a map field `giftPacks` with a number for each pack type to give: `daily`, `standard` or `premium` (for example `premium: 1`). The player sees them at the top of the Packs page with a count on the Packs tab, and opens them free; gifts don't use coins or the daily pack. Each one opened lowers its count. To give starter packs again, set `starterPacks` lower; to give coins, raise `coins`.
 - **First leaderboard query:** the leaderboard sorts `users` by `rp`. Firestore indexes single fields automatically, so no setup is needed. If the browser console ever shows a "requires an index" link, click it once.
 - **Late schedules:** GitHub treats cron times as best effort and can run them hours late or skip them, especially on free accounts. That delays forming groups and applying rank points, but never changes the results. **Run workflow** catches up immediately.
 - **Paused schedules:** GitHub pauses scheduled workflows after 60 days without repo activity. A commit, or **Run workflow**, turns them back on.

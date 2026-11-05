@@ -644,27 +644,37 @@ body.no-slip main { grid-column: 2 / -1; }
 .pack.p-premium { background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.28), transparent 45%), linear-gradient(150deg, #F5C451, #B8801A 55%, #3A2606); box-shadow: 0 18px 40px rgba(245,184,61,.28), inset 0 0 0 2px rgba(255,255,255,.18); }
 .pack.p-premium .pack-brand .seven { color: #B8801A; }
 .pack:disabled { opacity: .5; cursor: not-allowed; }
-.bc .bc-card { height: 100%; border-radius: 3cqw; display: grid; align-content: center; justify-items: center; gap: 3cqw; padding: 8cqw 6cqw; text-align: center; color: #fff;
-  background: radial-gradient(circle at 50% 32%, rgba(94,234,212,.35), transparent 55%), linear-gradient(160deg, #123B5C, #0B1E36 60%, #081424); box-shadow: inset 0 0 0 2px rgba(94,234,212,.55); }
-.bc.s-all .bc-card { background: radial-gradient(circle at 50% 32%, rgba(245,196,81,.4), transparent 55%), linear-gradient(160deg, #4A3410, #22170A 60%, #140D05); box-shadow: inset 0 0 0 2px rgba(245,196,81,.7); }
-.bc-kind { font: 700 max(8px, 5.5cqw)/1 "Oswald", var(--sans); letter-spacing: .22em; text-transform: uppercase; color: rgba(94,234,212,.9); }
-.bc.s-all .bc-kind { color: #F5C451; }
-.bc-icon { font-size: 28cqw; line-height: 1.1; filter: drop-shadow(0 4px 10px rgba(0,0,0,.5)); }
-.bc-name { font: 700 max(11px, 9.5cqw)/1.1 "Oswald", var(--sans); text-transform: uppercase; letter-spacing: .03em; }
-.bc-fx { font: 700 max(12px, 11cqw)/1 "Oswald", var(--sans); color: #5EEAD4; }
-.bc.s-all .bc-fx { color: #F5C451; }
-.bc-game { font-size: max(9px, 5.6cqw); color: rgba(255,255,255,.7); line-height: 1.3; }
-.bst-chip { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: rgba(94,234,212,.16); color: #5EEAD4; white-space: nowrap; }
-.spot-boost { position: absolute; left: 50%; top: 0; z-index: 2; transform: translate(-50%, -55%); padding: 2px 7px; border-radius: 6px; white-space: nowrap;
-  background: #0B1E36; color: #5EEAD4; box-shadow: 0 0 0 1px rgba(94,234,212,.6), 0 3px 8px rgba(0,0,0,.5); font: 700 max(9px, 8cqw)/1.3 "Oswald", var(--sans); }
+/* Booster cards: Nytro Boost bottles on a retro promo card. --fl is the flavour colour. */
+.bc .bc-card { position: relative; height: 100%; border-radius: 3cqw; padding: 5cqw; background: var(--fl); box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
+.bc-tab { position: absolute; top: 5.5cqw; right: 7cqw; font: 700 max(8px, 6cqw)/1 "Oswald", var(--sans); font-style: italic; letter-spacing: .08em; color: #fff; }
+.bc-panel { height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto auto auto; justify-items: center; text-align: center; gap: 1.2cqw;
+  padding: 5cqw 5cqw 4cqw; background: #fff; color: #15171A; border-radius: 3cqw 3cqw 3cqw 3cqw;
+  clip-path: polygon(0 0, 64% 0, 70% 7cqw, 100% 7cqw, 100% 100%, 0 100%); }
+.bc-brand { display: grid; justify-items: center; line-height: .9; transform: skewX(-10deg); }
+.bc-brand b { font: 700 max(14px, 15cqw)/.95 "Oswald", var(--sans); letter-spacing: .01em; color: #15171A; -webkit-text-stroke: .4cqw #15171A; }
+.bc-brand i { font: 700 max(7px, 5.4cqw)/1.2 "Oswald", var(--sans); font-style: normal; letter-spacing: .5em; margin-right: -.5em; color: var(--fl); }
+.bc-bottle { height: 100%; max-height: 52cqw; width: auto; min-height: 0; filter: drop-shadow(0 2cqw 2.4cqw rgba(0,0,0,.25)); }
+.bc-fx { font: 700 max(12px, 10cqw)/1 "Oswald", var(--sans); color: var(--fl); }
+.bc-name { font: 700 max(10px, 7cqw)/1.1 "Oswald", var(--sans); text-transform: uppercase; letter-spacing: .03em; }
+.bc-flavor { font-size: max(8px, 4.8cqw); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #8A8D93; }
+.bc-game { font-size: max(8.5px, 5cqw); color: #5D6168; line-height: 1.3; }
+.nb-bottle { display: block; }
+.bst-chip .nb-bottle, .spot-boost .nb-bottle { width: auto; height: 1.35em; flex: none; }
+.bst-chip { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 800; padding: 2px 7px 2px 4px; border-radius: 6px; white-space: nowrap;
+  background: color-mix(in srgb, var(--fl) 14%, #fff); color: color-mix(in srgb, var(--fl) 75%, #000); }
+
+.spot-boost { position: absolute; left: 50%; top: 0; z-index: 2; transform: translate(-50%, -55%); display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px 2px 4px; border-radius: 6px; white-space: nowrap;
+  background: #fff; color: #15171A; box-shadow: 0 0 0 1.5px var(--fl), 0 3px 8px rgba(28,30,34,.25); font: 700 max(9px, 8cqw)/1.3 "Oswald", var(--sans); }
 .pk-sub { font-size: 15px; margin: 18px 0 8px; }
 .bst-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
 .bst { display: grid; grid-template-columns: auto 1fr; column-gap: 8px; align-items: center; text-align: left; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--chip-2); background: var(--panel-2); color: var(--ink); font-size: 18px; }
 .bst b { font-size: 13px; } .bst small { grid-column: 2; font-size: 11.5px; color: var(--muted); font-weight: 600; }
-.bst:hover:not(:disabled) { border-color: #5EEAD4; }
-.bst.on { border-color: #5EEAD4; background: rgba(94,234,212,.1); }
+
 .bst:disabled { opacity: .5; cursor: not-allowed; }
-.bst { grid-template-rows: auto auto; } .bst-i { grid-row: 1 / span 2; font-size: 20px; }
+.bst { grid-template-rows: auto auto; } .bst-i { grid-row: 1 / span 2; display: grid; place-items: center; }
+.bst-i .nb-bottle { width: auto; height: 30px; }
+.bst:hover:not(:disabled), .bst.on { border-color: var(--ink); }
+.bst.on { background: var(--panel-2); }
 .pc-sell { justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .btn.danger { background: var(--bad); color: #2A0606; }
 @media (max-width: 700px) {
@@ -758,9 +768,7 @@ h1 { font-size: 30px; line-height: 1.15; }
 #pcard { border-color: var(--line); box-shadow: 0 24px 60px rgba(28,30,34,.25); }
 #pcard::backdrop { background: rgba(28,30,34,.45); }
 .face { box-shadow: inset 0 0 0 1px rgba(28,30,34,.1); }
-.bst-chip { background: var(--teal-soft); color: var(--teal); }
-.bst:hover:not(:disabled), .bst.on { border-color: var(--teal); }
-.bst.on { background: var(--teal-soft); }
+
 .btn.danger { color: #fff; }
 .gift-head { box-shadow: inset 0 0 0 1.5px rgba(45,91,216,.4); }
 @media (max-width: 1180px) { .side { align-items: flex-start; } .nav-item { border: 1px solid var(--line); } }
@@ -1126,16 +1134,44 @@ function cardHtml(c, { fresh = false, i = 0, tonight = false, tag = null } = {})
 
 /* ---------- Boosters ---------- */
 const BOOST_STAT = { pts: 'PTS', reb: 'REB', ast: 'AST', stl: 'STL', blk: 'BLK', tpm: '3PM', fgm: 'FG%', ftm: 'FTM', to: 'TO', all: 'all stats' };
-const BOOST_ICON = { pts: '🔥', reb: '🧲', ast: '🤝', stl: '🖐️', blk: '🚫', tpm: '💧', fgm: '🪶', ftm: '🎯', to: '🔐', all: '⭐' };
+// Boosters are bottles of Nytro Boost, a made-up sports drink: each stat is a flavour with its own colour.
+const FLAVOR = {
+  pts: ['Fire Orange', '#FF6A13'], reb: ['Grape Rush', '#7B3FD3'], ast: ['Blue Ice', '#1E7FE0'], stl: ['Lemon Lime', '#7DBB10'],
+  blk: ['Fruit Punch', '#E3283C'], tpm: ['Glacier', '#14AFC4'], ftm: ['Mango', '#F5A300'], fgm: ['Cool Mint', '#21B67F'],
+  to: ['Arctic Chill', '#7F93AA'], all: ['Gold Rush', '#C9951F'],
+};
+const flavorOf = stat => FLAVOR[stat] || ['Original', '#FF6A13'];
+// A sports-drink bottle in the flavour's colour. label: false drops the wordmark for the small chip version.
+function bottleSvg(stat, { label = true, cls = '' } = {}) {
+  const c = flavorOf(stat)[1], id = `nb-${stat}${label ? '' : '-s'}`;
+  return `<svg class="nb-bottle ${cls}" viewBox="0 0 60 120" aria-hidden="true">
+    <defs><linearGradient id="${id}" x1="0" x2="1"><stop offset="0" stop-color="color-mix(in srgb, ${c} 70%, #fff)" style="stop-color:color-mix(in srgb, ${c} 70%, #fff)"/><stop offset=".45" stop-color="${c}"/><stop offset="1" stop-color="color-mix(in srgb, ${c} 60%, #000)" style="stop-color:color-mix(in srgb, ${c} 60%, #000)"/></linearGradient></defs>
+    <rect x="18" y="2" width="24" height="13" rx="3" fill="#F3F2EE" stroke="rgba(0,0,0,.28)"/>
+    <path d="M22 5v8M26 5v8M30 5v8M34 5v8M38 5v8" stroke="rgba(0,0,0,.12)"/>
+    <path d="M20 15H40V20C40 24 50 26 50 36V58C50 62 46 64 46 68C46 72 50 74 50 78V108C50 114 46 118 40 118H20C14 118 10 114 10 108V78C10 74 14 72 14 68C14 64 10 62 10 58V36C10 26 20 24 20 20Z" fill="url(#${id})" stroke="rgba(0,0,0,.25)"/>
+    ${label ? `<rect x="10.5" y="38" width="39" height="18" fill="#fff"/><rect x="10.5" y="56" width="39" height="2.5" fill="#111"/>
+    <text x="30" y="51" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="700" font-size="10.5" letter-spacing=".5" fill="#111" transform="skewX(-10) translate(9 0)">NYTRO</text>` : ''}
+    <path d="M17 100L30 89L43 100M17 109L30 98L43 109" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="${label ? 3.2 : 5}" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="14" y="62" width="4" height="44" rx="2" fill="#fff" opacity=".28"/>
+  </svg>`;
+}
 const BOOST_WORD = { pts: 'points', reb: 'rebounds', ast: 'assists', stl: 'steals', blk: 'blocks', tpm: 'threes', ftm: 'free throws made' };
 const boostLabel = b => `${b.stat === 'to' ? '−' : '+'}${Math.round(b.pct * 100)}% ${BOOST_STAT[b.stat] || b.stat}`;
 const boostText = b => { const n = Math.round(b.pct * 100); return b.stat === 'all' ? `Lifts all of a player’s stats by ${n}% for one game.` : b.stat === 'to' ? `Cuts a player’s turnovers by ${n}% for one game.` : b.stat === 'fgm' ? `Lifts a player’s made shots, and so his FG%, by ${n}% for one game.` : `Lifts a player’s ${BOOST_WORD[b.stat]} by ${n}% for one game.`; };
-const boostChip = b => b ? `<span class="bst-chip" title="${esc(b.name)}: ${esc(boostText(b))}">${BOOST_ICON[b.stat] || '⚡'} ${boostLabel(b)}</span>` : '';
+const boostChip = b => b ? `<span class="bst-chip" style="--fl:${flavorOf(b.stat)[1]}" title="Nytro Boost ${esc(b.name)}: ${esc(boostText(b))}">${bottleSvg(b.stat, { label: false })} ${boostLabel(b)}</span>` : '';
 const boostOn = i => boosters.find(x => x.id === ui.draftBoosts[i]) || null;
 function boosterHtml(b, { fresh = false, i = 0, tag = null } = {}) {
-  return `<div class="tc bc s-${esc(b.stat)} ${fresh ? 'fresh' : ''}" style="--i:${i}" title="${esc(boostText(b))}">
-    <div class="bc-card"><span class="bc-kind">Booster</span><span class="bc-icon" aria-hidden="true">${BOOST_ICON[b.stat] || '⚡'}</span>
-      <b class="bc-name">${esc(b.name)}</b><span class="bc-fx">${boostLabel(b)}</span><span class="bc-game">${esc(boostText(b))}</span></div>
+  // Styled like an old sports-drink promo card: a flavour-coloured border, a white panel with a tab, the bottle.
+  const [flavor, color] = flavorOf(b.stat);
+  return `<div class="tc bc s-${esc(b.stat)} ${fresh ? 'fresh' : ''}" style="--i:${i};--fl:${color}" title="Nytro Boost ${esc(b.name)}: ${esc(boostText(b))}">
+    <div class="bc-card"><span class="bc-tab">BOOST</span>
+      <div class="bc-panel">
+        <span class="bc-brand"><b>NYTRO</b><i>BOOST</i></span>
+        ${bottleSvg(b.stat, { cls: 'bc-bottle' })}
+        <span class="bc-fx">${boostLabel(b)}</span>
+        <b class="bc-name">${esc(b.name)}</b><span class="bc-flavor">${esc(flavor)}</span>
+        <span class="bc-game">${esc(boostText(b))}</span>
+      </div></div>
     ${tag ? `<span class="tc-tonight t-${tag[1]}">${esc(tag[0])}</span>` : ''}
   </div>`;
 }
@@ -1154,7 +1190,7 @@ function reservedBoosters() {
 function boosterPick(i) {
   const here = ui.draftBoosts[i], reserved = reservedBoosters();
   const elsewhere = id => Object.entries(ui.draftBoosts).find(([k, v]) => v === id && +k !== i)?.[0];
-  const row = (b, action, note, off) => `<button class="bst ${action === 'unboost' ? 'on' : ''}" ${off ? 'disabled' : `data-action="${action}" data-id="${esc(b.id)}" data-i="${i}"`}><span class="bst-i" aria-hidden="true">${BOOST_ICON[b.stat] || '⚡'}</span><b>${esc(b.name)}</b><small>${boostLabel(b)}${note}</small></button>`;
+  const row = (b, action, note, off) => `<button class="bst ${action === 'unboost' ? 'on' : ''}" ${off ? 'disabled' : `data-action="${action}" data-id="${esc(b.id)}" data-i="${i}"`}><span class="bst-i" style="--fl:${flavorOf(b.stat)[1]}">${bottleSvg(b.stat, { label: false })}</span><b>${esc(b.name)}</b><small>${boostLabel(b)}${note}</small></button>`;
   const list = boosters.map(b => reserved.has(b.id) ? row(b, '', ` · set for ${dayLabel(reserved.get(b.id)).split(',')[0]}`, true)
     : here === b.id ? row(b, 'unboost', ' · on this card, tap to take off')
     : row(b, 'boost', elsewhere(b.id) != null ? ` · moves from ${spotTag(SLOTS[elsewhere(b.id)])}` : '')).join('');
@@ -1504,7 +1540,7 @@ function renderCourt() {
       <span class="slot-card"><b>+</b><span>${fill.has(i) ? spotName(slot) : 'No card fits'}</span></span><span class="spot-tag">${spotTag(slot)}</span></button>`;
     const warn = isOut(p) ? 'OUT' : !owns(p.id) ? 'NOT YOURS' : '';
     return `<button class="spot filled" style="--x:${x}%;--y:${y}%" data-action="slot" data-i="${i}" aria-label="${spotName(slot)}: ${esc(p.name)}, ${f1(p.avg)} fantasy points per game${warn ? ', ' + warn.toLowerCase() : ''}. Change card">
-      ${boostOn(i) ? `<span class="spot-boost" title="${esc(boostOn(i).name)}">${BOOST_ICON[boostOn(i).stat] || '⚡'} ${boostLabel(boostOn(i))}</span>` : ''}
+      ${boostOn(i) ? `<span class="spot-boost" style="--fl:${flavorOf(boostOn(i).stat)[1]}" title="Nytro Boost ${esc(boostOn(i).name)}">${bottleSvg(boostOn(i).stat, { label: false })} ${boostLabel(boostOn(i))}</span>` : ''}
       ${cardHtml(cards.get(p.id) || { pid: p.id, rarity: 'common', name: p.name, team: p.team, pos: p.pos })}
       <span class="spot-tag ${warn ? 'warn' : ''}">${spotTag(slot)}${warn ? `<i>${warn}</i>` : ''}</span></button>`;
   }).join('');

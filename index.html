@@ -7,7 +7,7 @@
 <meta name="description" content="An NBA card battler: collect player cards, set a lineup every game night and win nine stat categories against one opponent each week to climb from Bronze to Elite.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Oswald:wght@500;700&family=Permanent+Marker&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Oswald:wght@500;700&display=swap">
 <style>
 :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 body { margin: 0; }
@@ -585,7 +585,7 @@ body.no-slip main { grid-column: 2 / -1; }
 .court-floor .rim { fill: none; stroke: #E8590C; stroke-width: 3; }
 .court-floor .play { fill: none; stroke: #2A2D33; stroke-opacity: .34; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .court-floor .play .dash { stroke-dasharray: 6 7; }
-.court-floor .note { font: 400 30px "Permanent Marker", var(--sans); fill: #2A2D33; fill-opacity: .6; }
+.court-floor .note { font: 700 30px "Oswald", var(--sans); fill: #2A2D33; fill-opacity: .5; }
 
 /* A spot is a card; its size and type scale with the court (cqw = 1% of the card's width). */
 .spot { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); z-index: 1; width: 26%;
@@ -714,7 +714,6 @@ button.wn:hover { background: var(--chip); }
   --pill: #1C1E22; --pill-ink: #fff;
   --a: #2D5BD8; --b: #E8590C;
   --t0: #B06A3B; --t1: #7D8896; --t2: #B88A12; --t3: #13908F; --t4: #4A73D8; --t5: #7F8F00;
-  --hand: "Permanent Marker", "Manrope", cursive;
   color-scheme: light;
 }
 .panel, .card, .hero-card, .slip-card, .rank-card, .streak { border: 1px solid var(--line); box-shadow: 0 1px 2px rgba(28,30,34,.04); }
@@ -722,13 +721,11 @@ button.wn:hover { background: var(--chip); }
 .invite { border-color: var(--line); }
 .champ { border-color: rgba(160,106,0,.45); }
 
-/* Marker headings, like a coach's notes */
-h1, .list-head h2, .notice h2, .form h2, .invite h2, .brand, .pack-brand, .st-title { font-family: var(--hand); font-weight: 400; letter-spacing: .02em; }
-h1 { font-size: 32px; line-height: 1.15; }
-.list-head h2 { font-size: 21px; }
-.brand { font-size: 23px; }
-.brand .seven, .pack-brand .seven { font-family: var(--hand); transform: rotate(-4deg); border-radius: 6px; }
-.hero-card h1 { padding-bottom: 12px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 12'%3E%3Cpath d='M2 7C40 2 80 10 120 5S168 7 178 4' fill='none' stroke='%231C1E22' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M10 10.5C60 7.5 110 10.5 150 8.5' fill='none' stroke='%231C1E22' stroke-width='1.3' stroke-linecap='round' opacity='.55'/%3E%3C/svg%3E") no-repeat left bottom / 170px 12px; }
+/* Headings: plain, heavy and tight, so the playbook doodles and the cards carry the character */
+h1, .list-head h2, .notice h2, .form h2, .invite h2, .st-title { font-weight: 800; letter-spacing: -.025em; }
+h1 { font-size: 30px; line-height: 1.15; }
+.list-head h2 { font-size: 19px; }
+.hero-card h1 { padding-bottom: 12px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 12'%3E%3Cpath d='M2 7C40 2 80 10 120 5S168 7 178 4' fill='none' stroke='%231C1E22' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M10 10.5C60 7.5 110 10.5 150 8.5' fill='none' stroke='%231C1E22' stroke-width='1.3' stroke-linecap='round' opacity='.55'/%3E%3C/svg%3E") no-repeat left bottom / 96px 9px; }
 .eyebrow { text-transform: uppercase; letter-spacing: .08em; font-size: 11px; font-weight: 700; }
 
 /* A faint play drawn in the corner of the page headers */
@@ -741,7 +738,6 @@ h1 { font-size: 32px; line-height: 1.15; }
 
 /* Spots on the court: pencilled-in slots */
 .slot-card { background: rgba(255,255,255,.78); border: 2px dashed #2A2D33; color: var(--ink); backdrop-filter: none; }
-.slot-card b { font-family: var(--hand); font-weight: 400; }
 .spot.empty.open .slot-card { border-color: var(--ink); }
 @keyframes spot-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(28,30,34,.35); } 50% { box-shadow: 0 0 0 8px rgba(28,30,34,0); } }
 .spot-tag { background: var(--ink); box-shadow: 0 2px 6px rgba(28,30,34,.25); }

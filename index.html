@@ -7,7 +7,7 @@
 <meta name="description" content="An NBA card battler: collect player cards, set a lineup every game night and win nine stat categories against one opponent each week to climb from Bronze to Elite.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Oswald:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Oswald:wght@500;700&family=Permanent+Marker&display=swap">
 <style>
 :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 body { margin: 0; }
@@ -570,24 +570,23 @@ body.no-slip main { grid-column: 2 / -1; }
 }
 @media (prefers-reduced-motion: reduce) { .tc.fresh, .pack.busy, .r-legendary .tc-card::after { animation: none; } }
 
-/* The court: maple hardwood, cards in formation like a squad screen */
+/* The court: a pencil playbook sketch, cards in formation on top */
 .court-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 4px 22px 12px; min-height: 46px; }
 .court-lock { font-size: 12px; font-weight: 700; color: var(--muted); margin-right: 4px; }
 .court-act { margin-left: auto; display: flex; gap: 6px; }
 .court { position: relative; aspect-ratio: 540 / 490; width: calc(100% - 44px); max-width: 620px; margin: 0 auto 22px; border-radius: 12px; overflow: hidden;
-  background: #12213D; box-shadow: 0 16px 36px rgba(0,0,0,.45); }
-.court::after { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 60px rgba(40,20,5,.35); }
+  background: #FCFBF8; box-shadow: inset 0 0 0 1px var(--line); }
 .court-floor { position: absolute; inset: 0; width: 100%; height: 100%; }
-.court-floor .apron { fill: #12213D; }
-.court-floor .apron-text { font: 700 11px "Oswald", var(--sans); letter-spacing: 6px; fill: #F5B83D; }
-.court-floor .ln { fill: none; stroke: #fff; stroke-width: 3; }
-.court-floor .ln.dash { stroke-dasharray: 9 7; }
-.court-floor .arc3 { fill: none; stroke: #1B4FA8; stroke-width: 4; }
-.court-floor .paint { fill: #1B4FA8; stroke: #fff; stroke-width: 3; }
-.court-floor .board { stroke: #fff; stroke-width: 5; }
-.court-floor .rim { fill: none; stroke: #FF7A1A; stroke-width: 3.5; }
-.court-floor .mid { fill: #1B4FA8; stroke: #fff; stroke-width: 3; }
-.court-floor .mid-7 { font: 700 30px "Oswald", var(--sans); fill: #fff; }
+.court-floor .paper { fill: #FCFBF8; }
+.court-floor .grid { fill: none; stroke: #1C1E22; stroke-opacity: .05; stroke-width: 1; }
+.court-floor .ln { fill: none; stroke: #2A2D33; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.court-floor .ln.thin { stroke-width: 1.6; }
+.court-floor .ln.dash { stroke-dasharray: 8 8; }
+.court-floor .rim { fill: none; stroke: #E8590C; stroke-width: 3; }
+.court-floor .play { fill: none; stroke: #2A2D33; stroke-opacity: .34; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.court-floor .play .dash { stroke-dasharray: 6 7; }
+.court-floor .note { font: 400 30px "Permanent Marker", var(--sans); fill: #2A2D33; fill-opacity: .6; }
+
 /* A spot is a card; its size and type scale with the court (cqw = 1% of the card's width). */
 .spot { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); z-index: 1; width: 26%;
   border: 0; padding: 0; background: none; color: inherit; container-type: inline-size; pointer-events: none; }
@@ -617,7 +616,7 @@ body.no-slip main { grid-column: 2 / -1; }
   .court-bar { padding: 2px 14px 10px; }
   .court { width: calc(100% - 12px); margin-bottom: 18px; border-radius: 10px; }
   .spot { width: 28%; }
-  .court-floor .apron-text { letter-spacing: 4px; }
+
   .pk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 }
 /* Phones: while setting a lineup, the court leads the page, then the week, then everything else. */
@@ -702,6 +701,76 @@ button.wn:hover { background: var(--chip); }
   .cats.mini { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 4px 16px 12px; }
   .wk-nights { gap: 4px; padding: 6px 16px 14px; }
   .wn b { font-size: 12px; }
+}
+/* ---------- Playbook theme ----------
+   Clean paper and pencil, with the look of a coach's whiteboard: ink-black controls, marker headings, faint
+   X's-and-O's doodles. The cards and packs are the only full colour on the page. */
+:root {
+  --bg: #F5F3EE; --panel: #FFFFFF; --panel-2: #F4F2ED; --chip: #ECE9E3; --chip-2: #DEDAD2; --line: #E6E2DA;
+  --ink: #1C1E22; --muted: #676B72; --dim: #9B9EA4;
+  --accent: #1C1E22; --accent-2: #2D5BD8; --accent-soft: rgba(45,91,216,.08);
+  --teal: #0F8A7C; --teal-soft: rgba(15,138,124,.1); --tag: #A06A00; --tag-ink: #fff;
+  --good: #15803D; --bad: #D03B2F; --live: #B45309;
+  --pill: #1C1E22; --pill-ink: #fff;
+  --a: #2D5BD8; --b: #E8590C;
+  --t0: #B06A3B; --t1: #7D8896; --t2: #B88A12; --t3: #13908F; --t4: #4A73D8; --t5: #7F8F00;
+  --hand: "Permanent Marker", "Manrope", cursive;
+  color-scheme: light;
+}
+.panel, .card, .hero-card, .slip-card, .rank-card, .streak { border: 1px solid var(--line); box-shadow: 0 1px 2px rgba(28,30,34,.04); }
+.streak { border-color: rgba(180,83,9,.3); }
+.invite { border-color: var(--line); }
+.champ { border-color: rgba(160,106,0,.45); }
+
+/* Marker headings, like a coach's notes */
+h1, .list-head h2, .notice h2, .form h2, .invite h2, .brand, .pack-brand, .st-title { font-family: var(--hand); font-weight: 400; letter-spacing: .02em; }
+h1 { font-size: 32px; line-height: 1.15; }
+.list-head h2 { font-size: 21px; }
+.brand { font-size: 23px; }
+.brand .seven, .pack-brand .seven { font-family: var(--hand); transform: rotate(-4deg); border-radius: 6px; }
+.hero-card h1 { padding-bottom: 12px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 12'%3E%3Cpath d='M2 7C40 2 80 10 120 5S168 7 178 4' fill='none' stroke='%231C1E22' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M10 10.5C60 7.5 110 10.5 150 8.5' fill='none' stroke='%231C1E22' stroke-width='1.3' stroke-linecap='round' opacity='.55'/%3E%3C/svg%3E") no-repeat left bottom / 170px 12px; }
+.eyebrow { text-transform: uppercase; letter-spacing: .08em; font-size: 11px; font-weight: 700; }
+
+/* A faint play drawn in the corner of the page headers */
+.hero-card::before { -webkit-mask-image: none; mask-image: none; opacity: .2; inset: 0 12px 0 auto; width: min(300px, 55%);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 140' fill='none' stroke='%231C1E22' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M30 30l12 12M42 30L30 42M92 16l12 12M104 16L92 28M150 40l12 12M162 40l-12 12M206 20l12 12M218 20l-12 12'/%3E%3Ccircle cx='60' cy='104' r='8'/%3E%3Ccircle cx='122' cy='116' r='8'/%3E%3Ccircle cx='182' cy='100' r='8'/%3E%3Ccircle cx='232' cy='112' r='8'/%3E%3Cpath d='M62 94C68 66 80 54 94 44' stroke-dasharray='5 6'/%3E%3Cpath d='M86 44l9-1-2 9'/%3E%3Cpath d='M184 90C192 72 200 60 208 48'/%3E%3Cpath d='M201 50l8-3 1 9'/%3E%3Cpath d='M126 106C140 86 148 74 154 62' stroke-dasharray='5 6'/%3E%3Cpath d='M147 66l8-5 1 9'/%3E%3C/svg%3E") no-repeat center / contain; }
+
+/* Empty states get a little X-to-O play */
+.empty:not(.spot)::before { content: ""; display: block; width: 92px; height: 30px; margin: 0 auto 10px; opacity: .4;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 92 30' fill='none' stroke='%231C1E22' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M6 9l12 12M18 9L6 21'/%3E%3Cpath d='M26 15C40 6 54 6 66 13' stroke-dasharray='4 5'/%3E%3Cpath d='M59 8l8 5-8 4'/%3E%3Ccircle cx='80' cy='15' r='7'/%3E%3C/svg%3E") no-repeat center / contain; }
+
+/* Spots on the court: pencilled-in slots */
+.slot-card { background: rgba(255,255,255,.78); border: 2px dashed #2A2D33; color: var(--ink); backdrop-filter: none; }
+.slot-card b { font-family: var(--hand); font-weight: 400; }
+.spot.empty.open .slot-card { border-color: var(--ink); }
+@keyframes spot-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(28,30,34,.35); } 50% { box-shadow: 0 0 0 8px rgba(28,30,34,0); } }
+.spot-tag { background: var(--ink); box-shadow: 0 2px 6px rgba(28,30,34,.25); }
+
+/* Cards sit on paper: lighter shadows, a pale sleeve */
+.tc { background: linear-gradient(155deg, #FFFFFF, #ECEAE4 55%, #F7F6F2); box-shadow: inset 0 0 0 1px rgba(28,30,34,.1), 0 8px 18px rgba(28,30,34,.16), 0 1px 2px rgba(28,30,34,.1); }
+.r-legendary { box-shadow: inset 0 0 0 1px rgba(28,30,34,.1), 0 10px 24px rgba(184,128,26,.35); }
+.pick.on .tc { box-shadow: 0 0 0 3px var(--ink), 0 8px 18px rgba(28,30,34,.16); }
+.pack { box-shadow: 0 14px 28px rgba(28,30,34,.2), inset 0 0 0 2px rgba(255,255,255,.14) !important; }
+
+/* Spots that were tuned for the dark look */
+.tabs input, .tabs select, .field input[type=text], .field select, .linkbox input { background: var(--panel); border-color: var(--chip-2); }
+.race, .final { background: var(--panel-2); }
+.chip, .st-chip, .arch { color: var(--ink); }
+.info, .pc-bio, .st-line, .arch-list li { color: var(--muted); }
+.badge.tag, .st-chip.tag { background: rgba(160,106,0,.12); }
+.leg-sal .stars, .r-trail .stars, .pc-tags .stars { color: var(--tag); }
+#pcard { border-color: var(--line); box-shadow: 0 24px 60px rgba(28,30,34,.25); }
+#pcard::backdrop { background: rgba(28,30,34,.45); }
+.face { box-shadow: inset 0 0 0 1px rgba(28,30,34,.1); }
+.bst-chip { background: var(--teal-soft); color: var(--teal); }
+.bst:hover:not(:disabled), .bst.on { border-color: var(--teal); }
+.bst.on { background: var(--teal-soft); }
+.btn.danger { color: #fff; }
+.gift-head { box-shadow: inset 0 0 0 1.5px rgba(45,91,216,.4); }
+@media (max-width: 1180px) { .side { align-items: flex-start; } .nav-item { border: 1px solid var(--line); } }
+@media (max-width: 860px) {
+  .dock { background: var(--panel); border-top-color: var(--line); box-shadow: 0 -4px 16px rgba(28,30,34,.06); }
+  body.sheet-open .sheet-bg { background: rgba(28,30,34,.4); }
 }
 </style>
 </head>
@@ -1389,38 +1458,41 @@ function heroCard(day) {
 }
 
 /* ---------- The court: tap a spot, pick a card ---------- */
-// A maple half court, hoop at the top: 500 × 470 is 50 × 47 feet, inside a 20-unit apron.
+// A half court drawn like a coach's playbook, hoop at the top: 500 × 470 is 50 × 47 feet, inside a 20-unit margin.
 // Cards line up in formation like a squad screen: the frontcourt (forwards and the center) near the hoop,
 // the backcourt (guards and the sixth man) behind. Spots are x%, y% for G, G, F, F, C, UTIL.
+// The faint X's, O's and arrows run along the band between the two rows of cards, where they stay visible.
 const SPOTS = [[18, 74], [82, 74], [18, 28], [82, 28], [50, 28], [50, 74]];
 const COURT_SVG = `<svg class="court-floor" viewBox="0 0 540 490" aria-hidden="true">
   <defs>
-    <pattern id="planks" width="48" height="216" patternUnits="userSpaceOnUse" x="20" y="20">
-      <rect width="12" height="216" fill="#E0B07A"/><rect x="12" width="12" height="216" fill="#D7A46C"/>
-      <rect x="24" width="12" height="216" fill="#E6BC88"/><rect x="36" width="12" height="216" fill="#DBA972"/>
-      <rect y="70" width="12" height="90" fill="#D39D62"/><rect x="12" y="150" width="12" height="66" fill="#E2B37E"/>
-      <rect x="24" y="20" width="12" height="80" fill="#DCA96F"/><rect x="36" y="120" width="12" height="70" fill="#E5B985"/>
-      <path d="M12 0V216M24 0V216M36 0V216M48 0V216" stroke="#9C6A35" stroke-opacity=".35" stroke-width=".7"/>
-      <path d="M0 70H12M0 160H12M12 40H24M12 150H24M24 20H36M24 100H36M24 190H36M36 120H48M36 190H48" stroke="#8A5A2B" stroke-opacity=".45" stroke-width=".8"/>
-    </pattern>
-    <radialGradient id="gloss" cx="50%" cy="22%" r="75%"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".6" stop-color="#fff" stop-opacity=".04"/><stop offset="1" stop-color="#000" stop-opacity=".12"/></radialGradient>
+    <filter id="pencil" x="-2%" y="-2%" width="104%" height="104%"><feTurbulence type="fractalNoise" baseFrequency=".018" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.6"/></filter>
+    <pattern id="paper-grid" width="20" height="20" patternUnits="userSpaceOnUse"><path class="grid" d="M20 0H0V20"/></pattern>
   </defs>
-  <rect class="apron" width="540" height="490"/>
-  <text class="apron-text" x="270" y="14.5" text-anchor="middle">BEST OF 7</text>
-  <rect x="20" y="20" width="500" height="470" fill="url(#planks)"/>
-  <rect x="20" y="20" width="500" height="470" fill="url(#gloss)"/>
-  <path class="arc3" d="M50 20V160A237.5 237.5 0 0 0 490 160V20"/>
-  <rect class="paint" x="190" y="20" width="160" height="190"/>
-  <path class="ln" d="M182 90H190M182 100H190M182 130H190M182 160H190M350 90H358M350 100H358M350 130H358M350 160H358"/>
-  <path class="ln" d="M210 210A60 60 0 0 0 330 210"/>
-  <path class="ln dash" d="M210 210A60 60 0 0 1 330 210"/>
-  <path class="ln" d="M230 72A40 40 0 0 0 310 72"/>
-  <line class="board" x1="240" y1="58" x2="300" y2="58"/>
-  <circle class="rim" cx="270" cy="72" r="8"/>
-  <path class="mid" d="M210 490A60 60 0 0 1 330 490"/>
-  <text class="mid-7" x="270" y="486" text-anchor="middle">7</text>
-  <rect class="ln" x="20" y="20" width="500" height="470"/>
+  <rect class="paper" width="540" height="490"/>
+  <rect width="540" height="490" fill="url(#paper-grid)"/>
+  <g filter="url(#pencil)">
+    <rect class="ln" x="20" y="20" width="500" height="470"/>
+    <path class="ln" d="M50 20V160A237.5 237.5 0 0 0 490 160V20"/>
+    <rect class="ln" x="190" y="20" width="160" height="190"/>
+    <path class="ln thin" d="M182 90H190M182 100H190M182 130H190M182 160H190M350 90H358M350 100H358M350 130H358M350 160H358"/>
+    <path class="ln" d="M210 210A60 60 0 0 0 330 210"/>
+    <path class="ln dash" d="M210 210A60 60 0 0 1 330 210"/>
+    <path class="ln thin" d="M230 72A40 40 0 0 0 310 72"/>
+    <path class="ln" d="M240 58H300"/>
+    <circle class="rim" cx="270" cy="72" r="8"/>
+    <path class="ln" d="M210 490A60 60 0 0 1 330 490"/>
+    <g class="play">
+      <circle cx="44" cy="250" r="8"/><path class="dash" d="M54 246C84 232 116 234 146 246"/><path d="M138 238l9 8-11 4"/>
+      <path d="M176 243l14 14M190 243l-14 14"/>
+      <circle cx="270" cy="250" r="8"/><path class="dash" d="M262 242C246 236 226 236 210 242"/><path d="M218 235l-9 7 10 5"/>
+      <path class="dash" d="M278 242C296 236 316 236 332 242"/><path d="M324 235l9 7-10 5"/>
+      <path d="M350 243l14 14M364 243l-14 14"/>
+      <circle cx="496" cy="250" r="8"/><path class="dash" d="M486 246C456 232 424 234 394 246"/><path d="M402 238l-9 8 11 4"/>
+    </g>
+  </g>
+  <text class="note" x="270" y="482" text-anchor="middle">7</text>
 </svg>`;
+
 
 const spotName = slot => slot === 'UTIL' ? 'Sixth man' : POS_NAME[slot];
 const spotTag = slot => slot === 'UTIL' ? '6th' : slot;

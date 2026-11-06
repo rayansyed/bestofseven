@@ -988,6 +988,20 @@ h1 { font-size: 30px; line-height: 1.15; }
 .slip-sum + .links { padding-top: 14px; }
 .links + .legs { margin-top: 14px; }
 @media (max-width: 700px) { .lineup-stage .court-bar h2 { font-size: 32px; } .lineup-stage .court { width: 100%; } }
+/* Phones: the lineup dock shows mini card cutouts */
+@media (max-width: 860px) {
+  .dk-slots { gap: 5px; align-items: center; }
+  .dk-slot.dk-card { width: 30px; height: 42px; flex: 0 1 30px; border-radius: 4px; padding: 2px; display: grid; grid-template-rows: minmax(0, 1fr) auto; place-items: stretch;
+    background: #F3F1EA; box-shadow: 0 1px 3px rgba(28,30,34,.25), inset 0 0 0 1px rgba(0,0,0,.08); }
+  .dk-card.r-rare { background: linear-gradient(135deg, #E9ECF0, #9AA3AE 40%, #F7F8FA 60%, #87909C); }
+  .dk-card.r-epic { background: linear-gradient(135deg, #F2C6FF, #A98BFF 30%, #8FE3FF 55%, #FFD48A 80%); }
+  .dk-card.r-legendary { background: linear-gradient(135deg, #FFF1B8, #D9A227 35%, #FFE58A 55%, #B8801A); }
+  .dk-win { position: relative; overflow: hidden; border-radius: 2px; background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--team) 75%, #fff), var(--team) 55%, color-mix(in srgb, var(--team) 45%, #000)); }
+  .r-legendary .dk-win { background: radial-gradient(circle at 50% 30%, #4A3810, #0A0805); }
+  .dk-win img { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); height: 100%; width: auto; max-width: none; }
+  .dk-card i { font: 700 7px/1 "Oswald", var(--sans); font-style: normal; text-align: center; color: #1A1D22; padding-top: 2px; }
+  .dk-slot.dk-card.free { background: transparent; border: 1.5px dashed var(--chip-2); box-shadow: none; place-items: center; grid-template-rows: 1fr; color: var(--muted); font-size: 9px; font-weight: 800; }
+}
 /* Phones: a menu button in place of the wrapped nav and account chips */
 .burger, .coin-m, .rank-m { display: none; }
 .menu { display: contents; }
@@ -1927,7 +1941,10 @@ function renderDock(lu, proj, open, day) {
   const m = pmap(day);
   dock.innerHTML = `<span class="dk-slots">${SLOTS.map((slot, i) => {
     const p = lu[i] && m.get(lu[i]);
-    return p ? `<span class="dk-slot">${face(p)}</span>` : `<span class="dk-slot free">${slot === 'UTIL' ? 'U' : slot}</span>`;
+    // Mini card cutouts: the rarity frame, the team colour and the player's headshot, with the spot underneath.
+    const tag = slot === 'UTIL' ? '6th' : slot;
+    return p ? `<span class="dk-slot dk-card r-${rarityOf(p.id)}" style="--team:${TEAM_COLORS[p.team] || '#5B6573'}"><span class="dk-win"><img src="https://a.espncdn.com/i/headshots/nba/players/full/${encodeURIComponent(p.id)}.png" alt="" loading="lazy" onerror="this.remove()"></span><i>${tag}</i></span>`
+      : `<span class="dk-slot dk-card free"><b>${tag}</b></span>`;
   }).join('')}</span>
     <span class="dk-info"><b class="${entries.has(ui.sel) && ui.save !== 'pending' ? 'ok' : ''}">${!ready(lu, day) ? `${6 - open} of 6` : entries.has(ui.sel) && ui.save !== 'pending' ? '✓ Entered' : 'Saving…'}</b><small>${f1(proj)} proj pts</small></span>
     <svg class="dk-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 10l7-7M15 3h6v6M10 14l-7 7M3 15v6h6"/></svg>`;

@@ -879,12 +879,24 @@ h1 { font-size: 30px; line-height: 1.15; }
 .btn.danger { color: #fff; }
 .gift-head { box-shadow: inset 0 0 0 1.5px rgba(45,91,216,.4); }
 /* The lineup is the page itself, not a card on it: a big heading, then the court full width */
-.lineup-stage { padding: 14px 0 6px; min-width: 0; }
-.lineup-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 0 2px 12px; }
-.lineup-head h2 { font-size: 46px; font-weight: 800; letter-spacing: -.035em; line-height: .95; text-transform: uppercase; }
-.lineup-stage .court-bar { padding: 0 0 12px; }
-.lineup-stage .court { width: 100%; max-width: 760px; margin: 0 auto 6px; box-shadow: inset 0 0 0 1px var(--line), 0 10px 30px rgba(28,30,34,.06); }
-@media (max-width: 700px) { .lineup-stage { padding-top: 4px; } .lineup-head h2 { font-size: 36px; } .lineup-stage .court { width: 100%; } }
+/* The squad screen: the court is the page's centre, sized to fit the screen, on a faint playbook backdrop */
+.lineup-stage { position: relative; padding: 6px 0 18px; min-width: 0; isolation: isolate; }
+.lineup-stage::before { content: ""; position: absolute; inset: -16px -8px 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 45%, rgba(255,255,255,.9), transparent 70%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M24 0H0V24' fill='none' stroke='%231C1E22' stroke-opacity='.05'/%3E%3C/svg%3E");
+  -webkit-mask: radial-gradient(ellipse at 50% 45%, #000 45%, transparent 75%); mask: radial-gradient(ellipse at 50% 45%, #000 45%, transparent 75%); }
+.lineup-stage .court-bar { padding: 0 0 12px; align-items: baseline; gap: 8px 10px; }
+.lineup-stage .court-bar h2 { font-size: 40px; font-weight: 800; letter-spacing: -.035em; line-height: .95; text-transform: uppercase; margin-right: 6px; }
+.lineup-stage .court-lock { font-size: 12.5px; }
+.lineup-stage .court-act { align-self: center; }
+.lineup-stage .court { width: min(100%, max(560px, calc((100vh - 190px) * 540 / 490))); max-width: none; margin: 0 auto; box-shadow: inset 0 0 0 1px var(--line), 0 18px 44px rgba(28,30,34,.1); }
+.slip-sum { padding-top: 4px; border-bottom: 1px solid var(--line); }
+.sum-big { grid-template-columns: repeat(3, minmax(0, 1fr)); display: grid; gap: 8px; }
+.sum-big div { display: grid; gap: 2px; justify-content: start; }
+.sum-big dt { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.sum-big dd { font-size: 24px; letter-spacing: -.02em; }
+.slip-sum + .links { padding-top: 14px; }
+.links + .legs { margin-top: 14px; }
+@media (max-width: 700px) { .lineup-stage .court-bar h2 { font-size: 32px; } .lineup-stage .court { width: 100%; } }
 /* Phones: a menu button in place of the wrapped nav and account chips */
 .burger, .coin-m { display: none; }
 .menu { display: contents; }
@@ -1781,7 +1793,7 @@ function renderCourt() {
       ${cardHtml(cards.get(p.id) || { pid: p.id, rarity: 'common', name: p.name, team: p.team, pos: p.pos })}
       <span class="spot-tag ${warn ? 'warn' : ''}">${spotTag(slot)}${warn ? `<i>${warn}</i>` : ''}</span></button>`;
   }).join('');
-  el.innerHTML = `<div class="court-bar"><span class="court-lock">Locks ${timeLabel(day.lockAt)} · ${until(day.lockAt)}</span>${combos.map(l => `<span class="arch syn" title="${esc(l.sy.text)}">✦ ${esc(l.sy.name)} <b>${linkFx(l.sy)}</b></span>`).join('')}
+  el.innerHTML = `<div class="court-bar"><h2 id="lineup-h">Lineup</h2><span class="court-lock">${dayLabel(ui.sel).split(',')[0]} · locks ${timeLabel(day.lockAt)} · ${until(day.lockAt)}</span>${combos.map(l => `<span class="arch syn" title="${esc(l.sy.text)}">✦ ${esc(l.sy.name)} <b>${linkFx(l.sy)}</b></span>`).join('')}
       <span class="court-act">${lu.some(Boolean) ? '<button class="btn" data-action="clear">Clear</button>' : ''}${fill.size ? `<button class="btn primary" data-action="auto">Auto-fill ${fill.size}</button>` : ''}</span></div>
     <div class="court">${COURT_SVG}${spots}</div>`;
 }
@@ -1861,15 +1873,15 @@ function renderLineup() {
     : entered ? `<button class="cta ok" disabled>✓ Entered · edit until ${timeLabel(day.lockAt)}</button>` : '<button class="cta" disabled>Saving…</button>';
   renderDock(lu, proj, open, day);
   $('#lineup').innerHTML = `
-    <div class="slip-head"><span class="count">${6 - open}</span><h3>Lineup</h3><button class="sheet-x" data-action="sheet-close" aria-label="Close lineup">✕</button></div>
+    <div class="slip-head"><span class="count">${6 - open}</span><h3>Squad</h3><button class="sheet-x" data-action="sheet-close" aria-label="Close lineup">✕</button></div>
     <div class="seg"><span class="on">${esc(profile.name)}</span><span>${TIERS[tierOf(profile.rp)]} · weekly 1v1</span></div>
-    <ul class="legs">${legs}</ul>
-    ${linksHtml}
-    <div class="slip-foot">
-      <dl class="totals"><div><dt>Cards</dt><dd>${6 - open} of 6</dd></div><div><dt>Stars</dt><dd>${lu.reduce((a, id) => a + (id ? m.get(id)?.stars || 0 : 0), 0)}★</dd></div><div><dt>Projected</dt><dd>${f1(proj)} pts</dd></div></dl>
-      <div class="info">${info}</div>
+    <div class="slip-foot slip-sum">
+      <dl class="totals sum-big"><div><dt>Projected</dt><dd>${f1(proj)}</dd></div><div><dt>Cards</dt><dd>${6 - open}/6</dd></div><div><dt>Stars</dt><dd>${lu.reduce((a, id) => a + (id ? m.get(id)?.stars || 0 : 0), 0)}★</dd></div></dl>
       <div class="ctarow"><button class="trash" data-action="clear" aria-label="Clear lineup" ${lu.some(Boolean) ? '' : 'disabled'}>${TRASH}</button>${cta}</div>
-    </div>`;
+      <div class="info">${info}</div>
+    </div>
+    ${linksHtml}
+    <ul class="legs">${legs}</ul>`;
 }
 
 /* ---------- Group results ---------- */
@@ -2233,7 +2245,8 @@ function render() {
     if (sig === ui.sig && $('#court')) { renderCourt(); renderLineup(); const wk = $('#week'); if (wk) wk.innerHTML = weekPanel(); const el = $('#slate'); if (el) keepRacesScroll(() => { el.innerHTML = slateCard(day); }); const st = $('#streak'); if (st) st.innerHTML = streakBanner(); return; }
     ui.sig = sig;
     $('#slip').innerHTML = '<button class="dock" id="dock" data-action="sheet" aria-expanded="false" aria-label="Show your lineup"></button><div class="sheet-bg" data-action="sheet-close"></div><div class="slip-card" id="lineup"></div>';
-    m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day)}<div id="week">${weekPanel()}</div><section class="court-panel lineup-stage" aria-labelledby="lineup-h"><div class="lineup-head"><h2 id="lineup-h">Lineup</h2><span class="eyebrow">${dayLabel(ui.sel)}</span></div><div id="court"></div></section>`;
+    // The court leads the page, squad-screen style; the week, the night's games and the streak follow it.
+    m.innerHTML = `<section class="court-panel lineup-stage" aria-labelledby="lineup-h"><div id="court"></div></section><div id="week">${weekPanel()}</div>${heroCard(day)}<section class="streak" id="streak">${streakBanner()}</section>`;
     renderCourt(); renderLineup();
     return;
   }

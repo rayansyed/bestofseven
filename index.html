@@ -1721,7 +1721,7 @@ function towPanel() {
   const t = rosterStars && rosterStars.packWeek === weekOf(etDay()) ? rosterStars : null;
   if (!t?.players?.length) return '';
   const card = s => starCardHtml({ pid: s.pid, name: s.name, team: s.team, pos: s.pos, rarity: 'star', star: { week: t.week, stat: s.stat, label: s.label, statPg: s.statPg, fpg: s.fpg, caption: s.caption } }, { tag: [s.slot === 'UTIL' ? '6th man' : s.slot, 'pos'] });
-  return `<section class="panel tow"><div class="list-head"><div><div class="eyebrow">In packs until Sunday</div><h2>Team of the week</h2></div></div>
+  return `<section class="panel tow"><div class="list-head"><div><div class="eyebrow">In packs until Sunday</div><h2>Weekly stars</h2></div></div>
     <div class="tc-grid">${t.players.map(card).join('')}</div></section>`;
 }
 

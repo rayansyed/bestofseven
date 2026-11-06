@@ -923,8 +923,13 @@ h1 { font-size: 30px; line-height: 1.15; }
   background: #fff; color: var(--ink); border-radius: 1.8cqw; box-shadow: 0 1cqw 2cqw rgba(0,0,0,.35); }
 .sc-logo b { font: 700 8.5cqw/.9 "Oswald", var(--sans); transform: skewX(-8deg); }
 .sc-logo small { font: 800 max(4px, 1.7cqw)/1 var(--sans); letter-spacing: .06em; text-transform: uppercase; }
-.sc-side { position: absolute; right: 1.6cqw; top: 22cqw; z-index: 3; max-height: 44cqw; overflow: hidden; writing-mode: vertical-rl; white-space: nowrap;
-  font: 700 max(5px, 2.8cqw)/1 "Oswald", var(--sans); letter-spacing: .1em; text-transform: uppercase; color: rgba(20,23,28,.75); }
+/* His best night down the right edge, white on a dark strip so it reads over the foil */
+.sc-side { position: absolute; right: 1.3cqw; top: 16cqw; z-index: 3; max-height: 76cqw; overflow: hidden; writing-mode: vertical-rl; white-space: nowrap;
+  padding: 1.8cqw .9cqw; border-radius: 1.2cqw; background: rgba(20,23,28,.88); color: #fff; box-shadow: 0 .6cqw 1.6cqw rgba(0,0,0,.25);
+  font: 700 max(6px, 3.1cqw)/1 "Oswald", var(--sans); letter-spacing: .06em; text-transform: uppercase; }
+/* A cutout of the player drawn over the frame, lined up with the photo underneath */
+.sc-pop { position: absolute; left: 10.6cqw; right: 10.6cqw; top: 10.6cqw; bottom: 28.6cqw; z-index: 3; width: calc(100% - 21.2cqw); height: calc(100% - 39.2cqw);
+  object-fit: cover; object-position: 50% 18%; pointer-events: none; filter: drop-shadow(0 1.2cqw 1.6cqw rgba(0,0,0,.45)); }
 /* The emblem, bottom left: a slanted blue badge that breaks over the frame */
 .sc-emblem { position: absolute; left: 3.5cqw; bottom: 6cqw; z-index: 4; display: grid; justify-items: center; line-height: .88; padding: 1.4cqw 2.8cqw 1.6cqw;
   background: repeating-linear-gradient(115deg, rgba(255,255,255,.14) 0 .5cqw, transparent .5cqw 1.6cqw), linear-gradient(160deg, #57C3FF, #1C6DD0 70%);
@@ -935,7 +940,32 @@ h1 { font-size: 30px; line-height: 1.15; }
 .sc-accent { position: absolute; right: 14cqw; bottom: 22.2cqw; z-index: 3; width: 34cqw; height: 2.2cqw; background: var(--ice); box-shadow: 0 0 1.2cqw rgba(111,211,255,.6); }
 .sc-plate { position: absolute; right: 4cqw; bottom: 5cqw; z-index: 3; width: 64cqw; height: 15.5cqw; display: grid; align-content: center; gap: 1cqw; padding: 0 3cqw 0 6cqw;
   background: #fff; color: var(--ink); clip-path: polygon(3.4cqw 0, 100% 0, 100% 100%, 0 100%); box-shadow: 0 1cqw 2cqw rgba(0,0,0,.2); }
-.sc-name { display: block; font: italic 800 max(8px, var(--nm, 6cqw))/1.05 var(--sans); letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sc-name { display: block; font: italic 800 max(7px, 6.4cqw)/1.05 var(--sans); letter-spacing: -.01em; white-space: nowrap; overflow: hidden; padding-right: .18em; }
+/* Enlarged card view */
+#cardview { border: 0; padding: 28px 16px 20px; background: transparent; overflow: visible; max-width: none; max-height: none; color: #fff; }
+#cardview::backdrop { background: rgba(10,12,16,.8); backdrop-filter: blur(4px); }
+.cv-x { position: fixed; top: 16px; right: 16px; background: rgba(255,255,255,.14); color: #fff; }
+.cv-x:hover { background: rgba(255,255,255,.24); }
+.cv-stage { width: min(380px, 84vw, calc((100vh - 140px) * 5 / 7)); margin: 0 auto; perspective: 1100px; touch-action: none; }
+.cv-tilt { position: relative; transform-style: preserve-3d; transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .12s ease-out; }
+.cv-tilt.idle { animation: cv-float 6s ease-in-out infinite; transition: transform .6s ease; }
+@keyframes cv-float { 0%, 100% { transform: rotateX(5deg) rotateY(-9deg); } 50% { transform: rotateX(-4deg) rotateY(9deg); } }
+.cv-tilt > .tc { width: 100%; cursor: default; transform-style: preserve-3d; box-shadow: 0 30px 60px rgba(0,0,0,.5); }
+.cv-tilt > .tc:hover { transform: none; }
+.cv-tilt .sc-card { overflow: visible; transform-style: preserve-3d; background-position: 0 0, calc(50% + var(--px, 0) * 160%) 50%; animation: none; }
+.cv-tilt .sc-photo img { transform: translate(calc(var(--px, 0) * -18px), calc(var(--py, 0) * -18px)) scale(1.1); transition: transform .12s ease-out; }
+.cv-tilt .sc-inner { transform: translateZ(2px); }
+.cv-tilt .sc-plate, .cv-tilt .sc-accent, .cv-tilt .sc-logo, .cv-tilt .sc-rate, .cv-tilt .sc-side { transform: translateZ(34px); }
+.cv-tilt .sc-bars { transform: translateZ(22px); }
+.cv-tilt .sc-pop { transform: translateZ(46px); }
+.cv-tilt .sc-emblem { transform: translateZ(56px) rotate(-8deg) skewX(-6deg); }
+.cv-glare { position: absolute; inset: 0; border-radius: 11px; pointer-events: none; transform: translateZ(60px); mix-blend-mode: overlay;
+  background: radial-gradient(circle at calc(50% + var(--px, 0) * 140%) calc(50% + var(--py, 0) * 140%), rgba(255,255,255,.55), rgba(255,255,255,0) 55%); }
+.cv-foot { display: flex; justify-content: center; margin-top: 22px; }
+.cv-foot .btn { background: rgba(255,255,255,.14); color: #fff; }
+.cv-foot .btn:hover:not(:disabled) { background: rgba(255,255,255,.24); }
+.sc { cursor: zoom-in; }
+@media (prefers-reduced-motion: reduce) { .cv-tilt.idle { animation: none; } }
 .sc-sub { display: flex; justify-content: space-between; align-items: baseline; gap: 2cqw; min-width: 0; }
 .sc-sub em { font: 700 max(5px, 3cqw)/1 "Oswald", var(--sans); font-style: normal; letter-spacing: .04em; text-transform: uppercase; color: #1C6DD0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sc-sub span { font: 800 max(5.5px, 3.4cqw)/1 var(--sans); letter-spacing: .06em; text-transform: uppercase; flex: none; }
@@ -948,7 +978,7 @@ h1 { font-size: 30px; line-height: 1.15; }
   .sc-emblem { padding: 1.2cqw 2cqw; bottom: 20cqw; }
   .sc-plate { width: 84cqw; padding-left: 5cqw; }
   .sc-accent { display: none; }
-  .sc-name { font-size: max(8px, calc(var(--nm, 6cqw) * 1.25)); }
+  .sc-name { font-size: max(7px, 8cqw); }
 }
 
 @media (prefers-reduced-motion: reduce) { .sc .sc-card::after, .sc .sc-card, .sc-photo::after { animation: none; } }
@@ -1134,6 +1164,7 @@ h1 { font-size: 30px; line-height: 1.15; }
   <aside class="slip" id="slip" aria-label="Lineup"></aside>
 </div>
 <dialog id="pcard" aria-labelledby="pc-name"></dialog>
+<dialog id="cardview" aria-label="Card"></dialog>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -1508,13 +1539,53 @@ function cardHtml(c, opts = {}) {
 // (tow/<week>/<pid>.jpg, added by hand; his headshot until it is), a dark strip down the side with his best night,
 // and a name bar with the week and his bonus.
 const weekShort = w => dateOf(w).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+// Weekly Stars with a cutout of the player (tow/<week>/<pid>-cut.png, a transparent PNG cut from the same photo):
+// the cutout is drawn in front of the frame so he comes out of the card. Add "<week>/<pid>" here with the file.
+const STAR_CUTS = new Set([]);
+// Shrinks each Weekly Star name until it fits its nameplate.
+function fitStarNames(root = document) {
+  for (const el of root.querySelectorAll('.sc-name')) {
+    el.style.fontSize = '';
+    const w = el.clientWidth;
+    if (!w || el.scrollWidth <= w) continue;
+    el.style.fontSize = `${parseFloat(getComputedStyle(el).fontSize) * w / el.scrollWidth * 0.97}px`;
+  }
+}
+// The enlarged view of a Weekly Star: the card on its own, tilting in 3D with the pointer. The photo sits deep in the
+// card while the frame, plate and emblem float in front, and the foil and a glare follow the angle.
+function openCardView(card) {
+  const dlg = $('#cardview'), pid = card.dataset.pid, copy = card.cloneNode(true);
+  copy.classList.remove('fresh');
+  copy.querySelectorAll('.tc-tonight, .tc-ready').forEach(x => x.remove());
+  dlg.innerHTML = `<button class="pc-x cv-x" data-action="cv-close" aria-label="Close">✕</button>
+    <div class="cv-stage"><div class="cv-tilt idle"></div></div>
+    <div class="cv-foot"><button class="btn" data-action="player" data-id="${esc(pid)}">Player profile</button></div>`;
+  const stage = dlg.querySelector('.cv-stage'), tilt = dlg.querySelector('.cv-tilt');
+  tilt.append(copy);
+  tilt.insertAdjacentHTML('beforeend', '<span class="cv-glare" aria-hidden="true"></span>');
+  const set = (x, y) => {
+    tilt.style.setProperty('--rx', `${(-y * 22).toFixed(2)}deg`); tilt.style.setProperty('--ry', `${(x * 26).toFixed(2)}deg`);
+    tilt.style.setProperty('--px', x.toFixed(3)); tilt.style.setProperty('--py', y.toFixed(3));
+  };
+  const move = e => {
+    const r = stage.getBoundingClientRect();
+    tilt.classList.remove('idle');
+    set(Math.max(-.5, Math.min(.5, (e.clientX - r.left) / r.width - .5)), Math.max(-.5, Math.min(.5, (e.clientY - r.top) / r.height - .5)));
+  };
+  stage.addEventListener('pointermove', move);
+  stage.addEventListener('pointerdown', move);
+  stage.addEventListener('pointerleave', () => { set(0, 0); tilt.classList.add('idle'); });
+  if (!dlg.open) dlg.showModal();
+  fitStarNames(dlg);
+}
 function starCardHtml(c, { fresh = false, i = 0, tonight = false, tag = null, ready = false } = {}) {
   const p = { ...c, ...roster.get(c.pid), id: c.pid }, s = c.star || {};
   const head = `https://a.espncdn.com/i/headshots/nba/players/full/${encodeURIComponent(c.pid)}.png`;
   const photo = s.week ? `tow/${s.week}/${encodeURIComponent(c.pid)}.jpg` : '';
   const lbl = s.label || STAT_LABEL[s.stat] || String(s.stat || '').toUpperCase(), level = c.level || 1;
   const img = photo ? `<img src="${photo}" alt="" loading="lazy" onerror="this.onerror=null;this.src='${head}';this.parentNode.classList.add('head')">` : `<img src="${head}" alt="" loading="lazy">`;
-  const name = String(p.name || ''), nm = name.length <= 12 ? 6.6 : name.length <= 16 ? 5.4 : name.length <= 20 ? 4.5 : 3.9;
+  // The name is sized to fit by fitStarNames() after each render.
+  const name = String(p.name || ''), cut = s.week && STAR_CUTS.has(`${s.week}/${c.pid}`) ? `tow/${s.week}/${encodeURIComponent(c.pid)}-cut.png` : '';
   return `<div class="tc sc r-star ${fresh ? 'fresh' : ''}" style="--i:${i};--team:${TEAM_COLORS[p.team] || '#5B6573'}" data-pid="${esc(c.pid)}" title="${esc(p.name)} · Weekly Star · +${Math.round(STAR_BONUS * 100)}% ${esc(lbl)}, +${Math.round(RARITY.star.bonus * 100)}% all">
     <div class="sc-card">
       <span class="sc-bars l" aria-hidden="true"><i></i><i></i><i></i></span><span class="sc-bars r" aria-hidden="true"><i></i><i></i></span>
@@ -1525,10 +1596,11 @@ function starCardHtml(c, { fresh = false, i = 0, tonight = false, tag = null, re
       </div>
       <span class="sc-logo" aria-hidden="true"><b>7</b><small>Best of 7</small></span>
       ${s.caption ? `<span class="sc-side">${esc(s.caption)}</span>` : ''}
+      ${cut ? `<img class="sc-pop" src="${cut}" alt="" loading="lazy">` : ''}
       <span class="sc-emblem"><small>★ Weekly</small><b>Star</b></span>
       <i class="sc-accent" aria-hidden="true"></i>
-      <div class="sc-plate"><b class="sc-name" style="--nm:${nm}cqw">${esc(name)}</b>
-        <span class="sc-sub"><em>+${Math.round(STAR_BONUS * 100)}% ${esc(lbl)}${s.statPg ? ` · ${s.statPg}/G` : ''} · +${Math.round(RARITY.star.bonus * 100)}% all</em><span>${esc(p.team || '')}</span></span></div>
+      <div class="sc-plate"><b class="sc-name">${esc(name)}</b>
+        <span class="sc-sub"><em>+${Math.round(STAR_BONUS * 100)}% ${esc(lbl)} · +${Math.round(RARITY.star.bonus * 100)}% all stats</em><span>${esc(p.team || '')}</span></span></div>
     </div>
     ${tag ? `<span class="tc-tonight t-${tag[1]}">${esc(tag[0])}</span>` : tonight ? '<span class="tc-tonight">Tonight</span>' : ''}
     ${ready ? '<span class="tc-ready">▲ Level up</span>' : ''}
@@ -1928,6 +2000,8 @@ function renderTop() {
 
 document.addEventListener('scroll', e => { if (e.target.matches?.('.races, #side, .tablewrap')) updateScrollCues(); }, true);
 window.addEventListener('resize', updateScrollCues);
+let fitTimer = null;
+window.addEventListener('resize', () => { clearTimeout(fitTimer); fitTimer = setTimeout(() => fitStarNames(), 150); });
 
 function rankCard() {
   const rp = profile?.rp || 0, tier = tierOf(rp), top = tier === TIERS.length - 1;
@@ -2559,6 +2633,7 @@ function updateScrollCues() {
 let afterRenderQueued = false;
 function afterRender() {
   afterRenderQueued = false;
+  fitStarNames();
   const docked = !!$('#dock');
   document.body.classList.toggle('has-dock', docked);
   // On phones the court moves to the top of the page while a lineup is being set.
@@ -2704,7 +2779,8 @@ document.addEventListener('click', e => {
   else if (a === 'mu-cats') { ui.muCats = b.dataset.s; ui.sig = ''; render(); }
   else if (a === 'sheet') setSheet(!document.body.classList.contains('sheet-open'));
   else if (a === 'sheet-close') setSheet(false);
-  else if (a === 'player') openPlayer(b.dataset.id);
+  else if (a === 'player') { if ($('#cardview').open) $('#cardview').close(); openPlayer(b.dataset.id); }
+  else if (a === 'cv-close') $('#cardview').close();
   else if (a === 'avatar-pick') $('#avatar-file').click();
   else if (a === 'avatar-remove') saveProfile({ avatar: firebase.firestore.FieldValue.delete() }, 'Picture removed.');
   else if (a === 'feature') saveProfile({ featuredBadge: b.dataset.id === profile.featuredBadge ? firebase.firestore.FieldValue.delete() : b.dataset.id });
@@ -2929,7 +3005,13 @@ function openPlayer(id) {
 document.addEventListener('click', e => {
   const dlg = $('#pcard');
   if (e.target === dlg || e.target.closest('[data-pclose]')) { dlg.close(); return; }
+  const cv = $('#cardview');
+  if (e.target === cv) { cv.close(); return; }
   if (e.target.closest('button, a, input, select')) return;
+  // A Weekly Star opens its enlarged view; other cards open the player's profile.
+  const star = e.target.closest('.sc');
+  if (star && !star.closest('#cardview')) { openCardView(star); return; }
+  if (e.target.closest('#cardview')) return;
   const row = e.target.closest('[data-pid]');
   if (row) openPlayer(row.dataset.pid);
 });

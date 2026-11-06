@@ -160,7 +160,12 @@ export function momentBadges(ids, captain, day) {
   return earned;
 }
 
-const BOT_NAMES = ['Bot Rookie', 'Bot Sixth Man', 'Bot Glue Guy', 'Bot Sharpshooter', 'Bot Rim Runner', 'Bot Floor General', 'Bot Stretch Four', 'Bot Iron Man', 'Bot Spark Plug', 'Bot Closer'];
+// Computer opponents get ordinary-looking player names.
+const BOT_NAMES = ['marcus_b', 'TayBuckets', 'jalen.w3', 'courtsidekev', 'priya_hoops', 'luisito23', 'big_ant_04', 'swishsam', 'dannyg', 'ellie.dunks',
+  'reggie_tre', 'mo_ballin', 'NickFromQueens', 'kd_szn', 'jojo.lane', 'TheRealDre', 'amari_k', 'sofia.shoots', 'bennyhoops', 'coach_lou'];
 export const botName = i => BOT_NAMES[i % BOT_NAMES.length];
+// Names computer opponents had before; a matchup still using one is renamed at the next lock.
+const OLD_BOT_NAMES = ['Bot Rookie', 'Bot Sixth Man', 'Bot Glue Guy', 'Bot Sharpshooter', 'Bot Rim Runner', 'Bot Floor General', 'Bot Stretch Four', 'Bot Iron Man', 'Bot Spark Plug', 'Bot Closer'];
+export const renameOldBot = name => OLD_BOT_NAMES.includes(name) ? BOT_NAMES[OLD_BOT_NAMES.indexOf(name)] : name;
 // Computer lineups get sharper as tiers rise.
 export const botNoise = tier => Math.max(0.08, 0.38 - 0.06 * tier);

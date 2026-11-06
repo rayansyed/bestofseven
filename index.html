@@ -2328,7 +2328,7 @@ function groupView(day) {
     return `<div class="gboard-row ${r.uid === me.id ? 'me' : ''}">
       <button class="grow" data-action="toggle-row" data-k="${esc(r.key)}" aria-expanded="${isOpen}">
         <span class="gpos">${i + 1}</span>
-        ${avatarHtml(r.bot ? { name: '#' } : peer(r.uid) || { name: r.name }, 'sm')}<span class="gname">${esc(r.name)}${r.bot ? '' : badgeMark(peer(r.uid))}${r.bot ? '<span class="bot">Computer</span>' : ''}${r.uid === me.id ? '<span class="you">You</span>' : ''}<small class="gprog">${lineupProgress(r.rows, day)}</small></span>
+        ${avatarHtml(r.bot ? { name: r.name } : peer(r.uid) || { name: r.name }, 'sm')}<span class="gname">${esc(r.name)}${r.bot ? '' : badgeMark(peer(r.uid))}${r.bot ? '<span class="bot">Computer</span>' : ''}${r.uid === me.id ? '<span class="you">You</span>' : ''}<small class="gprog">${lineupProgress(r.rows, day)}</small></span>
         ${delta}
         <span class="sc">${f1(r.total)}</span>
       </button>
@@ -2446,7 +2446,7 @@ function lockedCourt(day, e) {
 function weekView(day, m) {
   const w = weekState(m), [a, b] = w.r.wins;
   const live = !m.scored && day.games?.some(g => g.status !== 'STATUS_SCHEDULED' && !LIVE_DONE.has(g.status));
-  const who = (sd, mine) => `<span class="ms-who ${mine ? 'me' : ''}">${avatarHtml(sd.bot ? { name: '#' } : peer(sd.uid) || { name: sd.name }, 'md')}<b>${esc(sd.name)}</b></span>`;
+  const who = (sd, mine) => `<span class="ms-who ${mine ? 'me' : ''}">${avatarHtml(sd.bot ? { name: sd.name } : peer(sd.uid) || { name: sd.name }, 'md')}<b>${esc(sd.name)}</b></span>`;
   return `<button class="ms-card" data-action="mu-open" data-d="${day.date}" aria-label="Open the matchup: ${a} to ${b} in categories">
     <span class="ms-top">${live ? '<span class="mu-live">Live</span>' : m.scored ? 'Final' : `Week of ${weekLabel(m.week)}`}<span class="ms-go">Matchup ›</span></span>
     <span class="ms-board">${who(w.mine, true)}<span class="ms-score"><b class="${a >= b ? 'lead' : ''}">${a}</b><i>–</i><b class="${b >= a ? 'lead' : ''}">${b}</b></span>${who(w.opp, false)}</span>
@@ -2490,7 +2490,7 @@ function matchupView() {
   const liveNow = !!day && !m.scored && day.games.some(g => g.status !== 'STATUS_SCHEDULED' && !LIVE_DONE.has(g.status));
   const status = m.scored ? 'Final' : liveNow ? '<span class="mu-live">Live</span>' : 'In progress';
   const who = (sd, mine) => {
-    const u = sd.bot ? { name: '#' } : peer(sd.uid) || { name: sd.name };
+    const u = sd.bot ? { name: sd.name } : peer(sd.uid) || { name: sd.name };
     return `<div class="mu-who">${avatarHtml(u, 'lg')}<b>${esc(sd.name)}${sd.bot ? '' : badgeMark(peer(sd.uid))}</b>${mine ? '<span class="you">You</span>' : sd.bot ? '<span class="bot">Computer</span>' : tierBadge(tierOf(sd.rpBefore))}</div>`;
   };
   const [a, b] = w.r.wins;

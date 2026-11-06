@@ -4,7 +4,7 @@
 // are final its stats are added to every matchup that week, and once the week's last game is final the nine
 // categories over the whole week decide each matchup and rank points are applied.
 // Nights grouped before matchups existed are scored by ranked-groups.mjs.
-import { RP_WIN, RP_LOSS, SKIP_PENALTY, COINS, TIERS, tierOf, invalidReason, rewardFor, momentBadges, buildLineup, seeded, botName, botNoise } from './game.mjs';
+import { RP_WIN, RP_LOSS, SKIP_PENALTY, COINS, TIERS, tierOf, invalidReason, rewardFor, momentBadges, buildLineup, seeded, botName, botNoise, renameOldBot } from './game.mjs';
 import { sideTotals, decide, addTotals, weekResult, weekOf, weekDates, duelsOf } from './battle.mjs';
 
 const RANK = { common: 0, rare: 1, epic: 2, legendary: 3, star: 4 };
@@ -47,6 +47,8 @@ export async function lockNight(db, day) {
     return { id, rarity: c?.rarity || 'common', types: pmap.get(id)?.types || [], ...(c?.picks?.length ? { lv: c.picks } : {}), ...(c?.star ? { star: c.star } : {}) };
   });
   const matches = new Map((await db.query('matches', 'week', week)).map(m => [m.id, m.data]));
+  // Computer opponents named under the old "Bot …" scheme get their new name (the matchups are rewritten below).
+  for (const m of matches.values()) for (const s of m.sides || []) if (s.bot) s.name = renameOldBot(s.name);
   const seat = new Map();
   for (const [mid, m] of matches) m.sides.forEach((s, k) => { if (s.uid) seat.set(s.uid, [mid, k]); });
 

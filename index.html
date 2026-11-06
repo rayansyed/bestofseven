@@ -882,6 +882,20 @@ h1 { font-size: 30px; line-height: 1.15; }
 /* The lineup is the page itself, not a card on it: a big heading, then the court full width */
 /* The squad screen: the court is the page's centre, sized to fit the screen, on a faint playbook backdrop */
 #week:empty { display: none; }
+/* Card levels */
+.tc-lv { position: absolute; left: 4cqw; bottom: 3cqw; z-index: 1; padding: .9cqw 2.6cqw; border-radius: 1.6cqw; background: rgba(10,12,16,.82); color: #fff;
+  font: 700 max(7px, 5.4cqw)/1.15 "Oswald", var(--sans); letter-spacing: .08em; text-transform: uppercase; box-shadow: inset 0 0 0 .45cqw #5CC8FF; }
+.st.lv b, .st.lv i { color: #5CC8FF; }
+.st.lv b::after { content: "▲"; font-size: .5em; margin-left: .4cqw; vertical-align: .55em; }
+.tc-ready { position: absolute; top: -7px; left: 12px; font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 3px 7px; border-radius: 6px;
+  background: #5CC8FF; color: #062033; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+.pc-lvl { margin-top: 16px; padding: 14px; border-radius: 12px; background: var(--panel-2); display: grid; gap: 10px; }
+.pc-lvl-top { display: grid; gap: 3px; }
+.pc-lvl-top b { font-size: 15px; }
+.lv-picks { display: flex; flex-wrap: wrap; gap: 6px; }
+.lv-pick { border: 1px solid var(--chip-2); background: var(--panel); border-radius: 8px; padding: 6px 10px; font-weight: 700; font-size: 12.5px; color: var(--ink); }
+.lv-pick[aria-pressed=true] { background: var(--ink); border-color: var(--ink); color: #fff; }
+.pc-lvl .btn.primary { justify-self: start; }
 /* Matchup page */
 .mu-hero { display: grid; gap: 14px; padding: 10px 0 6px; text-align: center; }
 .mu-eyebrow { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
@@ -1101,6 +1115,22 @@ const RARITY = {
 };
 const RARITY_RANK = { common: 0, rare: 1, epic: 2, legendary: 3 };
 const BOOST = 0.10, COUNTER = 0.10, STACK_CAP = 0.25;
+// Card levels (keep in step with LEVEL in api/_packs.js and LEVEL_BONUS in sync/battle.mjs).
+const LEVEL = { cost: 2, max: 3, bonus: 0.05 };
+const LEVEL_STATS = [['pts', 'PTS'], ['reb', 'REB'], ['ast', 'AST'], ['stl', 'STL'], ['blk', 'BLK'], ['tpm', '3PM'], ['fgm', 'FG%'], ['ftm', 'FTM'], ['to', 'Fewer TO']];
+const LEVEL_LABEL = Object.fromEntries(LEVEL_STATS);
+// "+10% REB · +5% AST" from a card's level picks.
+const picksText = picks => [...new Set(picks || [])].map(k => `+${Math.round(LEVEL.bonus * 100 * picks.filter(x => x === k).length)}% ${k === 'to' ? 'fewer TO' : LEVEL_LABEL[k]}`).join(' · ');
+// One player's copies as the card that plays: the rarest copy (then the highest level), with the levels of whichever
+// copy carries them.
+function bestOf(copies) {
+  const r = c => RARITY_RANK[c.rarity] ?? 0, lv = c => c.level || 1;
+  const keeper = copies.reduce((a, b) => r(b) > r(a) || (r(b) === r(a) && lv(b) > lv(a)) ? b : a);
+  const src = copies.reduce((a, b) => lv(b) > lv(a) ? b : a, keeper);
+  return { ...keeper, level: lv(src), picks: src.picks || [] };
+}
+const sparesOf = pid => Math.max(0, allCards.filter(c => c.pid === pid).length - 1);
+const canLevel = pid => cards.has(pid) && (cards.get(pid).level || 1) < LEVEL.max && sparesOf(pid) >= LEVEL.cost;
 const COUNTING = ['pts', 'reb', 'ast', 'stl', 'blk', 'tpm', 'fgm', 'fga', 'ftm', 'to'];
 const STARTER_PACKS = 3;
 
@@ -1121,7 +1151,8 @@ function sideTotals(slots, opp, results) {
     for (const k of COUNTING) {
       const v = L[STAT[k]] || 0;
       if (k === 'fga') { t.fga += v; continue; }
-      const bonus = Math.min(STACK_CAP, (RARITY[sl.rarity]?.bonus || 0) + ((sl.types || []).some(x => TYPES[x]?.boost === k) ? BOOST : 0));
+      const lvB = LEVEL.bonus * (sl.lv || []).filter(x => x === k).length;
+      const bonus = Math.min(STACK_CAP, (RARITY[sl.rarity]?.bonus || 0) + ((sl.types || []).some(x => TYPES[x]?.boost === k) ? BOOST : 0) + lvB);
       let mult = k === 'to' ? 1 - bonus : 1 + bonus;
       if (cuts.includes(k)) mult *= 1 - COUNTER;
       // A booster card lifts one stat (or all of them) for this game, on top of the capped bonuses.
@@ -1298,7 +1329,7 @@ function fillableSlots(lu, day) {
 }
 const projected = (lu, day) => lu.reduce((a, id) => a + (id ? pmap(day).get(id)?.avg || 0 : 0), 0);
 const ready = (lu, day) => lu.some(Boolean) && !fillableSlots(lu, day).length;
-const draftSlots = (lu, day) => lu.map(id => id ? { id, rarity: rarityOf(id), types: pmap(day).get(id)?.types || [] } : null);
+const draftSlots = (lu, day) => lu.map(id => id ? { id, rarity: rarityOf(id), types: pmap(day).get(id)?.types || [], lv: cards.get(id)?.picks || [] } : null);
 const starsHtml = n => `<span class="stars" aria-label="${n} star${n > 1 ? 's' : ''}">${'★'.repeat(n)}<i>${'★'.repeat(5 - n)}</i></span>`;
 function scoreRows(ids, captain, day) {
   const m = pmap(day);
@@ -1395,14 +1426,16 @@ const rarityTag = r => r && r !== 'common' ? `<span class="rar r-${r}">${RARITY[
 const STAT_LABEL = { pts: 'PTS', reb: 'REB', ast: 'AST', stl: 'STL', blk: 'BLK', tpm: '3PM', fgp: 'FG%', ftm: 'FTM', to: 'TO' };
 // A collectible card, squad-screen style: fantasy points per game as the rating, then season per-game averages
 // for all nine categories so you can see what a player brings. The category his archetype boosts is gold.
-function cardHtml(c, { fresh = false, i = 0, tonight = false, tag = null } = {}) {
+// A levelled card shows "Level 2" and marks the categories its levels lift with a blue arrow.
+function cardHtml(c, { fresh = false, i = 0, tonight = false, tag = null, ready = false } = {}) {
   const p = { ...c, ...roster.get(c.pid), id: c.pid }, rarity = c.rarity || 'common';
   const [first, ...rest] = String(p.name || '').split(' ');
   const types = (p.types || []).filter(t => TYPES[t]);
   const boosted = new Set(types.map(t => TYPES[t].boost));
+  const level = c.level || 1, picks = c.picks || [];
   const stats = CATS.map((cat, k) => {
-    const v = p.s?.[k];
-    return `<span class="st ${boosted.has(cat.key) ? 'up' : ''}"><b>${v == null ? '–' : cat.key === 'fgp' ? Math.round(v) : v.toFixed(1)}</b><i>${STAT_LABEL[cat.key]}</i></span>`;
+    const v = p.s?.[k], lv = picks.includes(cat.key === 'fgp' ? 'fgm' : cat.key);
+    return `<span class="st ${boosted.has(cat.key) ? 'up' : ''} ${lv ? 'lv' : ''}"><b>${v == null ? '–' : cat.key === 'fgp' ? Math.round(v) : v.toFixed(1)}</b><i>${STAT_LABEL[cat.key]}</i></span>`;
   }).join('');
   return `<div class="tc r-${rarity} ${fresh ? 'fresh' : ''}" style="--i:${i};--team:${TEAM_COLORS[p.team] || '#5B6573'}" data-pid="${esc(c.pid)}" title="${esc(p.name)}">
     <div class="tc-card">
@@ -1411,12 +1444,14 @@ function cardHtml(c, { fresh = false, i = 0, tonight = false, tag = null } = {})
         <img src="https://a.espncdn.com/i/headshots/nba/players/full/${encodeURIComponent(c.pid)}.png" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="tc-jersey" hidden>${jersey(p.team)}</span>
         <span class="tc-rate" title="Fantasy points per game"><b>${p.gp ? Math.round(p.avg) : '–'}</b><small>FPPG</small></span>
         ${p.stars ? `<span class="tc-stars">${starsHtml(p.stars)}</span>` : ''}
+        ${level > 1 ? `<span class="tc-lv" title="${esc(picksText(picks))}">Level ${level}</span>` : ''}
       </div>
       <div class="tc-plate"><span class="tc-first">${esc(rest.length ? first : '')}</span><b class="tc-last">${esc(rest.length ? rest.join(' ') : first)}</b>
         <div class="tc-stats" aria-label="Season averages per game">${stats}</div></div>
       <div class="tc-foot"><span>${esc(p.team)} · ${esc(POS_NAME[p.pos] || p.pos)}</span><span class="tc-rar">${RARITY[rarity].name}</span></div>
     </div>
     ${tag ? `<span class="tc-tonight t-${tag[1]}">${esc(tag[0])}</span>` : tonight ? '<span class="tc-tonight">Tonight</span>' : ''}
+    ${ready ? '<span class="tc-ready">▲ Level up</span>' : ''}
   </div>`;
 }
 
@@ -1593,14 +1628,15 @@ function packsView() {
   // Extra copies of a player beyond your best card of him.
   const groups = new Map();
   for (const c of allCards) { if (!groups.has(c.pid)) groups.set(c.pid, []); groups.get(c.pid).push(c); }
-  for (const g of groups.values()) g.sort((a, b) => RARITY_RANK[b.rarity] - RARITY_RANK[a.rarity]);
-  const dupes = [...groups.values()].flatMap(g => g.slice(1));
+  for (const g of groups.values()) g.sort((a, b) => RARITY_RANK[b.rarity] - RARITY_RANK[a.rarity] || (b.level || 1) - (a.level || 1));
+  // A copy carrying levels is never listed for sale.
+  const dupes = [...groups.values()].flatMap(g => g.slice(1).filter(c => !(c.level > 1)));
   const dupeValue = dupes.reduce((s, c) => s + SELL_VALUE[c.rarity || 'common'], 0);
   const dupeRows = dupes.map(c => {
     const p = { ...c, ...roster.get(c.pid), id: c.pid };
     return `<div class="runner sub" data-pid="${esc(c.pid)}">${face(p)}
       <div><div class="r-name">${plink(p)}${rarityTag(c.rarity) || '<span class="rar r-common">Common</span>'}</div><div class="r-sub">${esc(p.team)} · ${POS_NAME[p.pos] || ''} · you keep your ${RARITY[groups.get(c.pid)[0].rarity || 'common'].name} card</div></div>
-      <div class="r-act"><button class="btn" data-action="sell" data-id="${esc(c.id)}" ${ui.selling ? 'disabled' : ''}>Sell · 🪙 ${SELL_VALUE[c.rarity || 'common']}</button></div></div>`;
+      <div class="r-act">${canLevel(c.pid) ? `<button class="btn" data-action="player" data-id="${esc(c.pid)}">▲ Level up</button>` : ''}<button class="btn" data-action="sell" data-id="${esc(c.id)}" ${ui.selling ? 'disabled' : ''}>Sell · 🪙 ${SELL_VALUE[c.rarity || 'common']}</button></div></div>`;
   }).join('');
   // The flip-in plays once: the cards, boosters and coins that arrive just after opening redraw the page.
   const fresh = !!r && !r.played;
@@ -1630,10 +1666,35 @@ function packsView() {
 function sellFoot(pid) {
   const copies = allCards.filter(c => c.pid === pid).sort((a, b) => RARITY_RANK[a.rarity] - RARITY_RANK[b.rarity]);
   if (!copies.length) return '';
-  const c = copies[0], v = SELL_VALUE[c.rarity || 'common'], last = copies.length === 1, sure = ui.sellConfirm === c.id;
+  // Sell a plain spare first: never the card that plays or a copy carrying levels while there's another to sell.
+  const keep = cards.get(pid)?.id, c = copies.find(x => x.id !== keep && !(x.level > 1)) || copies[0], v = SELL_VALUE[c.rarity || 'common'], last = copies.length === 1, sure = ui.sellConfirm === c.id;
   const label = !last ? `Sell a ${RARITY[c.rarity || 'common'].name} copy · 🪙 ${v}` : sure ? `Tap again to sell your only card · 🪙 ${v}` : `Sell this card · 🪙 ${v}`;
   return `<div class="pc-foot pc-sell"><span class="pc-dim">You have ${copies.length} card${copies.length > 1 ? 's' : ''} of him</span>
     <button class="btn ${sure ? 'danger' : ''}" data-action="sell-one" data-id="${esc(c.id)}" data-pid="${esc(pid)}" data-last="${last}" ${ui.selling ? 'disabled' : ''}>${label}</button></div>`;
+}
+
+// Levelling up from a player's profile: pick a category, then spend two duplicates.
+function levelFoot(pid) {
+  const c = cards.get(pid);
+  if (!c) return '';
+  const lvl = c.level || 1, spare = sparesOf(pid), has = c.picks?.length ? ` · ${picksText(c.picks)}` : '';
+  if (lvl >= LEVEL.max) return `<div class="pc-lvl"><div class="pc-lvl-top"><b>Level ${lvl}${has}</b><span class="pc-dim">Top level.</span></div></div>`;
+  const can = spare >= LEVEL.cost;
+  const chips = LEVEL_STATS.map(([k, l]) => `<button class="lv-pick" data-action="lvl-pick" data-s="${k}" aria-pressed="${ui.lvlPick === k}">${l}</button>`).join('');
+  return `<div class="pc-lvl"><div class="pc-lvl-top"><b>Level ${lvl}${has}</b>
+      <span class="pc-dim">${can ? `Level up to ${lvl + 1}: uses ${LEVEL.cost} duplicates and adds +${Math.round(LEVEL.bonus * 100)}% to the category you pick.` : `Level ${lvl + 1} needs ${LEVEL.cost} duplicates of him. You have ${spare}.`}</span></div>
+    ${can ? `<div class="lv-picks">${chips}</div>
+      <button class="btn primary" data-action="lvl-go" data-pid="${esc(pid)}" ${ui.lvlPick && !ui.leveling ? '' : 'disabled'}>${ui.leveling ? 'Levelling up…' : ui.lvlPick ? `Level up to ${lvl + 1} · +${Math.round(LEVEL.bonus * 100)}% ${LEVEL_LABEL[ui.lvlPick]}` : 'Pick a category'}</button>` : ''}</div>`;
+}
+async function levelUp(pid, stat) {
+  if (ui.leveling || !stat) return;
+  ui.leveling = true; refreshPlayer();
+  try {
+    const out = await api('/api/level', { pid, stat });
+    toast(`${out.name || roster.get(pid)?.name || 'Your card'} is now Level ${out.level} · ${picksText(out.picks)}`);
+    ui.lvlPick = null;
+  } catch (err) { toast(err.message); }
+  ui.leveling = false; refreshPlayer();
 }
 
 // The pack and sell endpoints (api/*.js), signed in as the player.
@@ -1704,7 +1765,7 @@ function cardsView() {
   const reserved = reservedBoosters();
   return `<section class="panel"><div class="list-head"><div><h2>My cards</h2><p class="sub">${cards.size} cards. ${today ? `${[...cards.keys()].filter(id => tonight.has(id)).length} of them play ${dayLabel(today.date).split(',')[0]}.` : ''} Tap a card for the player’s profile.</p></div></div>
       <div class="pool-tools"><div class="tabs">${tabs}</div></div>
-      ${list.length ? `<div class="tc-grid">${list.map(c => cardHtml(c, { tag: tonight.has(c.pid) ? [when, 'play'] : null })).join('')}</div>` : '<p class="empty">No cards here yet.</p>'}
+      ${list.length ? `<div class="tc-grid">${list.map(c => cardHtml(c, { tag: tonight.has(c.pid) ? [when, 'play'] : null, ready: canLevel(c.pid) })).join('')}</div>` : '<p class="empty">No cards here yet.</p>'}
     </section>
     <section class="panel"><div class="list-head"><div><h2>Boosters · ${boosters.length}</h2><p class="sub">Tap a card on the court, then pick a booster. It lifts that player for that night’s game and is used up when the night locks.</p></div></div>
       ${boosters.length ? `<div class="tc-grid">${boosters.map(b => boosterHtml(b, { tag: reserved.has(b.id) ? [`Set for ${dayLabel(reserved.get(b.id)).split(',')[0]}`, 'set'] : null })).join('')}</div>` : '<p class="empty">No boosters yet. Every pack has at least one.</p>'}</section>
@@ -2207,7 +2268,7 @@ function muSide(sl, day, side, up = false) {
   const line = day?.results?.[sl.id], st = day ? playerState({ p, line }, day) : { kind: 'final', text: 'Final' };
   const cells = MU_STATS.map(([k, i]) => `<span><b>${!line ? '–' : i === 'fg' ? `${line[8] || 0}/${line[9] || 0}` : line[i] || 0}</b><i>${k}</i></span>`).join('');
   return `<div class="mu-side ${side} ${up ? 'up' : ''}">
-    <div class="mu-card">${sl.boost ? boostChip(sl.boost) : ''}${cardHtml({ pid: sl.id, rarity: sl.rarity || 'common', name: p.name, team: p.team, pos: p.pos })}</div>
+    <div class="mu-card">${sl.boost ? boostChip(sl.boost) : ''}${cardHtml({ pid: sl.id, rarity: sl.rarity || 'common', name: p.name, team: p.team, pos: p.pos, level: 1 + (sl.lv || []).length, picks: sl.lv || [] })}</div>
     <div class="mu-stats"><div class="mu-st-top"><span class="pstate ${st.kind}">${esc(st.text)}</span><b class="mu-fp">${line ? f1(fpOf(line)) : '–'}<small>FP</small></b></div>
       <div class="mu-grid ${line ? '' : 'none'}">${cells}</div>${line ? `<span class="mu-min">${line[0] || 0} min</span>` : ''}</div></div>`;
 }
@@ -2541,6 +2602,8 @@ document.addEventListener('click', e => {
   else if (a === 'reveal-done') { ui.packReveal = null; ui.sig = ''; render(); }
   else if (a === 'sell') sellCards([b.dataset.id]);
   else if (a === 'sell-dupes') sellCards([...document.querySelectorAll('[data-action=sell]')].map(x => x.dataset.id));
+  else if (a === 'lvl-pick') { ui.lvlPick = b.dataset.s; refreshPlayer(); }
+  else if (a === 'lvl-go') levelUp(b.dataset.pid, ui.lvlPick);
   else if (a === 'sell-one') {
     if (b.dataset.last === 'true' && ui.sellConfirm !== b.dataset.id) { ui.sellConfirm = b.dataset.id; openPlayer(b.dataset.pid); return; }
     $('#pcard').close(); sellCards([b.dataset.id]);
@@ -2653,7 +2716,7 @@ function watchLeaders() {
 /* ---------- Player profile ---------- */
 const ESPN_ATHLETE = 'https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/athletes';
 const profiles = new Map();
-let pcardFor = null;
+let pcardFor = null, pcardData = null;
 
 function fetchProfile(id) {
   if (!profiles.has(id)) {
@@ -2723,17 +2786,24 @@ function renderPlayer(id, p, data, failed) {
       : !data ? '<p class="empty">Loading profile…</p>'
       : `<p class="pc-bio">${esc(describe(a, p))}</p><h3>Last 5 games</h3>${gamesTable(lastGames(data[1]))}`}
     ${canEdit ? `<div class="pc-foot"><button class="btn ${inLu ? '' : 'primary'}" data-action="${inLu ? 'drop' : 'add'}" data-id="${esc(id)}" data-pclose>${inLu ? 'Remove from lineup' : `Add to lineup · ${p.stars}★`}</button></div>` : ''}
+    ${owns(id) ? levelFoot(id) : ''}
     ${sellFoot(id)}
     <p class="pc-src">Photo and stats: ESPN</p>`;
+}
+// Redraws the open profile in place (after a level-up or new cards), keeping the ESPN data already loaded.
+function refreshPlayer() {
+  if (!pcardFor || !$('#pcard').open) return;
+  const p = pmap(days.get(ui.sel) || { players: [] }).get(pcardFor) || (roster.has(pcardFor) ? { ...roster.get(pcardFor), opp: '' } : undefined);
+  renderPlayer(pcardFor, p, pcardData);
 }
 
 function openPlayer(id) {
   const dlg = $('#pcard'), p = pmap(days.get(ui.sel) || { players: [] }).get(id) || (roster.has(id) ? { ...roster.get(id), opp: '' } : undefined);
-  if (pcardFor !== id) ui.sellConfirm = null;
+  if (pcardFor !== id) { ui.sellConfirm = null; ui.lvlPick = null; pcardData = null; }
   pcardFor = id;
-  renderPlayer(id, p);
+  renderPlayer(id, p, pcardData);
   if (!dlg.open) dlg.showModal();
-  fetchProfile(id).then(d => { if (pcardFor === id) renderPlayer(id, p, d); }, () => { if (pcardFor === id) renderPlayer(id, p, null, true); });
+  fetchProfile(id).then(d => { if (pcardFor === id) { pcardData = d; renderPlayer(id, p, d); } }, () => { if (pcardFor === id) renderPlayer(id, p, null, true); });
 }
 
 document.addEventListener('click', e => {
@@ -2809,13 +2879,11 @@ function startData() {
   db.collection('entries').where('uid', '==', me.id)
     .onSnapshot(s => { entries = new Map(s.docs.map(x => [x.data().date, x.data()])); loaded.entries = true; render(); }, () => { loaded.entries = true; render(); });
   db.collection(`users/${me.id}/cards`).onSnapshot(s => {
-    cards = new Map();
     allCards = s.docs.map(d => ({ id: d.id, ...d.data() }));
-    for (const d of s.docs) {
-      const c = d.data();
-      if ((RARITY_RANK[c.rarity] ?? 0) >= (RARITY_RANK[cards.get(c.pid)?.rarity] ?? -1)) cards.set(c.pid, c);
-    }
-    loaded.cards = true; ui.sig = ''; render();
+    const by = new Map();
+    for (const c of allCards) { if (!by.has(c.pid)) by.set(c.pid, []); by.get(c.pid).push(c); }
+    cards = new Map([...by].map(([pid, list]) => [pid, bestOf(list)]));
+    loaded.cards = true; ui.sig = ''; render(); refreshPlayer();
   }, () => { loaded.cards = true; render(); });
   db.collection(`users/${me.id}/boosters`).onSnapshot(s => {
     boosters = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.name.localeCompare(b.name));

@@ -112,4 +112,8 @@ function makePack({ roster, kind, teams = null, rnd = Math.random }) {
   return { cards, boosters };
 }
 
-module.exports = { makeStarterPack, STARTER_PACKS, PACKS, BOOSTERS, SELL_VALUE, RARITY_STARS, MIN_MPG, makePack, openSlateTeams };
+// Levelling up a card: each level uses LEVEL.cost duplicate copies of the player and adds LEVEL.bonus to one category
+// the player picks (fgm lifts FG%, to cuts turnovers). Keep in step with sync/battle.mjs and index.html.
+const LEVEL = { cost: 2, max: 3, bonus: 0.05, stats: ['pts', 'reb', 'ast', 'stl', 'blk', 'tpm', 'fgm', 'ftm', 'to'] };
+
+module.exports = { makeStarterPack, STARTER_PACKS, PACKS, BOOSTERS, SELL_VALUE, RARITY_STARS, MIN_MPG, makePack, openSlateTeams, LEVEL, RANK };

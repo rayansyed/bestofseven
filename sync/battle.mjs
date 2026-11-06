@@ -41,6 +41,8 @@ export const RARITY = {
   legendary: { name: 'Legendary', bonus: 0.10 },
 };
 const BOOST = 0.10, COUNTER = 0.10, STACK_CAP = 0.25;
+// Each card level adds this to the category picked for it (a slot's lv lists the picks). Same as LEVEL.bonus in api/_packs.js.
+export const LEVEL_BONUS = 0.05;
 const COUNTING = ['pts', 'reb', 'ast', 'stl', 'blk', 'tpm', 'fgm', 'fga', 'ftm', 'to'];
 
 export const synergiesOf = slots => {
@@ -63,8 +65,9 @@ export function sideTotals(slots, opp, results) {
     for (const k of COUNTING) {
       const v = L[STAT[k]] || 0;
       if (k === 'fga') { t.fga += v; continue; }
-      // Rarity and archetype bonuses stack, capped at +25%.
-      const bonus = Math.min(STACK_CAP, (RARITY[s.rarity]?.bonus || 0) + ((s.types || []).some(x => TYPES[x]?.boost === k) ? BOOST : 0));
+      // Rarity, archetype and card-level bonuses stack, capped at +25%.
+      const lv = LEVEL_BONUS * (s.lv || []).filter(x => x === k).length;
+      const bonus = Math.min(STACK_CAP, (RARITY[s.rarity]?.bonus || 0) + ((s.types || []).some(x => TYPES[x]?.boost === k) ? BOOST : 0) + lv);
       let mult = k === 'to' ? 1 - bonus : 1 + bonus;
       if (cuts.includes(k)) mult *= 1 - COUNTER;
       // A booster card lifts one stat (or all of them) for this game, on top of the capped bonuses.

@@ -9,11 +9,14 @@ import { sideTotals, decide, addTotals, weekResult, weekOf, weekDates, duelsOf }
 
 const RANK = { common: 0, rare: 1, epic: 2, legendary: 3 };
 
-// The player's cards by player id, keeping the rarest copy.
+// The player's cards by player id: the rarest copy's rarity, and the level picks of the copy carrying the levels.
 async function collection(db, uid) {
   const owned = new Map();
   for (const { data: c } of await db.list(`users/${uid}/cards`)) {
-    if ((RANK[c.rarity] ?? 0) >= (RANK[owned.get(c.pid)] ?? -1)) owned.set(c.pid, c.rarity || 'common');
+    const o = owned.get(c.pid) || { rarity: null, level: 0, picks: [] };
+    if ((RANK[c.rarity] ?? 0) >= (RANK[o.rarity] ?? -1)) o.rarity = c.rarity || 'common';
+    if ((c.level || 1) > o.level) { o.level = c.level || 1; o.picks = c.picks || []; }
+    owned.set(c.pid, o);
   }
   return owned;
 }
@@ -37,7 +40,12 @@ function pair(players) {
 export async function lockNight(db, day) {
   const date = day.date, week = weekOf(date);
   const pmap = new Map(day.players.map(p => [p.id, p]));
-  const slotsOf = (ids, rarityOf) => ids.map(id => id ? { id, rarity: rarityOf(id), types: pmap.get(id)?.types || [] } : null);
+  // A slot carries its card's rarity, archetypes and level picks (lv), as they were at lock.
+  const slotsOf = (ids, cardOf) => ids.map(id => {
+    if (!id) return null;
+    const c = cardOf(id);
+    return { id, rarity: c?.rarity || 'common', types: pmap.get(id)?.types || [], ...(c?.picks?.length ? { lv: c.picks } : {}) };
+  });
   const matches = new Map((await db.query('matches', 'week', week)).map(m => [m.id, m.data]));
   const seat = new Map();
   for (const [mid, m] of matches) m.sides.forEach((s, k) => { if (s.uid) seat.set(s.uid, [mid, k]); });
@@ -84,7 +92,7 @@ export async function lockNight(db, day) {
     m.sides.forEach((s, k) => {
       if (!s.bot) return;
       const lu = buildLineup(day.players, { rnd: seeded(`${date}|bot|${mid}`), noise: botNoise(m.tier), tries: 80, noCaptain: true });
-      if (lu) night.sides[k].slots = slotsOf(lu.ids, () => 'common');
+      if (lu) night.sides[k].slots = slotsOf(lu.ids, () => null);
     });
     m.nights = { ...m.nights, [date]: night };
   }

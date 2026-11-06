@@ -888,58 +888,69 @@ h1 { font-size: 30px; line-height: 1.15; }
 /* The lineup is the page itself, not a card on it: a big heading, then the court full width */
 /* The squad screen: the court is the page's centre, sized to fit the screen, on a faint playbook backdrop */
 #week:empty { display: none; }
-/* Weekly Star cards: a holographic foil frame (like a prizm/optic parallel), full-bleed action photo with an angled
-   corner and a light foil sheen, a dark side strip with his best night, and a black name bar with a foil edge.
-   Everything scales with the card (cqw). */
-.sc { --holo: linear-gradient(125deg, #D9DEE5 0%, #8FF3FF 9%, #E9F2F7 15%, #FF9BEA 23%, #C7CCD4 30%, #FFF07A 38%, #A6FFC8 46%, #E4E8EE 52%, #9DB0FF 60%, #FF9BD8 68%, #DCE1E7 75%, #7FE9FF 84%, #FFE88A 92%, #D9DEE5 100%); }
+/* Weekly Star cards, in the style of a chrome parallel: a thick holographic foil frame around a dark panel with
+   notched corners, a white inner frame line and a faint maze pattern; ice-blue tech bars off the edges, a "7" logo
+   square, a slanted Weekly Star emblem and a white nameplate. Everything scales with the card (cqw). */
+.sc { --holo: linear-gradient(125deg, #D9DEE5 0%, #8FF3FF 9%, #E9F2F7 15%, #FF9BEA 23%, #C7CCD4 30%, #FFF07A 38%, #A6FFC8 46%, #E4E8EE 52%, #9DB0FF 60%, #FF9BD8 68%, #DCE1E7 75%, #7FE9FF 84%, #FFE88A 92%, #D9DEE5 100%);
+  --ice: #6FD3FF; --ink: #14171C; --notch: polygon(4cqw 0, calc(100% - 4cqw) 0, 100% 4cqw, 100% calc(100% - 4cqw), calc(100% - 4cqw) 100%, 4cqw 100%, 0 calc(100% - 4cqw), 0 4cqw); }
 .r-star { box-shadow: inset 0 0 0 1px rgba(28,30,34,.1), 0 10px 24px rgba(110,130,170,.32); }
 .sc .sc-card { position: relative; height: 100%; border-radius: 3cqw; overflow: hidden;
   background: repeating-linear-gradient(115deg, rgba(255,255,255,.55) 0 .5cqw, rgba(255,255,255,0) .5cqw 1.6cqw, rgba(40,50,70,.08) 1.6cqw 2.2cqw), var(--holo);
   background-size: 100% 100%, 300% 300%; animation: sc-holo 7s ease-in-out infinite alternate; }
 @keyframes sc-holo { from { background-position: 0 0, 0% 40%; } to { background-position: 0 0, 100% 60%; } }
-.sc-photo::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .4; mix-blend-mode: color-dodge;
+.sc-inner { position: absolute; left: 7cqw; right: 7cqw; top: 7cqw; bottom: 25cqw; clip-path: var(--notch);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' fill='none' stroke='%239FE8FF' stroke-opacity='.28' stroke-width='1.6' stroke-linecap='square'%3E%3Cpath d='M2 2h10v6H6v6h8M18 2h8v10h-6M26 18v8h-8v-6M2 20h6v6M12 18v8'/%3E%3C/svg%3E") repeat, #14171C; background-size: 7cqw 7cqw, auto; }
+.sc-inner::after { content: ""; position: absolute; inset: 2cqw; z-index: 2; pointer-events: none; clip-path: var(--notch);
+  box-shadow: inset 0 0 0 .55cqw rgba(255,255,255,.9), inset 0 0 0 1.4cqw rgba(20,23,28,.85), inset 0 0 0 1.75cqw rgba(255,255,255,.35); }
+.sc-photo { position: absolute; inset: 3.6cqw; overflow: hidden; clip-path: var(--notch); background: #1B2027; }
+.sc-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; display: block; }
+.sc-photo.head { background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--team) 55%, transparent), transparent 70%); }
+.sc-photo.head img { object-fit: contain; object-position: 50% 100%; transform: scale(1.12); transform-origin: 50% 100%; filter: drop-shadow(0 2cqw 3cqw rgba(0,0,0,.5)); }
+.sc-photo::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .3; mix-blend-mode: color-dodge;
   background: linear-gradient(125deg, rgba(255,0,170,.35), rgba(0,220,255,.35) 25%, rgba(255,230,0,.3) 50%, rgba(140,0,255,.35) 75%, rgba(0,255,170,.3));
   background-size: 300% 300%; animation: sc-holo-photo 7s ease-in-out infinite alternate; }
 @keyframes sc-holo-photo { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
-.sc-photo { position: absolute; left: 12cqw; right: 4cqw; top: 4cqw; bottom: 30cqw; overflow: hidden; background: #1B2027;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 14cqw 100%, 0 calc(100% - 14cqw)); box-shadow: inset 0 0 0 .5cqw #111418; }
-.sc-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; display: block; }
-.sc-photo.head { background: repeating-linear-gradient(115deg, rgba(255,255,255,.09) 0 2px, transparent 2px 11px),
-  radial-gradient(circle at 55% 30%, color-mix(in srgb, var(--team) 70%, #fff), var(--team) 48%, color-mix(in srgb, var(--team) 40%, #000)); }
-.sc-photo.head img { object-fit: contain; object-position: 55% 100%; transform: scale(1.15); transform-origin: 50% 100%; filter: drop-shadow(0 2cqw 3cqw rgba(0,0,0,.4)); }
-.sc-side { position: absolute; left: 4cqw; top: 4cqw; bottom: 30cqw; width: 7cqw; display: flex; align-items: center; justify-content: center; overflow: hidden;
-  background: #111418; color: #fff; writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap;
-  font: 700 max(5.5px, 3.5cqw)/1 "Oswald", var(--sans); letter-spacing: .08em; text-transform: uppercase; }
-
-.sc-rate { position: absolute; top: 6cqw; left: 15cqw; z-index: 1; display: grid; justify-items: center; line-height: 1; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.75); }
-.sc-rate b { font: 700 14cqw/.95 "Oswald", var(--sans); }
-.sc-rate small { font: 800 3.6cqw/1.3 var(--sans); letter-spacing: .08em; }
-.sc .tc-lv { left: 15cqw; bottom: 33cqw; }
-/* The name bar: a "BEST OF 7 / WEEKLY STAR" wordmark on the left, like a set title, and the player on the right. */
-.sc-bar { position: absolute; left: 4cqw; right: 4cqw; bottom: 4cqw; height: 22cqw; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 3cqw; padding: 0 3.4cqw;
-  color: #fff; border-top: .9cqw solid transparent; background: linear-gradient(#111418, #111418) padding-box, var(--holo) border-box; background-size: 100% 100%, 300% 100%; }
-.sc-title { display: grid; line-height: .95; padding-right: 3cqw; border-right: .4cqw solid rgba(255,255,255,.25); transform: skewX(-8deg); }
-.sc-title small { font: 700 max(5px, 3cqw)/1.1 "Oswald", var(--sans); letter-spacing: .32em; text-transform: uppercase; color: rgba(255,255,255,.75); }
-.sc-title b { font: 700 max(8px, 6.6cqw)/1 "Oswald", var(--sans); letter-spacing: .02em; text-transform: uppercase; color: #fff; -webkit-text-stroke: .25cqw #fff; }
-.sc-who { display: grid; justify-items: end; gap: 1cqw; min-width: 0; text-align: right; }
-.sc-meta { font: 700 max(5px, 3cqw)/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.sc-name { display: block; max-width: 100%; font: 700 max(8px, var(--nm, 7cqw))/1.05 "Oswald", var(--sans); text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* The bonus sits on a white tab above the bar, where the date goes on the real thing. */
-.sc-tab { position: absolute; right: 4cqw; bottom: 26.9cqw; z-index: 1; padding: 1.1cqw 2.4cqw; background: #fff; color: #111418; white-space: nowrap;
-  font: 700 max(6px, 3.8cqw)/1 "Oswald", var(--sans); letter-spacing: .05em; text-transform: uppercase; clip-path: polygon(2.4cqw 0, 100% 0, 100% 100%, 0 100%); }
-.sc-tab i { font-style: normal; color: rgba(17,20,24,.55); }
-.sc .sc-card::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.35) 50%, transparent 62%);
+.sc-rate { position: absolute; top: 5.5cqw; left: 6.5cqw; z-index: 3; display: grid; justify-items: center; line-height: 1; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+.sc-rate b { font: 700 13cqw/.95 "Oswald", var(--sans); }
+.sc-rate small { font: 800 3.4cqw/1.3 var(--sans); letter-spacing: .08em; }
+.sc .tc-lv { left: 6.5cqw; bottom: 6cqw; z-index: 3; }
+/* Tech bars sticking out past the frame, left and right */
+.sc-bars { position: absolute; z-index: 3; display: grid; gap: 1.5cqw; pointer-events: none; }
+.sc-bars i { display: block; height: 1.7cqw; background: var(--ice); box-shadow: 0 0 1.2cqw rgba(111,211,255,.7), inset 0 -.4cqw 0 rgba(20,60,90,.25); }
+.sc-bars.l { left: 0; top: 30cqw; } .sc-bars.l i:nth-child(1) { width: 13cqw; } .sc-bars.l i:nth-child(2) { width: 8cqw; } .sc-bars.l i:nth-child(3) { width: 11cqw; }
+.sc-bars.r { right: 0; top: 74cqw; justify-items: end; } .sc-bars.r i:nth-child(1) { width: 10cqw; } .sc-bars.r i:nth-child(2) { width: 14cqw; }
+.sc-logo { position: absolute; top: 4cqw; right: 4cqw; z-index: 3; width: 12cqw; height: 13cqw; display: grid; place-content: center; justify-items: center; gap: .3cqw;
+  background: #fff; color: var(--ink); border-radius: 1.8cqw; box-shadow: 0 1cqw 2cqw rgba(0,0,0,.35); }
+.sc-logo b { font: 700 8.5cqw/.9 "Oswald", var(--sans); transform: skewX(-8deg); }
+.sc-logo small { font: 800 max(4px, 1.7cqw)/1 var(--sans); letter-spacing: .06em; text-transform: uppercase; }
+.sc-side { position: absolute; right: 1.6cqw; top: 22cqw; z-index: 3; max-height: 44cqw; overflow: hidden; writing-mode: vertical-rl; white-space: nowrap;
+  font: 700 max(5px, 2.8cqw)/1 "Oswald", var(--sans); letter-spacing: .1em; text-transform: uppercase; color: rgba(20,23,28,.75); }
+/* The emblem, bottom left: a slanted blue badge that breaks over the frame */
+.sc-emblem { position: absolute; left: 3.5cqw; bottom: 6cqw; z-index: 4; display: grid; justify-items: center; line-height: .88; padding: 1.4cqw 2.8cqw 1.6cqw;
+  background: repeating-linear-gradient(115deg, rgba(255,255,255,.14) 0 .5cqw, transparent .5cqw 1.6cqw), linear-gradient(160deg, #57C3FF, #1C6DD0 70%);
+  color: #fff; border: .6cqw solid #fff; border-radius: 1.4cqw; transform: rotate(-8deg) skewX(-6deg); box-shadow: 0 1.2cqw 2.4cqw rgba(0,0,0,.35); }
+.sc-emblem small { font: 700 max(5px, 3.2cqw)/1.1 "Oswald", var(--sans); letter-spacing: .12em; text-transform: uppercase; }
+.sc-emblem b { font: 700 max(9px, 8.6cqw)/.9 "Oswald", var(--sans); text-transform: uppercase; letter-spacing: .02em; text-shadow: 0 .5cqw 0 rgba(10,40,90,.45); }
+/* The nameplate, bottom right, with an ice-blue bar above it */
+.sc-accent { position: absolute; right: 14cqw; bottom: 22.2cqw; z-index: 3; width: 34cqw; height: 2.2cqw; background: var(--ice); box-shadow: 0 0 1.2cqw rgba(111,211,255,.6); }
+.sc-plate { position: absolute; right: 4cqw; bottom: 5cqw; z-index: 3; width: 64cqw; height: 15.5cqw; display: grid; align-content: center; gap: 1cqw; padding: 0 3cqw 0 6cqw;
+  background: #fff; color: var(--ink); clip-path: polygon(3.4cqw 0, 100% 0, 100% 100%, 0 100%); box-shadow: 0 1cqw 2cqw rgba(0,0,0,.2); }
+.sc-name { display: block; font: italic 800 max(8px, var(--nm, 6cqw))/1.05 var(--sans); letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sc-sub { display: flex; justify-content: space-between; align-items: baseline; gap: 2cqw; min-width: 0; }
+.sc-sub em { font: 700 max(5px, 3cqw)/1 "Oswald", var(--sans); font-style: normal; letter-spacing: .04em; text-transform: uppercase; color: #1C6DD0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sc-sub span { font: 800 max(5.5px, 3.4cqw)/1 var(--sans); letter-spacing: .06em; text-transform: uppercase; flex: none; }
+.sc .sc-card::after { content: ""; position: absolute; inset: 0; z-index: 5; pointer-events: none; background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.35) 50%, transparent 62%);
   background-size: 260% 100%; animation: tc-shine 4.2s ease-in-out infinite; mix-blend-mode: overlay; }
 .tc-tonight.t-pos { background: #111418; color: #fff; }
 @container (max-width: 125px) {
-  .sc-meta, .sc-tab i, .sc-rate small, .sc-title small { display: none; }
-  .sc-side { font-size: 0; }
-  .sc-bar { height: 22cqw; grid-template-columns: minmax(0, 1fr); gap: 0; padding: 0 3cqw; }
-  .sc-title { display: none; }
-  .sc-who { justify-items: start; text-align: left; }
-  .sc-name { font-size: max(8px, calc(var(--nm, 7cqw) * 1.3)); }
-  .sc-tab { font-size: max(5.5px, 5cqw); bottom: 25cqw; }
+  .sc-bars, .sc-side, .sc-logo small, .sc-sub em, .sc-rate small, .sc-emblem small { display: none; }
+  .sc-logo { width: 13cqw; height: 13cqw; }
+  .sc-emblem { padding: 1.2cqw 2cqw; bottom: 20cqw; }
+  .sc-plate { width: 84cqw; padding-left: 5cqw; }
+  .sc-accent { display: none; }
+  .sc-name { font-size: max(8px, calc(var(--nm, 6cqw) * 1.25)); }
 }
+
 @media (prefers-reduced-motion: reduce) { .sc .sc-card::after, .sc .sc-card, .sc-photo::after { animation: none; } }
 /* Card levels */
 .tc-lv { position: absolute; left: 4cqw; bottom: 3cqw; z-index: 1; padding: .9cqw 2.6cqw; border-radius: 1.6cqw; background: rgba(10,12,16,.82); color: #fff;
@@ -1499,27 +1510,31 @@ function cardHtml(c, opts = {}) {
 const weekShort = w => dateOf(w).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 function starCardHtml(c, { fresh = false, i = 0, tonight = false, tag = null, ready = false } = {}) {
   const p = { ...c, ...roster.get(c.pid), id: c.pid }, s = c.star || {};
-  const [first, ...rest] = String(p.name || '').split(' ');
   const head = `https://a.espncdn.com/i/headshots/nba/players/full/${encodeURIComponent(c.pid)}.png`;
   const photo = s.week ? `tow/${s.week}/${encodeURIComponent(c.pid)}.jpg` : '';
   const lbl = s.label || STAT_LABEL[s.stat] || String(s.stat || '').toUpperCase(), level = c.level || 1;
   const img = photo ? `<img src="${photo}" alt="" loading="lazy" onerror="this.onerror=null;this.src='${head}';this.parentNode.classList.add('head')">` : `<img src="${head}" alt="" loading="lazy">`;
+  const name = String(p.name || ''), nm = name.length <= 12 ? 6.6 : name.length <= 16 ? 5.4 : name.length <= 20 ? 4.5 : 3.9;
   return `<div class="tc sc r-star ${fresh ? 'fresh' : ''}" style="--i:${i};--team:${TEAM_COLORS[p.team] || '#5B6573'}" data-pid="${esc(c.pid)}" title="${esc(p.name)} · Weekly Star · +${Math.round(STAR_BONUS * 100)}% ${esc(lbl)}, +${Math.round(RARITY.star.bonus * 100)}% all">
     <div class="sc-card">
-      <div class="sc-photo ${photo ? '' : 'head'}">${img}</div>
-      <span class="sc-side">${esc(s.caption || `Weekly Star · ${p.team || ''}`)}</span>
-
-      <span class="sc-rate"><b>${s.fpg ? Math.round(s.fpg) : p.gp ? Math.round(p.avg) : '–'}</b><small>${s.fpg ? 'FP/G' : 'FPPG'}</small></span>
-      ${level > 1 ? `<span class="tc-lv">Level ${level}</span>` : ''}
-      <span class="sc-tab">+${Math.round(STAR_BONUS * 100)}% ${esc(lbl)}${s.statPg ? `<i> · ${s.statPg}/G</i>` : ''} · +${Math.round(RARITY.star.bonus * 100)}% all</span>
-      <div class="sc-bar"><span class="sc-title"><small>Best of 7</small><b>Weekly Star</b></span>
-        <span class="sc-who"><span class="sc-meta">${rest.length ? esc(first) + ' · ' : ''}${esc(p.team || '')}</span>
-          <b class="sc-name" style="--nm:${(n => n <= 8 ? 7 : n <= 10 ? 5.8 : n <= 13 ? 4.8 : 4)((rest.length ? rest.join(' ') : first).length)}cqw">${esc(rest.length ? rest.join(' ') : first)}</b></span></div>
+      <span class="sc-bars l" aria-hidden="true"><i></i><i></i><i></i></span><span class="sc-bars r" aria-hidden="true"><i></i><i></i></span>
+      <div class="sc-inner">
+        <div class="sc-photo ${photo ? '' : 'head'}">${img}</div>
+        <span class="sc-rate"><b>${s.fpg ? Math.round(s.fpg) : p.gp ? Math.round(p.avg) : '–'}</b><small>${s.fpg ? 'FP/G' : 'FPPG'}</small></span>
+        ${level > 1 ? `<span class="tc-lv">Level ${level}</span>` : ''}
+      </div>
+      <span class="sc-logo" aria-hidden="true"><b>7</b><small>Best of 7</small></span>
+      ${s.caption ? `<span class="sc-side">${esc(s.caption)}</span>` : ''}
+      <span class="sc-emblem"><small>★ Weekly</small><b>Star</b></span>
+      <i class="sc-accent" aria-hidden="true"></i>
+      <div class="sc-plate"><b class="sc-name" style="--nm:${nm}cqw">${esc(name)}</b>
+        <span class="sc-sub"><em>+${Math.round(STAR_BONUS * 100)}% ${esc(lbl)}${s.statPg ? ` · ${s.statPg}/G` : ''} · +${Math.round(RARITY.star.bonus * 100)}% all</em><span>${esc(p.team || '')}</span></span></div>
     </div>
     ${tag ? `<span class="tc-tonight t-${tag[1]}">${esc(tag[0])}</span>` : tonight ? '<span class="tc-tonight">Tonight</span>' : ''}
     ${ready ? '<span class="tc-ready">▲ Level up</span>' : ''}
   </div>`;
 }
+
 function tradingCardHtml(c, { fresh = false, i = 0, tonight = false, tag = null, ready = false } = {}) {
   const p = { ...c, ...roster.get(c.pid), id: c.pid }, rarity = c.rarity || 'common';
   const [first, ...rest] = String(p.name || '').split(' ');

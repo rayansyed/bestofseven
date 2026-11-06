@@ -4,7 +4,7 @@
 // are final its stats are added to every matchup that week, and once the week's last game is final the nine
 // categories over the whole week decide each matchup and rank points are applied.
 // Nights grouped before matchups existed are scored by ranked-groups.mjs.
-import { RP_WIN, RP_LOSS, SKIP_PENALTY, COINS, TIERS, tierOf, invalidReason, rewardFor, momentBadges, buildLineup, seeded, botName, botNoise, renameOldBot } from './game.mjs';
+import { RP_WIN, RP_LOSS, SKIP_PENALTY, COINS, WEEK_PACKS, TIERS, tierOf, invalidReason, rewardFor, momentBadges, buildLineup, seeded, botName, botNoise, renameOldBot } from './game.mjs';
 import { sideTotals, decide, addTotals, weekResult, weekOf, weekDates, duelsOf } from './battle.mjs';
 
 const RANK = { common: 0, rare: 1, epic: 2, legendary: 3, star: 4 };
@@ -176,13 +176,15 @@ export async function scoreWeeks(db, today) {
       if (user.shield && tierOf(after) < tierBefore) after = tierBefore * 100;
       const promoted = tierOf(after) > tierBefore;
       const coins = won ? COINS.weekWin : 0;
-      const res = { week: m.week, mid, result: won ? 'W' : lost ? 'L' : 'T', cats: [r.wins[k], r.wins[1 - k]], duels: [r.duels[k], r.duels[1 - k]], opp: opp.name, rpDelta: after - before, rpAfter: after, coins };
+      // Every finished week also gives a pack, opened from the Gifts panel: Premium for a win, Standard otherwise.
+      const pack = won ? WEEK_PACKS.win : lost ? WEEK_PACKS.loss : WEEK_PACKS.tie, gifts = user.giftPacks || {};
+      const res = { week: m.week, mid, result: won ? 'W' : lost ? 'L' : 'T', cats: [r.wins[k], r.wins[1 - k]], duels: [r.duels[k], r.duels[1 - k]], pack, opp: opp.name, rpDelta: after - before, rpAfter: after, coins };
       writes.push({ path: 'users/' + me.uid, data: {
-        coins: (user.coins || 0) + coins,
+        coins: (user.coins || 0) + coins, giftPacks: { ...gifts, [pack]: (gifts[pack] || 0) + 1 },
         rp: after, tier: tierOf(after), shield: promoted ? 1 : 0, bestTier: Math.max(user.bestTier || 0, tierOf(after)),
         wins: (user.wins || 0) + (won ? 1 : 0), losses: (user.losses || 0) + (lost ? 1 : 0), lastWeek: res,
       }, merge: true });
-      m.sides[k] = { ...me, rpDelta: res.rpDelta, coins };
+      m.sides[k] = { ...me, rpDelta: res.rpDelta, coins, pack };
     }
     writes.push({ path: 'matches/' + mid, data: { scored: true, result: r, sides: m.sides }, merge: true });
     done++;

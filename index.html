@@ -888,6 +888,8 @@ h1 { font-size: 30px; line-height: 1.15; }
 /* The lineup is the page itself, not a card on it: a big heading, then the court full width */
 /* The squad screen: the court is the page's centre, sized to fit the screen, on a faint playbook backdrop */
 #week:empty { display: none; }
+.mu-reward { max-width: none; font-size: 13px; color: var(--muted); }
+.mu-reward b { color: var(--ink); }
 .spot-fp { --fl: #14171C; font-variant-numeric: tabular-nums; }
 .spot-fp.live { --fl: var(--good); }
 .lineup-stage + .ms-card { margin-top: 4px; }
@@ -1767,8 +1769,8 @@ function boosterPick(i) {
 // Mirrors PACKS and SELL_VALUE in api/_packs.js; the server decides what a pack holds and costs.
 const SHOP = [
   { type: 'daily', name: 'Daily pack', price: 0, what: '3 players with a game on the next slate, plus a booster' },
-  { type: 'standard', name: 'Standard pack', price: 150, what: '4 players plus a booster' },
-  { type: 'premium', name: 'Premium pack', price: 400, what: '5 players with at least one Rare, plus 2 boosters' },
+  { type: 'standard', name: 'Standard pack', price: 80, what: '4 players plus a booster' },
+  { type: 'premium', name: 'Premium pack', price: 200, what: '5 players with at least one Rare, plus 2 boosters' },
 ];
 const SELL_VALUE = { common: 10, rare: 30, epic: 75, legendary: 200, star: 300 };
 const PACK_CARDS = { starter: 5, daily: 4, standard: 5, premium: 7 };
@@ -2543,7 +2545,7 @@ function matchupView() {
   const hero = `<section class="mu-hero">
     <div class="mu-eyebrow">${tierBadge(m.tier)}<span>Week of ${weekLabel(m.week)}</span><span>·</span>${status}</div>
     <div class="mu-board">${who(w.mine, true)}<div class="mu-score"><b class="${a >= b ? 'lead' : ''}">${a}</b><span>–</span><b class="${b >= a ? 'lead' : ''}">${b}</b><small>Categories won</small></div>${who(w.opp, false)}</div>
-    <div class="mu-duels"><b>${w.r.duels[0]}</b><span>Duels won</span><b>${w.r.duels[1]}</b></div></section>`;
+    <div class="mu-duels"><b>${w.r.duels[0]}</b><span>Duels won</span><b>${w.r.duels[1]}</b></div>${m.scored && w.mine.pack ? `<p class="mu-reward">You earned a <b>${w.mine.pack === 'premium' ? 'Premium' : 'Standard'} pack</b> · open it from Gifts on the Packs page</p>` : ''}</section>`;
   // Categories: the week's totals (what decides the matchup), or just the night on show.
   const scope = ui.muCats === 'night' && n ? 'night' : 'week', empty = addTotals([]);
   const r = scope === 'night' ? decide(n.tot[0] || empty, n.tot[1] || empty, n.duels) : w.r;

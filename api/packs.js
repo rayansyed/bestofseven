@@ -5,7 +5,7 @@
 const { initializeApp, cert, getApps } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 const { getFirestore } = require('firebase-admin/firestore');
-const { makeStarterPack, STARTER_PACKS, PACKS, makePack, openSlateTeams } = require('./_packs.js');
+const { makeStarterPack, STARTER_PACKS, PACKS, makePack, openSlateTeams, starsFor } = require('./_packs.js');
 
 function admin() {
   if (!getApps().length) initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)) });
@@ -53,7 +53,9 @@ module.exports = async (req, res) => {
         if (!gift && type === 'daily' && u.dailyPack === today) throw new HttpError(409, 'You’ve opened today’s free pack. A new one comes tomorrow.');
         if (!gift && coins < def.price) throw new HttpError(409, `You need ${def.price - coins} more coins for a ${def.name}.`);
         // The daily pack's players have a game on the next slate that's still open.
-        pack = makePack({ roster: roster.data().players, kind: type, teams: type === 'daily' ? open[0] || null : null });
+        // Last week's Team of the Week can turn up as Weekly Star cards this week.
+        const r = roster.data();
+        pack = makePack({ roster: r.players, kind: type, teams: type === 'daily' ? open[0] || null : null, stars: starsFor(r, today), week: r.stars && r.stars.week });
         update = gift ? { [`giftPacks.${type}`]: gifts - 1 } : type === 'daily' ? { dailyPack: today } : { coins: coins - def.price };
       }
       const at = Date.now();

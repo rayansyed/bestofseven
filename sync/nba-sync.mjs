@@ -15,6 +15,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { starsOf } from './game.mjs';
 import { lockNight, scoreNight, scoreWeeks, applySkips, bestSquads } from './ranked.mjs';
+import { teamOfWeek } from './stars.mjs';
+import { weekOf } from './battle.mjs';
 import * as groups from './ranked-groups.mjs';
 import { assignTypes, SEASON } from './battle.mjs';
 
@@ -174,7 +176,9 @@ async function updateRoster(db, season, types) {
     return { id, name, team, pos, avg, gp, mpg: gp ? Math.round(t[SEASON.min] / gp * 10) / 10 : 0, stars: starsOf(avg), types: types[id] || [], s: perGame(season, id) };
   });
   const same = prev && JSON.stringify(prev.players) === JSON.stringify(players);
-  const roster = { updatedAt: same ? prev.updatedAt : new Date().toISOString(), fetchedAt: base === prev?.players ? fetchedAt : new Date().toISOString(), players };
+  const roster = { updatedAt: same ? prev.updatedAt : new Date().toISOString(), fetchedAt: base === prev?.players ? fetchedAt : new Date().toISOString(), players,
+    // The current Team of the Week, written separately below; carried across rewrites.
+    ...(prev?.stars ? { stars: prev.stars } : {}) };
   if (!same || roster.fetchedAt !== fetchedAt) await db.write('meta/roster', roster);
   return roster;
 }
@@ -257,4 +261,13 @@ for (const date of dates) {
 // Weeks end on Sunday: decide every matchup whose week is over and fully scored.
 const weeks = await scoreWeeks(db, etDate(now));
 if (weeks) console.log(`weeks: decided ${weeks} matchups`);
+// Last week's Team of the Week, once all its games are final: they go into packs this week.
+const lastWeek = weekOf(etDate(now - 7 * 864e5)), rosterNow = await db.read('meta/roster');
+if (rosterNow && rosterNow.stars?.week !== lastWeek) {
+  const stars = await teamOfWeek(db, lastWeek, rosterNow);
+  if (stars?.players.length) {
+    await db.batch([{ path: 'meta/roster', data: { stars }, merge: true }]);
+    console.log(`stars: team of the week ${lastWeek}: ${stars.players.map(p => `${p.name} (${p.slot}, ${p.fp} FP, +${p.label})`).join(', ')}`);
+  }
+}
 process.exit(0);

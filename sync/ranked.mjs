@@ -7,14 +7,14 @@
 import { RP_WIN, RP_LOSS, SKIP_PENALTY, COINS, TIERS, tierOf, invalidReason, rewardFor, momentBadges, buildLineup, seeded, botName, botNoise } from './game.mjs';
 import { sideTotals, decide, addTotals, weekResult, weekOf, weekDates, duelsOf } from './battle.mjs';
 
-const RANK = { common: 0, rare: 1, epic: 2, legendary: 3 };
+const RANK = { common: 0, rare: 1, epic: 2, legendary: 3, star: 4 };
 
 // The player's cards by player id: the rarest copy's rarity, and the level picks of the copy carrying the levels.
 async function collection(db, uid) {
   const owned = new Map();
   for (const { data: c } of await db.list(`users/${uid}/cards`)) {
     const o = owned.get(c.pid) || { rarity: null, level: 0, picks: [] };
-    if ((RANK[c.rarity] ?? 0) >= (RANK[o.rarity] ?? -1)) o.rarity = c.rarity || 'common';
+    if ((RANK[c.rarity] ?? 0) >= (RANK[o.rarity] ?? -1)) { o.rarity = c.rarity || 'common'; o.star = c.rarity === 'star' ? c.star?.stat || null : null; }
     if ((c.level || 1) > o.level) { o.level = c.level || 1; o.picks = c.picks || []; }
     owned.set(c.pid, o);
   }
@@ -44,7 +44,7 @@ export async function lockNight(db, day) {
   const slotsOf = (ids, cardOf) => ids.map(id => {
     if (!id) return null;
     const c = cardOf(id);
-    return { id, rarity: c?.rarity || 'common', types: pmap.get(id)?.types || [], ...(c?.picks?.length ? { lv: c.picks } : {}) };
+    return { id, rarity: c?.rarity || 'common', types: pmap.get(id)?.types || [], ...(c?.picks?.length ? { lv: c.picks } : {}), ...(c?.star ? { star: c.star } : {}) };
   });
   const matches = new Map((await db.query('matches', 'week', week)).map(m => [m.id, m.data]));
   const seat = new Map();

@@ -419,6 +419,7 @@ body.no-slip main { grid-column: 2 / -1; }
 .rar.r-rare { background: rgba(79,179,246,.16); color: var(--r-rare); }
 .rar.r-epic { background: rgba(183,140,255,.16); color: var(--r-epic); }
 .rar.r-legendary { background: rgba(245,184,61,.16); color: var(--r-legendary); }
+.rar.r-star { background: rgba(229,36,59,.12); color: #E5243B; }
 .runner.rc-rare, .leg.rc-rare { box-shadow: inset 3px 0 0 var(--r-rare); }
 .runner.rc-epic, .leg.rc-epic { box-shadow: inset 3px 0 0 var(--r-epic); }
 .runner.rc-legendary, .leg.rc-legendary { box-shadow: inset 3px 0 0 var(--r-legendary); }
@@ -611,6 +612,10 @@ body.no-slip main { grid-column: 2 / -1; }
 .fx-epic .fx-rays { background: repeating-conic-gradient(rgba(255,0,170,.5) 0 7deg, transparent 7deg 20deg, rgba(0,220,255,.5) 20deg 27deg, transparent 27deg 40deg, rgba(255,230,0,.5) 40deg 47deg, transparent 47deg 60deg); }
 .fx-epic .fx-p:nth-child(3n) { background: #FF4FD8; } .fx-epic .fx-p:nth-child(3n+1) { background: #4FE3FF; } .fx-epic .fx-p:nth-child(3n+2) { background: #FFE14F; }
 .fx-legendary { --fx: rgba(245,184,61,.85); }
+.fx-star { --fx: rgba(229,36,59,.8); }
+.fx-star .fx-rays { width: 380%; background: repeating-conic-gradient(rgba(229,36,59,.55) 0 7deg, transparent 7deg 20deg, rgba(255,255,255,.7) 20deg 24deg, transparent 24deg 40deg); animation-duration: 2.6s; }
+.fx-star .fx-p:nth-child(2n) { background: #fff; }
+.fx-star .fx-label { top: -50px; font-size: 40px; color: #fff; -webkit-text-stroke: 1.5px #7A0C19; }
 .fx-legendary .fx-rays { width: 380%; animation-duration: 2.6s; }
 .fx-legendary .fx-label { top: -50px; font-size: 40px; color: #F5C451; -webkit-text-stroke: 1.5px #3A2606; }
 .stk-card.up.hit .tc { animation: hit-glow 1.8s ease-out; }
@@ -882,6 +887,43 @@ h1 { font-size: 30px; line-height: 1.15; }
 /* The lineup is the page itself, not a card on it: a big heading, then the court full width */
 /* The squad screen: the court is the page's centre, sized to fit the screen, on a faint playbook backdrop */
 #week:empty { display: none; }
+/* Weekly Star cards: white "instant" frame, full-bleed action photo with an angled corner, a dark side strip with
+   his best night, and a black name bar with a red edge. Everything scales with the card (cqw). */
+.r-star { box-shadow: inset 0 0 0 1px rgba(28,30,34,.1), 0 10px 24px rgba(229,36,59,.28); }
+.sc .sc-card { position: relative; height: 100%; border-radius: 3cqw; overflow: hidden; background: linear-gradient(160deg, #FCFCFD, #DCE0E5 55%, #F5F6F8); }
+.sc-photo { position: absolute; left: 12cqw; right: 4cqw; top: 4cqw; bottom: 30cqw; overflow: hidden; background: #1B2027;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 14cqw 100%, 0 calc(100% - 14cqw)); box-shadow: inset 0 0 0 .5cqw #111418; }
+.sc-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; display: block; }
+.sc-photo.head { background: repeating-linear-gradient(115deg, rgba(255,255,255,.09) 0 2px, transparent 2px 11px),
+  radial-gradient(circle at 55% 30%, color-mix(in srgb, var(--team) 70%, #fff), var(--team) 48%, color-mix(in srgb, var(--team) 40%, #000)); }
+.sc-photo.head img { object-fit: contain; object-position: 55% 100%; transform: scale(1.15); transform-origin: 50% 100%; filter: drop-shadow(0 2cqw 3cqw rgba(0,0,0,.4)); }
+.sc-side { position: absolute; left: 4cqw; top: 4cqw; bottom: 30cqw; width: 7cqw; display: flex; align-items: center; justify-content: center; overflow: hidden;
+  background: #111418; color: #fff; writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap;
+  font: 700 max(5.5px, 3.5cqw)/1 "Oswald", var(--sans); letter-spacing: .08em; text-transform: uppercase; }
+.sc-badge { position: absolute; top: 6.5cqw; right: 6.5cqw; z-index: 1; padding: 1.2cqw 2.2cqw; border-radius: 1.2cqw; background: #E5243B; color: #fff;
+  font: 700 max(6px, 4cqw)/1 "Oswald", var(--sans); letter-spacing: .06em; text-transform: uppercase; box-shadow: 0 1cqw 2cqw rgba(0,0,0,.3); }
+.sc-rate { position: absolute; top: 6cqw; left: 15cqw; z-index: 1; display: grid; justify-items: center; line-height: 1; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.75); }
+.sc-rate b { font: 700 14cqw/.95 "Oswald", var(--sans); }
+.sc-rate small { font: 800 3.6cqw/1.3 var(--sans); letter-spacing: .08em; }
+.sc .tc-lv { left: 15cqw; bottom: 33cqw; }
+.sc-bar { position: absolute; left: 4cqw; right: 4cqw; bottom: 4cqw; height: 24cqw; display: grid; align-content: center; gap: 1.2cqw; padding: 0 3.6cqw;
+  background: #111418; color: #fff; border-top: .9cqw solid #E5243B; }
+.sc-meta { font: 700 max(5.5px, 3.3cqw)/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sc-name { display: block; font: 700 max(9px, 8.6cqw)/1 "Oswald", var(--sans); text-transform: uppercase; letter-spacing: .01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transform: skewX(-6deg); }
+.sc-name small { display: block; font-size: .5em; letter-spacing: .12em; color: rgba(255,255,255,.7); }
+.sc-bonus { font: 700 max(6.5px, 4.4cqw)/1.1 "Oswald", var(--sans); letter-spacing: .03em; color: #FF6B7D; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sc-bonus i { font-style: normal; color: rgba(255,255,255,.6); }
+.sc .sc-card::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.35) 50%, transparent 62%);
+  background-size: 260% 100%; animation: tc-shine 4.2s ease-in-out infinite; mix-blend-mode: overlay; }
+.tc-tonight.t-pos { background: #111418; color: #fff; }
+@container (max-width: 125px) {
+  .sc-meta, .sc-bonus i, .sc-rate small { display: none; }
+  .sc-side { font-size: 0; }
+  .sc-badge { font-size: max(5px, 4.6cqw); padding: 1cqw 1.6cqw; top: 5cqw; right: 5cqw; }
+  .sc-bar { height: 22cqw; gap: .6cqw; }
+  .sc-name { font-size: max(8px, 10cqw); } .sc-name small { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .sc .sc-card::after { animation: none; } }
 /* Card levels */
 .tc-lv { position: absolute; left: 4cqw; bottom: 3cqw; z-index: 1; padding: .9cqw 2.6cqw; border-radius: 1.6cqw; background: rgba(10,12,16,.82); color: #fff;
   font: 700 max(7px, 5.4cqw)/1.15 "Oswald", var(--sans); letter-spacing: .08em; text-transform: uppercase; box-shadow: inset 0 0 0 .45cqw #5CC8FF; }
@@ -1010,6 +1052,8 @@ h1 { font-size: 30px; line-height: 1.15; }
   .dk-card.r-rare { background: linear-gradient(135deg, #E9ECF0, #9AA3AE 40%, #F7F8FA 60%, #87909C); }
   .dk-card.r-epic { background: linear-gradient(135deg, #F2C6FF, #A98BFF 30%, #8FE3FF 55%, #FFD48A 80%); }
   .dk-card.r-legendary { background: linear-gradient(135deg, #FFF1B8, #D9A227 35%, #FFE58A 55%, #B8801A); }
+  .dk-card.r-star { background: #111418; box-shadow: 0 1px 3px rgba(28,30,34,.25), inset 0 0 0 1.5px #E5243B; }
+  .dk-card.r-star i { color: #fff; }
   .dk-win { position: relative; overflow: hidden; border-radius: 2px; background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--team) 75%, #fff), var(--team) 55%, color-mix(in srgb, var(--team) 45%, #000)); }
   .r-legendary .dk-win { background: radial-gradient(circle at 50% 30%, #4A3810, #0A0805); }
   .dk-win img { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); height: 100%; width: auto; max-width: none; }
@@ -1112,8 +1156,11 @@ const RARITY = {
   rare: { name: 'Rare', bonus: 0.03 },
   epic: { name: 'Epic', bonus: 0.06 },
   legendary: { name: 'Legendary', bonus: 0.10 },
+  // Team of the Week cards (keep in step with sync/battle.mjs): +6% on everything, +STAR_BONUS on the stat he starred in.
+  star: { name: 'Weekly Star', bonus: 0.06 },
 };
-const RARITY_RANK = { common: 0, rare: 1, epic: 2, legendary: 3 };
+const STAR_BONUS = 0.15;
+const RARITY_RANK = { common: 0, rare: 1, epic: 2, legendary: 3, star: 4 };
 const BOOST = 0.10, COUNTER = 0.10, STACK_CAP = 0.25;
 // Card levels (keep in step with LEVEL in api/_packs.js and LEVEL_BONUS in sync/battle.mjs).
 const LEVEL = { cost: 2, max: 3, bonus: 0.05 };
@@ -1152,7 +1199,7 @@ function sideTotals(slots, opp, results) {
       const v = L[STAT[k]] || 0;
       if (k === 'fga') { t.fga += v; continue; }
       const lvB = LEVEL.bonus * (sl.lv || []).filter(x => x === k).length;
-      const bonus = Math.min(STACK_CAP, (RARITY[sl.rarity]?.bonus || 0) + ((sl.types || []).some(x => TYPES[x]?.boost === k) ? BOOST : 0) + lvB);
+      const bonus = Math.min(STACK_CAP, (RARITY[sl.rarity]?.bonus || 0) + ((sl.types || []).some(x => TYPES[x]?.boost === k) ? BOOST : 0) + lvB + (sl.star === k ? STAR_BONUS : 0));
       let mult = k === 'to' ? 1 - bonus : 1 + bonus;
       if (cuts.includes(k)) mult *= 1 - COUNTER;
       // A booster card lifts one stat (or all of them) for this game, on top of the capped bonuses.
@@ -1227,7 +1274,7 @@ const elig = (slot, p) => slot === 'UTIL' || p.pos === slot;
 let db = null, auth = null, me = { id: null, email: '' };
 let profile = null, days = new Map(), entries = new Map(), group = null, myMatches = [], leaders = [];
 // The player's cards, one per player id (the rarest copy), and the league roster for archetypes and ratings.
-let cards = new Map(), roster = new Map();
+let cards = new Map(), roster = new Map(), rosterStars = null;
 // Every card copy (for duplicates and selling) and the player's unused booster cards.
 let allCards = [], boosters = [];
 const loaded = { auth: false, profile: false, days: false, entries: false, cards: false };
@@ -1329,7 +1376,7 @@ function fillableSlots(lu, day) {
 }
 const projected = (lu, day) => lu.reduce((a, id) => a + (id ? pmap(day).get(id)?.avg || 0 : 0), 0);
 const ready = (lu, day) => lu.some(Boolean) && !fillableSlots(lu, day).length;
-const draftSlots = (lu, day) => lu.map(id => id ? { id, rarity: rarityOf(id), types: pmap(day).get(id)?.types || [], lv: cards.get(id)?.picks || [] } : null);
+const draftSlots = (lu, day) => lu.map(id => id ? { id, rarity: rarityOf(id), types: pmap(day).get(id)?.types || [], lv: cards.get(id)?.picks || [], star: cards.get(id)?.rarity === 'star' ? cards.get(id).star?.stat : undefined } : null);
 const starsHtml = n => `<span class="stars" aria-label="${n} star${n > 1 ? 's' : ''}">${'★'.repeat(n)}<i>${'★'.repeat(5 - n)}</i></span>`;
 function scoreRows(ids, captain, day) {
   const m = pmap(day);
@@ -1427,7 +1474,36 @@ const STAT_LABEL = { pts: 'PTS', reb: 'REB', ast: 'AST', stl: 'STL', blk: 'BLK',
 // A collectible card, squad-screen style: fantasy points per game as the rating, then season per-game averages
 // for all nine categories so you can see what a player brings. The category his archetype boosts is gold.
 // A levelled card shows "Level 2" and marks the categories its levels lift with a blue arrow.
-function cardHtml(c, { fresh = false, i = 0, tonight = false, tag = null, ready = false } = {}) {
+function cardHtml(c, opts = {}) {
+  return c.rarity === 'star' ? starCardHtml(c, opts) : tradingCardHtml(c, opts);
+}
+// A Weekly Star: a different card altogether, like an "instant" release. A full-bleed action photo from that week
+// (tow/<week>/<pid>.jpg, added by hand; his headshot until it is), a dark strip down the side with his best night,
+// and a name bar with the week and his bonus.
+const weekShort = w => dateOf(w).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+function starCardHtml(c, { fresh = false, i = 0, tonight = false, tag = null, ready = false } = {}) {
+  const p = { ...c, ...roster.get(c.pid), id: c.pid }, s = c.star || {};
+  const [first, ...rest] = String(p.name || '').split(' ');
+  const head = `https://a.espncdn.com/i/headshots/nba/players/full/${encodeURIComponent(c.pid)}.png`;
+  const photo = s.week ? `tow/${s.week}/${encodeURIComponent(c.pid)}.jpg` : '';
+  const lbl = s.label || STAT_LABEL[s.stat] || String(s.stat || '').toUpperCase(), level = c.level || 1;
+  const img = photo ? `<img src="${photo}" alt="" loading="lazy" onerror="this.onerror=null;this.src='${head}';this.parentNode.classList.add('head')">` : `<img src="${head}" alt="" loading="lazy">`;
+  return `<div class="tc sc r-star ${fresh ? 'fresh' : ''}" style="--i:${i};--team:${TEAM_COLORS[p.team] || '#5B6573'}" data-pid="${esc(c.pid)}" title="${esc(p.name)} · Weekly Star · +${Math.round(STAR_BONUS * 100)}% ${esc(lbl)}, +${Math.round(RARITY.star.bonus * 100)}% all">
+    <div class="sc-card">
+      <div class="sc-photo ${photo ? '' : 'head'}">${img}</div>
+      <span class="sc-side">${esc(s.caption || `Weekly Star · ${p.team || ''}`)}</span>
+      <span class="sc-badge">★ Weekly Star</span>
+      <span class="sc-rate"><b>${s.fpg ? Math.round(s.fpg) : p.gp ? Math.round(p.avg) : '–'}</b><small>${s.fpg ? 'FP/G' : 'FPPG'}</small></span>
+      ${level > 1 ? `<span class="tc-lv">Level ${level}</span>` : ''}
+      <div class="sc-bar"><span class="sc-meta">${s.week ? `Week of ${weekShort(s.week)}` : 'Team of the week'} · ${esc(p.team || '')} · ${esc(POS_NAME[p.pos] || p.pos || '')}</span>
+        <b class="sc-name">${rest.length ? `<small>${esc(first)}</small>` : ''}${esc(rest.length ? rest.join(' ') : first)}</b>
+        <span class="sc-bonus">+${Math.round(STAR_BONUS * 100)}% ${esc(lbl)}${s.statPg ? `<i> · ${s.statPg} ${esc(lbl)}/G</i>` : ''}<i> · +${Math.round(RARITY.star.bonus * 100)}% all</i></span></div>
+    </div>
+    ${tag ? `<span class="tc-tonight t-${tag[1]}">${esc(tag[0])}</span>` : tonight ? '<span class="tc-tonight">Tonight</span>' : ''}
+    ${ready ? '<span class="tc-ready">▲ Level up</span>' : ''}
+  </div>`;
+}
+function tradingCardHtml(c, { fresh = false, i = 0, tonight = false, tag = null, ready = false } = {}) {
   const p = { ...c, ...roster.get(c.pid), id: c.pid }, rarity = c.rarity || 'common';
   const [first, ...rest] = String(p.name || '').split(' ');
   const types = (p.types || []).filter(t => TYPES[t]);
@@ -1527,7 +1603,7 @@ const SHOP = [
   { type: 'standard', name: 'Standard pack', price: 150, what: '4 players plus a booster' },
   { type: 'premium', name: 'Premium pack', price: 400, what: '5 players with at least one Rare, plus 2 boosters' },
 ];
-const SELL_VALUE = { common: 10, rare: 30, epic: 75, legendary: 200 };
+const SELL_VALUE = { common: 10, rare: 30, epic: 75, legendary: 200, star: 300 };
 const PACK_CARDS = { starter: 5, daily: 4, standard: 5, premium: 7 };
 // Two players on the wrapper, from the top of the roster down: Premium gets the league's best, the others the next ones.
 function packArt(type) {
@@ -1547,10 +1623,12 @@ function packHtml(type, name, attrs, busy = false) {
 }
 
 // The card stack shown while opening: boosters first, then the players. st = { items, i }, i = cards flipped so far.
+// A pulled card is new, a duplicate of a player you had, or a Weekly Star (always a new version of him).
+const revealTag = (c, had) => c.rarity === 'star' ? ['New star', 'new'] : had.has(c.pid) ? ['Duplicate', 'dupe'] : ['New', 'new'];
 const stackItems = (cards, boosters = []) => [...boosters.map(b => ({ b })), ...cards.map(c => ({ c }))];
 const STK_BACK = '<span><b>7</b>BEST OF 7</span>';
 function stkFace(it, had) {
-  const html = it.b ? boosterHtml(it.b) : cardHtml(it.c, { tag: had ? (had.has(it.c.pid) ? ['Duplicate', 'dupe'] : ['New', 'new']) : null });
+  const html = it.b ? boosterHtml(it.b) : cardHtml(it.c, { tag: had ? revealTag(it.c, had) : null });
   return html.replace(/ data-pid="[^"]*"/, '');
 }
 function stkHint(st) {
@@ -1606,6 +1684,15 @@ function pullFx(stage, rarity, card) {
   setTimeout(() => { back.remove(); front.remove(); }, 2700);
 }
 
+// Last week's Team of the Week, the Weekly Stars in packs this week.
+function towPanel() {
+  const t = rosterStars && rosterStars.packWeek === weekOf(etDay()) ? rosterStars : null;
+  if (!t?.players?.length) return '';
+  const card = s => starCardHtml({ pid: s.pid, name: s.name, team: s.team, pos: s.pos, rarity: 'star', star: { week: t.week, stat: s.stat, label: s.label, statPg: s.statPg, fpg: s.fpg, caption: s.caption } }, { tag: [s.slot === 'UTIL' ? '6th man' : s.slot, 'pos'] });
+  return `<section class="panel tow"><div class="list-head"><div><div class="eyebrow">In packs until Sunday</div><h2>Team of the week</h2></div></div>
+    <div class="tc-grid">${t.players.map(card).join('')}</div></section>`;
+}
+
 // Packs given to the player by hand (giftPacks on their user document, set in the Firebase console).
 const giftCount = () => Object.values(profile?.giftPacks || {}).reduce((s, n) => s + (n > 0 ? n : 0), 0);
 
@@ -1653,8 +1740,9 @@ function packsView() {
       <h2>Your pack is open</h2></div></div>${stageHtml(r.st, r.had)}</section>`;
   const reveal = r ? `<section class="panel pack-reveal"><div class="list-head"><div><div class="eyebrow">${r.gift ? 'Gifted ' : ''}${SHOP.find(t => t.type === r.type)?.name || 'Pack'}</div>
       <h2>${r.cards.length} players and ${r.boosters.length} booster${r.boosters.length === 1 ? '' : 's'}</h2></div><button class="btn" data-action="reveal-done">Done</button></div>
-    <div class="tc-grid">${r.cards.map((c, i) => cardHtml(c, { fresh, i, tag: r.had.has(c.pid) ? ['Duplicate', 'dupe'] : ['New', 'new'] })).join('')}${r.boosters.map((b, j) => boosterHtml(b, { fresh, i: r.cards.length + j })).join('')}</div></section>` : '';
+    <div class="tc-grid">${r.cards.map((c, i) => cardHtml(c, { fresh, i, tag: revealTag(c, r.had) })).join('')}${r.boosters.map((b, j) => boosterHtml(b, { fresh, i: r.cards.length + j })).join('')}</div></section>` : '';
   return `${reveal}${giftPanel}
+    ${towPanel()}
     <section class="panel shop-head"><div class="list-head"><div><h2>Shop</h2></div></div>
       <div class="shop">${SHOP.map(tile).join('')}</div></section>
     <section class="panel"><div class="list-head"><div><h2>Duplicates · ${dupes.length}</h2><p class="sub">Extra copies of players you already have. Your best card of each player is kept.</p></div>
@@ -2268,7 +2356,7 @@ function muSide(sl, day, side, up = false) {
   const line = day?.results?.[sl.id], st = day ? playerState({ p, line }, day) : { kind: 'final', text: 'Final' };
   const cells = MU_STATS.map(([k, i]) => `<span><b>${!line ? '–' : i === 'fg' ? `${line[8] || 0}/${line[9] || 0}` : line[i] || 0}</b><i>${k}</i></span>`).join('');
   return `<div class="mu-side ${side} ${up ? 'up' : ''}">
-    <div class="mu-card">${sl.boost ? boostChip(sl.boost) : ''}${cardHtml({ pid: sl.id, rarity: sl.rarity || 'common', name: p.name, team: p.team, pos: p.pos, level: 1 + (sl.lv || []).length, picks: sl.lv || [] })}</div>
+    <div class="mu-card">${sl.boost ? boostChip(sl.boost) : ''}${cardHtml({ pid: sl.id, rarity: sl.rarity || 'common', name: p.name, team: p.team, pos: p.pos, level: 1 + (sl.lv || []).length, picks: sl.lv || [], ...(sl.star ? { star: { stat: sl.star } } : {}) })}</div>
     <div class="mu-stats"><div class="mu-st-top"><span class="pstate ${st.kind}">${esc(st.text)}</span><b class="mu-fp">${line ? f1(fpOf(line)) : '–'}<small>FP</small></b></div>
       <div class="mu-grid ${line ? '' : 'none'}">${cells}</div>${line ? `<span class="mu-min">${line[0] || 0} min</span>` : ''}</div></div>`;
 }
@@ -2894,7 +2982,7 @@ function startData() {
     myMatches = s.docs.map(d => d.data()).sort((a, b) => a.week < b.week ? 1 : -1);
     render();
   }, () => {});
-  db.doc('meta/roster').get().then(s => { roster = new Map((s.exists ? s.data().players : []).map(p => [p.id, p])); ui.sig = ''; render(); }, () => {});
+  db.doc('meta/roster').get().then(s => { roster = new Map((s.exists ? s.data().players : []).map(p => [p.id, p])); rosterStars = s.exists ? s.data().stars || null : null; ui.sig = ''; render(); }, () => {});
 }
 
 async function finishSignIn(email) {

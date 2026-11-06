@@ -39,7 +39,10 @@ export const RARITY = {
   rare: { name: 'Rare', bonus: 0.03 },
   epic: { name: 'Epic', bonus: 0.06 },
   legendary: { name: 'Legendary', bonus: 0.10 },
+  // Team of the Week cards: +6% on everything, plus STAR_BONUS on the stat he starred in (a slot's `star`).
+  star: { name: 'Weekly Star', bonus: 0.06 },
 };
+export const STAR_BONUS = 0.15;
 const BOOST = 0.10, COUNTER = 0.10, STACK_CAP = 0.25;
 // Each card level adds this to the category picked for it (a slot's lv lists the picks). Same as LEVEL.bonus in api/_packs.js.
 export const LEVEL_BONUS = 0.05;
@@ -67,7 +70,7 @@ export function sideTotals(slots, opp, results) {
       if (k === 'fga') { t.fga += v; continue; }
       // Rarity, archetype and card-level bonuses stack, capped at +25%.
       const lv = LEVEL_BONUS * (s.lv || []).filter(x => x === k).length;
-      const bonus = Math.min(STACK_CAP, (RARITY[s.rarity]?.bonus || 0) + ((s.types || []).some(x => TYPES[x]?.boost === k) ? BOOST : 0) + lv);
+      const bonus = Math.min(STACK_CAP, (RARITY[s.rarity]?.bonus || 0) + ((s.types || []).some(x => TYPES[x]?.boost === k) ? BOOST : 0) + lv + (s.star === k ? STAR_BONUS : 0));
       let mult = k === 'to' ? 1 - bonus : 1 + bonus;
       if (cuts.includes(k)) mult *= 1 - COUNTER;
       // A booster card lifts one stat (or all of them) for this game, on top of the capped bonuses.

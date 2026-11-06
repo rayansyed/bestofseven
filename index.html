@@ -592,11 +592,6 @@ body.no-slip main { grid-column: 2 / -1; }
 .stk-back span b { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 12px; background: #fff; color: #15171A; font-size: 34px; transform: skewX(-8deg); }
 .stk-hint { font-size: 13px; color: var(--muted); font-weight: 600; text-align: center; }
 .stk-hint b { color: var(--ink); }
-.stk-strip { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; min-height: 0; }
-.stk-thumb { width: 54px; animation: thumb-in .35s ease both; }
-.stk-thumb .tc-tonight { display: none; }
-.stk-thumb .tc:hover { transform: none; }
-@keyframes thumb-in { from { opacity: 0; transform: translateY(8px) scale(.8); } }
 
 /* Pull effects for Rare, Epic and Legendary cards: rays and a glow behind the card, sparks and a label in front */
 .fx-back, .fx-front { position: absolute; inset: 0; pointer-events: none; }
@@ -803,13 +798,14 @@ body.no-slip main { grid-column: 2 / -1; }
 }
 /* Weekly matchup: category grid above an open night, and the Monday-to-Sunday strip */
 .cats.mini { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 4px 22px 12px; border-top: 0; }
-.mc { background: var(--panel-2); border-radius: 9px; padding: 7px 10px; display: grid; gap: 1px; box-shadow: inset 3px 0 0 var(--chip-2); }
+.mc { background: var(--panel-2); border-radius: 9px; padding: 7px 10px; display: grid; gap: 1px; }
 .mc span { font-size: 11px; color: var(--muted); font-weight: 600; }
 .mc b { font-size: 14px; font-variant-numeric: tabular-nums; color: var(--muted); }
 .mc b em { font-style: normal; color: var(--ink); }
 .mc i { font-style: normal; color: var(--dim); padding: 0 4px; }
-.mc.w-me { box-shadow: inset 3px 0 0 var(--good); } .mc.w-me b em { color: var(--good); }
-.mc.w-them { box-shadow: inset 3px 0 0 var(--bad); }
+/* Whoever leads a category has their number in colour: yours green, theirs red. */
+.mc.w-me b em { color: var(--good); }
+.mc.w-them b { color: var(--bad); } .mc.w-them b em { color: var(--ink); } .mc.w-them b i { color: var(--dim); }
 .wk-nights { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; padding: 6px 22px 16px; }
 .wn { border: 0; border-radius: 9px; background: var(--panel-2); padding: 7px 4px; display: grid; gap: 1px; justify-items: center; color: var(--ink); font-variant-numeric: tabular-nums; min-width: 0; }
 .wn .wn-d { font-size: 11px; color: var(--muted); font-weight: 700; }
@@ -1517,9 +1513,8 @@ function stageHtml(st, had) {
     const d = Math.max(0, k - st.i), cls = k < st.i - 1 ? 'gone' : k === st.i - 1 ? 'up' : d > 4 ? 'deep' : '';
     return `<div class="stk-card ${cls}" style="--d:${d}"><div class="stk-in"><div class="stk-back">${STK_BACK}</div><div class="stk-face">${stkFace(it, had)}</div></div></div>`;
   }).join('');
-  const thumbs = st.items.slice(0, Math.max(0, st.i - 1)).map(it => `<div class="stk-thumb">${stkFace(it)}</div>`).join('');
   return `<div class="stk-stage" id="stk"><div class="stk-wrap"><button class="stk" data-action="flip" aria-label="Flip the next card">${cards}</button></div>
-    <p class="stk-hint" id="stk-hint" aria-live="polite">${stkHint(st)}</p><div class="stk-strip" id="stk-strip">${thumbs}</div>
+    <p class="stk-hint" id="stk-hint" aria-live="polite">${stkHint(st)}</p>
     <button class="linkbtn" data-action="flip-all">Show all cards</button></div>`;
 }
 const curStack = () => ui.packReveal?.st && !ui.packReveal.st.done ? ui.packReveal.st : ui.reveal && ui.revealSt && !ui.revealSt.done ? ui.revealSt : null;
@@ -1541,7 +1536,6 @@ function flipNext() {
     c.style.setProperty('--d', d);
     c.classList.toggle('gone', k < st.i - 1); c.classList.toggle('up', k === st.i - 1); c.classList.toggle('deep', k >= st.i && d > 4); c.classList.remove('hit');
   });
-  if (st.i >= 2) $('#stk-strip').insertAdjacentHTML('beforeend', `<div class="stk-thumb">${stkFace(st.items[st.i - 2])}</div>`);
   $('#stk-hint').innerHTML = stkHint(st);
   const rarity = st.items[st.i - 1].c?.rarity;
   if (rarity && rarity !== 'common') setTimeout(() => pullFx(el, rarity, el.querySelectorAll('.stk-card')[st.i - 1]), 380);

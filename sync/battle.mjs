@@ -28,12 +28,29 @@ export const COUNTERS = [
   { by: 'SL', vs: 'RP', cut: 'blk', text: 'Slasher cuts a Rim Protector’s blocks' },
   { by: 'FG', vs: 'LD', cut: 'stl', text: 'Floor General cuts a Lockdown’s steals' },
 ];
-// Team combos.
+// Links (combos), applied to the whole lineup's totals after the per-player bonuses. Archetype links use `need`;
+// the others read each slot's team, position and stars, which are saved into the lineup at lock (lineups locked
+// before that have no team, so only the original archetype links apply to them). Keep in step with index.html.
+export const LINK_ALL = ['pts', 'reb', 'ast', 'stl', 'blk', 'tpm', 'fgm', 'ftm', 'to'];
+// Teammates: each player sharing a team with another in the lineup gets this on everything (applied per player).
+export const TEAMMATE_BONUS = 0.04;
+const typeCount = slots => { const n = {}; for (const s of slots) for (const t of s?.types || []) n[t] = (n[t] || 0) + 1; return n; };
+const teamCount = slots => { const n = {}; for (const s of slots) if (s?.team) n[s.team] = (n[s.team] || 0) + 1; return n; };
+const hasMeta = slots => slots.some(s => s?.team);
 export const SYNERGIES = [
   { id: 'spacing', name: 'Spacing', need: { SS: 2, FG: 1 }, stats: ['ast'], bonus: 0.08, text: '2 Sharpshooters + a Floor General: +8% assists' },
   { id: 'towers', name: 'Twin Towers', need: { RP: 2 }, stats: ['reb'], bonus: 0.08, text: '2 Rim Protectors: +8% rebounds' },
   { id: 'wall', name: 'Defensive Wall', need: { LD: 1, RP: 1 }, stats: ['stl', 'blk'], bonus: 0.05, text: 'Lockdown + Rim Protector: +5% steals and blocks' },
+  { id: 'pnr', name: 'Pick and Roll', stats: ['ast', 'pts'], bonus: 0.06, text: 'A Floor General + a Rim Protector or Slasher: +6% assists and points',
+    test: s => { const n = typeCount(s); return hasMeta(s) && (n.FG || 0) >= 1 && (n.RP || 0) + (n.SL || 0) >= 1; } },
+  { id: 'franchise', name: 'Franchise', stats: LINK_ALL, bonus: 0.05, text: '3 players from one team: +5% to everything',
+    test: s => Object.values(teamCount(s)).some(c => c >= 3) },
+  { id: 'underdogs', name: 'Underdogs', stats: LINK_ALL, bonus: 0.08, text: 'All six players rated 3★ or lower: +8% to everything',
+    test: s => s.length >= 6 && s.slice(0, 6).every(x => x?.id && x.stars != null && x.stars <= 3) },
+  { id: 'smallball', name: 'Small Ball', stats: ['tpm', 'stl'], bonus: 0.06, text: 'A guard as the sixth man: +6% threes and steals', test: s => s[5]?.pos === 'G' },
+  { id: 'biglineup', name: 'Big Lineup', stats: ['reb', 'blk'], bonus: 0.06, text: 'A center as the sixth man: +6% rebounds and blocks', test: s => s[5]?.pos === 'C' },
 ];
+export const hasTeammate = (slots, i) => !!slots[i]?.team && slots.some((o, j) => j !== i && o?.team === slots[i].team);
 export const RARITY = {
   common: { name: 'Common', bonus: 0 },
   rare: { name: 'Rare', bonus: 0.03 },
@@ -49,9 +66,8 @@ export const LEVEL_BONUS = 0.05;
 const COUNTING = ['pts', 'reb', 'ast', 'stl', 'blk', 'tpm', 'fgm', 'fga', 'ftm', 'to'];
 
 export const synergiesOf = slots => {
-  const n = {};
-  for (const s of slots) for (const t of s.types || []) n[t] = (n[t] || 0) + 1;
-  return SYNERGIES.filter(sy => Object.entries(sy.need).every(([t, k]) => (n[t] || 0) >= k));
+  const n = typeCount(slots);
+  return SYNERGIES.filter(sy => sy.test ? sy.test(slots) : Object.entries(sy.need).every(([t, k]) => (n[t] || 0) >= k));
 };
 // Counters active on slot pair i: what `mine` does to `theirs`.
 export const countersOn = (mine, theirs) => COUNTERS.filter(c => (mine?.types || []).includes(c.by) && (theirs?.types || []).includes(c.vs));
@@ -61,10 +77,10 @@ export function sideTotals(slots, opp, results) {
   const t = Object.fromEntries(COUNTING.map(k => [k, 0]));
   let fp = 0;
   slots.forEach((s, i) => {
-    const L = results[s.id];
+    const L = s && results[s.id];
     if (!L) return;
     fp += fpOf(L);
-    const cuts = countersOn(opp[i], s).map(c => c.cut);
+    const cuts = countersOn(opp[i], s).map(c => c.cut), mate = hasTeammate(slots, i);
     for (const k of COUNTING) {
       const v = L[STAT[k]] || 0;
       if (k === 'fga') { t.fga += v; continue; }
@@ -76,10 +92,12 @@ export function sideTotals(slots, opp, results) {
       // A booster card lifts one stat (or all of them) for this game, on top of the capped bonuses.
       const bo = s.boost;
       if (bo && (bo.stat === k || bo.stat === 'all')) mult *= k === 'to' ? 1 - bo.pct : 1 + bo.pct;
+      if (mate) mult *= k === 'to' ? 1 - TEAMMATE_BONUS : 1 + TEAMMATE_BONUS;
       t[k] += v * mult;
     }
   });
-  for (const sy of synergiesOf(slots)) for (const k of sy.stats) t[k] *= 1 + sy.bonus;
+  // Links lift the lineup's totals; for turnovers a lift means fewer.
+  for (const sy of synergiesOf(slots)) for (const k of sy.stats) t[k] *= k === 'to' ? 1 - sy.bonus : 1 + sy.bonus;
   t.fgp = t.fga ? (t.fgm / t.fga) * 100 : 0;
   return { t, fp: Math.round(fp * 10) / 10 };
 }

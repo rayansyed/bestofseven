@@ -40,11 +40,13 @@ function pair(players) {
 export async function lockNight(db, day) {
   const date = day.date, week = weekOf(date);
   const pmap = new Map(day.players.map(p => [p.id, p]));
-  // A slot carries its card's rarity, archetypes and level picks (lv), as they were at lock.
+  // A slot carries its card's rarity, archetypes, level picks (lv) and the player's team, position and stars, as they were at lock.
   const slotsOf = (ids, cardOf) => ids.map(id => {
     if (!id) return null;
     const c = cardOf(id);
-    return { id, rarity: c?.rarity || 'common', types: pmap.get(id)?.types || [], ...(c?.picks?.length ? { lv: c.picks } : {}), ...(c?.star ? { star: c.star } : {}) };
+    const p = pmap.get(id);
+    // Team, position and stars feed the team and lineup-shape links.
+    return { id, rarity: c?.rarity || 'common', types: p?.types || [], team: p?.team || null, pos: p?.pos || null, stars: p?.stars ?? null, ...(c?.picks?.length ? { lv: c.picks } : {}), ...(c?.star ? { star: c.star } : {}) };
   });
   const matches = new Map((await db.query('matches', 'week', week)).map(m => [m.id, m.data]));
   // Computer opponents named under the old "Bot …" scheme get their new name (the matchups are rewritten below).

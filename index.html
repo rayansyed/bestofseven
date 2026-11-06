@@ -1221,11 +1221,27 @@ const COUNTERS = [
   { by: 'SL', vs: 'RP', cut: 'blk', text: 'Slasher cuts a Rim Protector’s blocks' },
   { by: 'FG', vs: 'LD', cut: 'stl', text: 'Floor General cuts a Lockdown’s steals' },
 ];
+// Links (keep in step with sync/battle.mjs). Archetype links use `need`; the rest read each slot's team, position
+// and stars (saved into the lineup at lock, so lineups locked before these existed only get the archetype links).
+const LINK_ALL = ['pts', 'reb', 'ast', 'stl', 'blk', 'tpm', 'fgm', 'ftm', 'to'];
+const TEAMMATE_BONUS = 0.04;
+const typeCount = slots => { const n = {}; for (const s of slots) for (const t of s?.types || []) n[t] = (n[t] || 0) + 1; return n; };
+const teamCount = slots => { const n = {}; for (const s of slots) if (s?.team) n[s.team] = (n[s.team] || 0) + 1; return n; };
+const hasMeta = slots => slots.some(s => s?.team);
 const SYNERGIES = [
   { id: 'spacing', name: 'Spacing', need: { SS: 2, FG: 1 }, stats: ['ast'], bonus: 0.08, text: '2 Sharpshooters + a Floor General: +8% assists' },
   { id: 'towers', name: 'Twin Towers', need: { RP: 2 }, stats: ['reb'], bonus: 0.08, text: '2 Rim Protectors: +8% rebounds' },
   { id: 'wall', name: 'Defensive Wall', need: { LD: 1, RP: 1 }, stats: ['stl', 'blk'], bonus: 0.05, text: 'Lockdown + Rim Protector: +5% steals and blocks' },
+  { id: 'pnr', name: 'Pick and Roll', stats: ['ast', 'pts'], bonus: 0.06, text: 'A Floor General + a Rim Protector or Slasher: +6% assists and points',
+    test: s => { const n = typeCount(s); return hasMeta(s) && (n.FG || 0) >= 1 && (n.RP || 0) + (n.SL || 0) >= 1; } },
+  { id: 'franchise', name: 'Franchise', stats: LINK_ALL, bonus: 0.05, text: '3 players from one team: +5% to everything',
+    test: s => Object.values(teamCount(s)).some(c => c >= 3) },
+  { id: 'underdogs', name: 'Underdogs', stats: LINK_ALL, bonus: 0.08, text: 'All six players rated 3★ or lower: +8% to everything',
+    test: s => s.length >= 6 && s.slice(0, 6).every(x => x?.id && x.stars != null && x.stars <= 3) },
+  { id: 'smallball', name: 'Small Ball', stats: ['tpm', 'stl'], bonus: 0.06, text: 'A guard as the sixth man: +6% threes and steals', test: s => s[5]?.pos === 'G' },
+  { id: 'biglineup', name: 'Big Lineup', stats: ['reb', 'blk'], bonus: 0.06, text: 'A center as the sixth man: +6% rebounds and blocks', test: s => s[5]?.pos === 'C' },
 ];
+const hasTeammate = (slots, i) => !!slots[i]?.team && slots.some((o, j) => j !== i && o?.team === slots[i].team);
 const RARITY = {
   common: { name: 'Common', bonus: 0 },
   rare: { name: 'Rare', bonus: 0.03 },
@@ -1257,9 +1273,8 @@ const COUNTING = ['pts', 'reb', 'ast', 'stl', 'blk', 'tpm', 'fgm', 'fga', 'ftm',
 const STARTER_PACKS = 3;
 
 const synergiesOf = slots => {
-  const n = {};
-  for (const sl of slots) for (const t of sl?.types || []) n[t] = (n[t] || 0) + 1;
-  return SYNERGIES.filter(sy => Object.entries(sy.need).every(([t, k]) => (n[t] || 0) >= k));
+  const n = typeCount(slots);
+  return SYNERGIES.filter(sy => sy.test ? sy.test(slots) : Object.entries(sy.need).every(([t, k]) => (n[t] || 0) >= k));
 };
 const countersOn = (mine, theirs) => COUNTERS.filter(c => (mine?.types || []).includes(c.by) && (theirs?.types || []).includes(c.vs));
 function sideTotals(slots, opp, results) {
@@ -1269,7 +1284,7 @@ function sideTotals(slots, opp, results) {
     const L = sl && results[sl.id];
     if (!L) return;
     fp += fpOf(L);
-    const cuts = countersOn(opp[i], sl).map(c => c.cut);
+    const cuts = countersOn(opp[i], sl).map(c => c.cut), mate = hasTeammate(slots, i);
     for (const k of COUNTING) {
       const v = L[STAT[k]] || 0;
       if (k === 'fga') { t.fga += v; continue; }
@@ -1280,10 +1295,11 @@ function sideTotals(slots, opp, results) {
       // A booster card lifts one stat (or all of them) for this game, on top of the capped bonuses.
       const bo = sl.boost;
       if (bo && (bo.stat === k || bo.stat === 'all')) mult *= k === 'to' ? 1 - bo.pct : 1 + bo.pct;
+      if (mate) mult *= k === 'to' ? 1 - TEAMMATE_BONUS : 1 + TEAMMATE_BONUS;
       t[k] += v * mult;
     }
   });
-  for (const sy of synergiesOf(slots)) for (const k of sy.stats) t[k] *= 1 + sy.bonus;
+  for (const sy of synergiesOf(slots)) for (const k of sy.stats) t[k] *= k === 'to' ? 1 - sy.bonus : 1 + sy.bonus;
   t.fgp = t.fga ? (t.fgm / t.fga) * 100 : 0;
   return { t, fp: Math.round(fp * 10) / 10 };
 }
@@ -1451,7 +1467,8 @@ function fillableSlots(lu, day) {
 }
 const projected = (lu, day) => lu.reduce((a, id) => a + (id ? pmap(day).get(id)?.avg || 0 : 0), 0);
 const ready = (lu, day) => lu.some(Boolean) && !fillableSlots(lu, day).length;
-const draftSlots = (lu, day) => lu.map(id => id ? { id, rarity: rarityOf(id), types: pmap(day).get(id)?.types || [], lv: cards.get(id)?.picks || [], star: cards.get(id)?.rarity === 'star' ? cards.get(id).star?.stat : undefined } : null);
+const draftSlots = (lu, day) => lu.map(id => { if (!id) return null; const p = pmap(day).get(id);
+  return { id, rarity: rarityOf(id), types: p?.types || [], team: p?.team || null, pos: p?.pos || null, stars: p?.stars ?? null, lv: cards.get(id)?.picks || [], star: cards.get(id)?.rarity === 'star' ? cards.get(id).star?.stat : undefined }; });
 const starsHtml = n => `<span class="stars" aria-label="${n} star${n > 1 ? 's' : ''}">${'★'.repeat(n)}<i>${'★'.repeat(5 - n)}</i></span>`;
 function scoreRows(ids, captain, day) {
   const m = pmap(day);
@@ -1533,15 +1550,44 @@ const typesOf = id => roster.get(id)?.types || [];
 const typeChip = (t, boost = false) => TYPES[t] ? `<span class="arch a-${t}" title="${esc(TYPES[t].name)}: ${esc(TYPES[t].what)}">${esc(TYPES[t].name)}${boost ? ` <b>+${Math.round(BOOST * 100)}% ${STAT_LABEL[TYPES[t].boost]}</b>` : ''}</span>` : '';
 const typeChips = (types, boost = false) => (types || []).map(t => typeChip(t, boost)).join('');
 const lastName = n => { const [first, ...rest] = String(n || '').split(' '); return rest.join(' ') || first; };
-const linkFx = sy => `+${Math.round(sy.bonus * 100)}% ${sy.stats.map(k => STAT_LABEL[k]).join(' & ')}`;
-// Every link (combo) for a lineup: who's making it, and whether it's on or one archetype short.
+const linkFx = sy => sy.fx || `+${Math.round(sy.bonus * 100)}% ${sy.stats === LINK_ALL ? 'all' : sy.stats.map(k => STAT_LABEL[k]).join(' & ')}`;
+const TEAMMATES = { id: 'mates', name: 'Teammates', fx: `+${Math.round(TEAMMATE_BONUS * 100)}% each`, text: `Players who share a team: +${Math.round(TEAMMATE_BONUS * 100)}% to everything for each of them` };
+const article = w => (/^[AEIOU]/.test(w) ? 'an ' : 'a ') + w;
+// Every link for a lineup: whether it's on, who's making it, and what would complete it when it's one step away.
 function linkStatus(lu, day) {
-  const m = pmap(day), slots = lu.map(id => id && m.get(id) ? { id, name: m.get(id).name, types: m.get(id).types || [] } : null).filter(Boolean);
-  return SYNERGIES.map(sy => {
-    const parts = Object.entries(sy.need).map(([t, k]) => ({ t, k, who: slots.filter(sl => sl.types.includes(t)).slice(0, k) }));
-    const missing = parts.reduce((s, p) => s + Math.max(0, p.k - p.who.length), 0);
-    return { sy, parts, missing, on: missing === 0, ids: new Set(parts.flatMap(p => p.who.map(w => w.id))) };
+  const m = pmap(day);
+  const slots = lu.map(id => { const p = id && m.get(id); return p ? { id, name: p.name, types: p.types || [], team: p.team, pos: p.pos, stars: p.stars } : null; });
+  const filled = slots.filter(Boolean), tc = teamCount(filled);
+  const out = SYNERGIES.map(sy => {
+    let on, who = [], need = null;
+    if (sy.need) {
+      const parts = Object.entries(sy.need).map(([t, k]) => ({ t, k, who: filled.filter(sl => sl.types.includes(t)).slice(0, k) }));
+      const missing = parts.reduce((s, p) => s + Math.max(0, p.k - p.who.length), 0);
+      on = !missing;
+      who = parts.flatMap(p => p.who.map(w => ({ w, tag: TYPES[p.t].name })));
+      if (missing === 1 && who.length) need = 'add ' + parts.filter(p => p.who.length < p.k).map(p => article(TYPES[p.t].name)).join('');
+    } else {
+      on = sy.test(slots);
+      if (sy.id === 'pnr') {
+        const fg = filled.find(s => s.types.includes('FG')), big = filled.find(s => s.types.includes('RP') || s.types.includes('SL'));
+        who = [fg && { w: fg, tag: 'Floor General' }, big && { w: big, tag: big.types.includes('RP') ? 'Rim Protector' : 'Slasher' }].filter(Boolean);
+        if (!on) need = fg && !big ? 'add a Rim Protector or Slasher' : big && !fg ? 'add a Floor General' : null;
+      } else if (sy.id === 'franchise') {
+        const [team, c] = Object.entries(tc).sort((a, b) => b[1] - a[1])[0] || [];
+        if (team && c >= 2) who = filled.filter(s => s.team === team).map(w => ({ w, tag: team }));
+        if (!on && c === 2) need = `add a third ${team} player`;
+      } else if (sy.id === 'underdogs') {
+        const high = filled.filter(s => s.stars > 3);
+        if (on) who = filled.map(w => ({ w, tag: `${w.stars}★` }));
+        else if (filled.length >= 5 && high.length === 1) need = `swap ${lastName(high[0].name)} (${high[0].stars}★) for a 3★ or lower player`;
+      } else if (on && slots[5]) who = [{ w: slots[5], tag: 'Sixth man' }];
+    }
+    return { sy, on, who, need, ids: new Set(who.map(x => x.w.id)) };
   });
+  // Teammates is per player: everyone sharing a team with someone else in the lineup.
+  const mates = filled.filter(s => s.team && filled.some(o => o !== s && o.team === s.team));
+  out.push({ sy: TEAMMATES, on: mates.length >= 2, who: mates.map(w => ({ w, tag: w.team })), need: null, ids: new Set(mates.map(w => w.id)) });
+  return out;
 }
 const rarityTag = r => r && r !== 'common' ? `<span class="rar r-${r}">${RARITY[r].name}</span>` : '';
 // Card stat labels, in battle category order (the sync's roster stores averages in the same order).
@@ -1981,7 +2027,7 @@ function cardsView() {
     <section class="panel arch-legend"><div class="list-head"><div><h2>Archetypes, counters and combos</h2><p class="sub">Set each month from season stats. The league’s elite players can carry two.</p></div></div>
       <ul class="arch-list">${arch}</ul>
       <h3 class="arch-h">Counters (between facing slots, −10%)</h3><ul class="arch-list">${COUNTERS.map(c => `<li>${typeChip(c.by)}<span>${esc(c.text)}</span></li>`).join('')}</ul>
-      <h3 class="arch-h">Combos (whole lineup)</h3><ul class="arch-list">${SYNERGIES.map(sy => `<li><span class="arch syn">${esc(sy.name)}</span><span>${esc(sy.text)}</span></li>`).join('')}</ul>
+      <h3 class="arch-h">Combos (whole lineup)</h3><ul class="arch-list">${[...SYNERGIES, TEAMMATES].map(sy => `<li><span class="arch syn">${esc(sy.name)}</span><span>${esc(sy.text)}</span></li>`).join('')}</ul>
     </section>`;
 }
 
@@ -2240,14 +2286,13 @@ function renderLineup() {
   const proj = projected(lu, day);
   // Links: the ones on, then the ones a single archetype away, each with the players making it.
   const linkRow = l => {
-    const who = l.parts.flatMap(p => p.who.map(w => `${esc(lastName(w.name))} <i>${esc(TYPES[p.t].name)}</i>`));
-    const need = l.parts.filter(p => p.who.length < p.k).map(p => `${p.k - p.who.length > 1 ? p.k - p.who.length + ' more ' + TYPES[p.t].name + 's' : 'a' + (/^[AEIOU]/.test(TYPES[p.t].name) ? 'n ' : ' ') + TYPES[p.t].name}`);
+    const who = l.who.map(x => `${esc(lastName(x.w.name))} <i>${esc(x.tag)}</i>`);
     return `<div class="link ${l.on ? 'on' : 'near'}"><div class="link-top"><b>${l.on ? '✦ ' : ''}${esc(l.sy.name)}</b><span class="link-fx">${linkFx(l.sy)}${l.on ? '' : ' if made'}</span></div>
-      <div class="link-who">${who.join(' + ')}${need.length ? `${who.length ? ' · ' : ''}<span class="link-need">add ${need.join(' and ')}</span>` : ''}</div></div>`;
+      <div class="link-who">${who.join(' + ')}${!l.on && l.need ? `${who.length ? ' · ' : ''}<span class="link-need">${esc(l.need)}</span>` : ''}</div></div>`;
   };
-  const shown = [...links.filter(l => l.on), ...links.filter(l => !l.on && l.missing === 1 && l.ids.size)];
-  const linksHtml = lu.some(Boolean) ? `<div class="links"><div class="links-h"><span>Links</span><small>${links.filter(l => l.on).length} on · whole-lineup boosts</small></div>
-    ${shown.map(linkRow).join('') || `<p class="link-none">No links yet. ${SYNERGIES.map(sy => `${esc(sy.name)}: ${esc(sy.text.split(':')[0])}`).join(' · ')}.</p>`}</div>` : '';
+  const shown = [...links.filter(l => l.on), ...links.filter(l => !l.on && l.need)];
+  const linksHtml = lu.some(Boolean) ? `<div class="links"><div class="links-h"><span>Links</span><small>${links.filter(l => l.on).length} on · lineup boosts</small></div>
+    ${shown.map(linkRow).join('') || `<p class="link-none">No links yet. ${[...SYNERGIES, TEAMMATES].map(sy => `${esc(sy.name)}: ${esc(sy.text.split(':')[0])}`).join(' · ')}.</p>`}</div>` : '';
   const entered = entries.has(ui.sel);
   const skipNote = !entered && profile.nights ? ` ${profile.savers ? 'Skipping tonight uses your Streak Saver.' : `Skipping tonight costs ${SKIP_PENALTY} RP and your streak.`}` : '';
   const wm = weekMatch(weekOf(ui.sel)), opp = wm?.sides.find(x => x.uid !== me.id);
@@ -2373,7 +2418,8 @@ const weekMatch = week => myMatches.find(m => m.week === week) || null;
 function weekState(m) {
   const k = Math.max(0, m.sides.findIndex(x => x.uid === me.id));
   const nights = Object.keys(m.nights || {}).sort().map(date => {
-    const n = m.nights[date], d = days.get(date), live = d && locked(d);
+    // A night the sync has scored uses its stored totals; until then it's worked out from the box scores.
+    const n = m.nights[date], d = days.get(date), live = d && locked(d) && !d.scored;
     const tot = n.sides.map((x, j) => !x.slots ? null : live ? sideTotals(x.slots, n.sides[1 - j].slots || [], d.results || {}) : x.tot);
     const du = live ? duelsOf(n.sides[0].slots || [], n.sides[1].slots || [], d.results || {}).wins : n.duels || [0, 0];
     return { date, slots: [n.sides[k].slots, n.sides[1 - k].slots], tot: [tot[k], tot[1 - k]], duels: [du[k] || 0, du[1 - k] || 0] };
@@ -2512,7 +2558,8 @@ function matchupView() {
     <div class="mu-catlist">${cats}</div></section>`;
   // The night's two lineups, slot against slot, with each player's box score.
   const tabs = w.nights.map(x => `<button class="mu-tab" data-action="mu-night" data-d="${x.date}" aria-pressed="${x.date === date}"><span>${short(x.date)}</span><b>${x.tot[0] ? f1(x.tot[0].fp) : '–'} · ${x.tot[1] ? f1(x.tot[1].fp) : '–'}</b></button>`).join('');
-  const links = list => synergiesOf(list || []).map(sy => `<span class="arch syn" title="${esc(sy.text)}">✦ ${esc(sy.name)} <b>${linkFx(sy)}</b></span>`).join('') || '<span class="dimtxt">No links</span>';
+  const links = list => [...synergiesOf(list || []), ...((list || []).some((_, i) => hasTeammate(list, i)) ? [TEAMMATES] : [])]
+    .map(sy => `<span class="arch syn" title="${esc(sy.text)}">✦ ${esc(sy.name)} <b>${linkFx(sy)}</b></span>`).join('') || '<span class="dimtxt">No links</span>';
   const duel = n && day ? duelsOf(n.slots[0] || [], n.slots[1] || [], day.results || {}) : null;
   const rows = n ? SLOTS.map((slot, i) => {
     const sa = n.slots[0]?.[i] || null, sb = n.slots[1]?.[i] || null, dw = duel?.slots[i];

@@ -736,11 +736,18 @@ body.no-slip main { grid-column: 2 / -1; }
 
   .pk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 }
-/* Phones: while setting a lineup, the court leads the page, then the week, then everything else. */
+/* Phones: while setting a lineup, the court leads the page, then your rank, the week and the streak; the night's NBA games go last.
+   main steps aside (display: contents) so its sections and the rank rail can be ordered together. */
 @media (max-width: 860px) {
-  body.drafting .side { order: 5; }
-  body.drafting main > .court-panel { order: -2; }
-  body.drafting main > #week { order: -1; }
+  body.drafting main { display: contents; }
+  body.drafting .topbar { order: -10; }
+  body.drafting main > .court-panel { order: -5; }
+  body.drafting .side { order: -4; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; overflow: visible; padding-bottom: 0; }
+  body.drafting .side .rank-card { min-width: 0; margin-bottom: 0; }
+  body.drafting .side .nav-item { width: 100%; grid-template-columns: 22px minmax(0, 1fr) auto; }
+  body.drafting main > #week { order: -3; }
+  body.drafting main > #streak { order: -2; }
+  body.drafting main > .hero-card { order: 20; }
 }
 @media (max-width: 520px) { .top-right .tchip:first-child { display: none; } }
 @media (prefers-reduced-motion: reduce) { .spot.empty.open .slot-card { animation: none; } }

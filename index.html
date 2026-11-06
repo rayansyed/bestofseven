@@ -888,6 +888,7 @@ h1 { font-size: 30px; line-height: 1.15; }
 /* The lineup is the page itself, not a card on it: a big heading, then the court full width */
 /* The squad screen: the court is the page's centre, sized to fit the screen, on a faint playbook backdrop */
 #week:empty { display: none; }
+.mu-link .list-head { align-items: center; padding-bottom: 20px; }
 /* Weekly Star cards, in the style of a chrome parallel: a thick holographic foil frame around a dark panel with
    notched corners, a white inner frame line and a faint maze pattern; ice-blue tech bars off the edges, a "7" logo
    square, a slanted Weekly Star emblem and a white nameplate. Everything scales with the card (cqw). */
@@ -2408,34 +2409,11 @@ function weekPanel() {
     <div class="cats mini">${catRows(w, true)}</div>${nightsStrip(m, w)}</section>`;
 }
 
+// On a locked night, Today just points to the Matchup page, which has the full battle.
 function weekView(day, m) {
-  const w = weekState(m), tonight = w.nights.find(n => n.date === day.date);
-  const who = (sd, mineSide) => {
-    const u = sd.bot ? { name: '#' } : peer(sd.uid) || { name: sd.name };
-    return `<div class="bt-who ${mineSide ? 'me' : ''}">${avatarHtml(u, 'md')}<div><b>${esc(sd.name)}${sd.bot ? '' : badgeMark(peer(sd.uid))}</b>${sd.bot ? '<span class="bot">Computer</span>' : mineSide ? '<span class="you">You</span>' : `<small>${tierBadge(tierOf(sd.rpBefore))}</small>`}</div></div>`;
-  };
-  const tb = w.r.tiebreak === 'duels' ? ` Categories are level, so duels won decide it: ${w.r.duels[0]} to ${w.r.duels[1]}.`
-    : w.r.tiebreak ? ` Categories and duels are level, so fantasy points decide it: ${f1(w.r.fp[0])} to ${f1(w.r.fp[1])}.` : '';
-  const updated = day.updatedAt && !m.scored ? ` Stats as of ${new Date(day.updatedAt).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}.` : '';
-  const combo = list => synergiesOf(list || []).map(sy => `<span class="arch syn" title="${esc(sy.text)}">✦ ${esc(sy.name)}</span>`).join('') || '<span class="dimtxt">No combos</span>';
-  const slots = tonight ? SLOTS.map((slot, i) => {
-    const a = tonight.slots[0]?.[i] || null, b = tonight.slots[1]?.[i] || null;
-    const marks = [...countersOn(a, b).map(c => ({ c, mine: true })), ...countersOn(b, a).map(c => ({ c, mine: false }))];
-    return `<div class="bslot"><span class="ptag">${slot}</span>${battleSlot(a, day, 'a')}<span class="vs">vs</span>${battleSlot(b, day, 'b')}
-      ${marks.length ? `<div class="ctr">${marks.map(x => `<span class="ctr-i ${x.mine ? 'good' : 'bad'}">${TYPES[x.c.by].icon} ${esc(x.c.text)}${x.mine ? '' : ' (theirs)'}</span>`).join('')}</div>` : ''}</div>`;
-  }).join('') : '';
-  const missing = day.grouped ? `Neither of you set a lineup on ${dayLabel(day.date)}.` : 'Tonight’s lineups join the week on the next sync, within 30 minutes of tip-off.';
-  return `<section class="panel battle">
-    <div class="list-head"><div><div class="eyebrow">${tierBadge(m.tier)} Week of ${weekLabel(m.week)}</div><h2>${weekHead(m, w)}</h2>
-      <p class="sub">${m.scored ? 'Final for the week.' : `Nine categories added up over the whole week. It’s decided after Sunday’s games.${day.final ? '' : ' Live stats refresh every minute.'}`}${updated}${tb}</p></div>${rpBadge(m, w)}</div>
-    <div class="bt-top">${who(w.mine, true)}<div class="bt-score"><b>${w.r.wins[0]}</b><span>–</span><b>${w.r.wins[1]}</b><small>categories this week</small></div>${who(w.opp, false)}</div>
-    <div class="cats">${catRows(w, false)}</div>
-    <div class="bt-fp"><span>${f1(w.r.fp[0])} fantasy pts</span><span class="dimtxt">tiebreak</span><span>${f1(w.r.fp[1])} fantasy pts</span></div>
-    ${nightsStrip(m, w)}
-    ${tonight ? `<h3 class="bt-h">${dayLabel(day.date)} · slot by slot</h3>
-    <div class="bt-combos"><div>${combo(tonight.slots[0])}</div><div>${combo(tonight.slots[1])}</div></div>
-    <div class="bslots">${slots}</div>` : `<p class="hint wk-missing">${missing}</p>`}
-  </section>`;
+  const w = weekState(m);
+  return `<section class="panel mu-link"><div class="list-head"><div><div class="eyebrow">${tierBadge(m.tier)} Week of ${weekLabel(m.week)} · vs ${esc(w.opp.name)}</div><h2>${weekHead(m, w)}</h2></div>
+    <button class="btn primary" data-action="mu-open" data-d="${day.date}">Open matchup</button></div></section>`;
 }
 
 /* ---------- Matchup page: the week's scoreboard, the categories and the two lineups card against card ---------- */
@@ -2481,8 +2459,7 @@ function matchupView() {
   const hero = `<section class="mu-hero">
     <div class="mu-eyebrow">${tierBadge(m.tier)}<span>Week of ${weekLabel(m.week)}</span><span>·</span>${status}</div>
     <div class="mu-board">${who(w.mine, true)}<div class="mu-score"><b class="${a >= b ? 'lead' : ''}">${a}</b><span>–</span><b class="${b >= a ? 'lead' : ''}">${b}</b><small>Categories won</small></div>${who(w.opp, false)}</div>
-    <div class="mu-duels"><b>${w.r.duels[0]}</b><span>Duels won${w.r.tiebreak === 'duels' ? ' · deciding the tie' : ' · tiebreaker'}</span><b>${w.r.duels[1]}</b></div>
-    <p class="mu-head"><span>${weekHead(m, w)}</span><span class="dimtxt">${f1(w.r.fp[0])} – ${f1(w.r.fp[1])} fantasy pts</span>${rpBadge(m, w)}</p></section>`;
+    <div class="mu-duels"><b>${w.r.duels[0]}</b><span>Duels won</span><b>${w.r.duels[1]}</b></div></section>`;
   // Categories: the week's totals (what decides the matchup), or just the night on show.
   const scope = ui.muCats === 'night' && n ? 'night' : 'week', empty = addTotals([]);
   const r = scope === 'night' ? decide(n.tot[0] || empty, n.tot[1] || empty, n.duels) : w.r;
@@ -2775,6 +2752,7 @@ document.addEventListener('click', e => {
     if (ui.view === 'matchup') { const mm = muWeek(), d = mm && muNight(mm); if (d && days.has(d)) ui.sel = d; }
     ui.sig = ''; render(); window.scrollTo({ top: 0 });
   }
+  else if (a === 'mu-open') { ui.view = 'matchup'; ui.muNight = b.dataset.d; ui.sig = ''; render(); window.scrollTo({ top: 0 }); }
   else if (a === 'mu-night') { ui.muNight = b.dataset.d; if (days.has(ui.muNight)) ui.sel = ui.muNight; ui.sig = ''; render(); }
   else if (a === 'mu-cats') { ui.muCats = b.dataset.s; ui.sig = ''; render(); }
   else if (a === 'sheet') setSheet(!document.body.classList.contains('sheet-open'));

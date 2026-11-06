@@ -743,7 +743,6 @@ body.no-slip main { grid-column: 2 / -1; }
   body.drafting .side { order: 5; }
   body.drafting main > .court-panel { order: -2; }
   body.drafting main > #week { order: -1; }
-  body.drafting .court-panel .list-head { padding: 14px 14px 6px; }
 }
 @media (max-width: 520px) { .top-right .tchip:first-child { display: none; } }
 @media (prefers-reduced-motion: reduce) { .spot.empty.open .slot-card { animation: none; } }
@@ -879,6 +878,13 @@ h1 { font-size: 30px; line-height: 1.15; }
 
 .btn.danger { color: #fff; }
 .gift-head { box-shadow: inset 0 0 0 1.5px rgba(45,91,216,.4); }
+/* The lineup is the page itself, not a card on it: a big heading, then the court full width */
+.lineup-stage { padding: 14px 0 6px; min-width: 0; }
+.lineup-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 0 2px 12px; }
+.lineup-head h2 { font-size: 46px; font-weight: 800; letter-spacing: -.035em; line-height: .95; text-transform: uppercase; }
+.lineup-stage .court-bar { padding: 0 0 12px; }
+.lineup-stage .court { width: 100%; max-width: 760px; margin: 0 auto 6px; box-shadow: inset 0 0 0 1px var(--line), 0 10px 30px rgba(28,30,34,.06); }
+@media (max-width: 700px) { .lineup-stage { padding-top: 4px; } .lineup-head h2 { font-size: 36px; } .lineup-stage .court { width: 100%; } }
 /* Phones: a menu button in place of the wrapped nav and account chips */
 .burger, .coin-m { display: none; }
 .menu { display: contents; }
@@ -2227,7 +2233,7 @@ function render() {
     if (sig === ui.sig && $('#court')) { renderCourt(); renderLineup(); const wk = $('#week'); if (wk) wk.innerHTML = weekPanel(); const el = $('#slate'); if (el) keepRacesScroll(() => { el.innerHTML = slateCard(day); }); const st = $('#streak'); if (st) st.innerHTML = streakBanner(); return; }
     ui.sig = sig;
     $('#slip').innerHTML = '<button class="dock" id="dock" data-action="sheet" aria-expanded="false" aria-label="Show your lineup"></button><div class="sheet-bg" data-action="sheet-close"></div><div class="slip-card" id="lineup"></div>';
-    m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day)}<div id="week">${weekPanel()}</div><section class="panel court-panel"><div class="list-head"><div><div class="eyebrow">${dayLabel(ui.sel)}</div><h2>Assemble your lineup</h2><p class="sub">Tap a spot to send in a card. ${ownedPool(day).length} of your ${cards.size} cards have a game this night.</p></div></div><div id="court"></div></section>`;
+    m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day)}<div id="week">${weekPanel()}</div><section class="court-panel lineup-stage" aria-labelledby="lineup-h"><div class="lineup-head"><h2 id="lineup-h">Lineup</h2><span class="eyebrow">${dayLabel(ui.sel)}</span></div><div id="court"></div></section>`;
     renderCourt(); renderLineup();
     return;
   }

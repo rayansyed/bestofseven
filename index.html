@@ -552,8 +552,6 @@ body.no-slip main { grid-column: 2 / -1; }
 .pk-band { position: relative; display: grid; justify-items: center; gap: 2cqw; padding: 11cqw 6cqw 7cqw; background: linear-gradient(var(--c1), var(--c2)); box-shadow: inset 0 1cqw 0 rgba(255,255,255,.25); }
 .pk-band::before { content: ""; position: absolute; inset: 3.5cqw 4cqw; border: .5cqw solid rgba(255,255,255,.35); border-radius: 1.5cqw; pointer-events: none; }
 .p-premium .pk-band::before { border-color: rgba(245,196,81,.6); }
-.pk-names { position: absolute; top: 5cqw; left: 7cqw; right: 7cqw; display: flex; justify-content: space-between; font: 700 3.6cqw/1.1 var(--sans); letter-spacing: .05em; text-transform: uppercase; opacity: .85; }
-.pk-names span { max-width: 34%; overflow-wrap: anywhere; } .pk-names span:last-child { text-align: right; }
 .pk-word { font: 700 15cqw/.9 "Oswald", var(--sans); letter-spacing: .01em; transform: skewX(-8deg); text-shadow: 0 .8cqw 0 rgba(0,0,0,.35); white-space: nowrap; }
 .pk-word b { color: #F5C451; }
 .pk-kind { font: 700 5.6cqw/1 "Oswald", var(--sans); letter-spacing: .22em; margin-right: -.22em; text-transform: uppercase; color: rgba(255,255,255,.85); }
@@ -1339,7 +1337,7 @@ function packHtml(type, name, attrs, busy = false) {
   return `<button class="pack p-${type} ${busy ? 'busy' : ''}" ${attrs}><span class="pk">
     <span class="pk-crimp"></span>
     <span class="pk-top"><span class="pk-year">2026–27 Basketball Cards</span><span class="pk-art">${art.map(img).join('')}</span><span class="pk-badge">7</span></span>
-    <span class="pk-band"><span class="pk-names">${art.map(a => `<span>${esc(a.name)}</span>`).join('')}</span>
+    <span class="pk-band">
       <span class="pk-word">BEST OF <b>7</b></span><span class="pk-kind">${esc(name.replace(/ pack$/i, ''))}</span><span class="pk-count">${PACK_CARDS[type]} cards per pack</span></span>
     <span class="pk-crimp b"></span>
     <span class="pk-grain"></span><span class="pk-shine"></span></span></button>`;

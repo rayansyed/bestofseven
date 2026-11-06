@@ -1612,18 +1612,15 @@ function packsView() {
       <p class="hint">${t.what}.</p></div>`;
   };
   const gifts = SHOP.filter(t => (profile.giftPacks?.[t.type] || 0) > 0);
-  const giftPanel = gifts.length ? `<section class="panel gift-head"><div class="list-head"><div><div class="eyebrow">Gifts</div><h2>You’ve been given ${giftCount()} pack${giftCount() > 1 ? 's' : ''}</h2>
-      <p class="sub">Free to open. They don’t use coins or your daily pack.</p></div></div><div class="shop">${gifts.map(giftTile).join('')}</div></section>` : '';
+  const giftPanel = gifts.length ? `<section class="panel gift-head"><div class="list-head"><div><div class="eyebrow">Gifts</div><h2>You’ve been given ${giftCount()} pack${giftCount() > 1 ? 's' : ''}</h2></div></div><div class="shop">${gifts.map(giftTile).join('')}</div></section>` : '';
   if (r && r.st && !r.st.done) return `<section class="panel pack-reveal"><div class="list-head"><div><div class="eyebrow">${r.gift ? 'Gifted ' : ''}${SHOP.find(t => t.type === r.type)?.name || 'Pack'}</div>
       <h2>Your pack is open</h2></div></div>${stageHtml(r.st, r.had)}</section>`;
   const reveal = r ? `<section class="panel pack-reveal"><div class="list-head"><div><div class="eyebrow">${r.gift ? 'Gifted ' : ''}${SHOP.find(t => t.type === r.type)?.name || 'Pack'}</div>
       <h2>${r.cards.length} players and ${r.boosters.length} booster${r.boosters.length === 1 ? '' : 's'}</h2></div><button class="btn" data-action="reveal-done">Done</button></div>
     <div class="tc-grid">${r.cards.map((c, i) => cardHtml(c, { fresh, i, tag: r.had.has(c.pid) ? ['Duplicate', 'dupe'] : ['New', 'new'] })).join('')}${r.boosters.map((b, j) => boosterHtml(b, { fresh, i: r.cards.length + j })).join('')}</div></section>` : '';
   return `${reveal}${giftPanel}
-    <section class="panel shop-head"><div class="list-head"><div><div class="eyebrow">Your coins</div><h2 class="coin-total">🪙 ${fmt(coins)}</h2>
-      <p class="sub">Win the night against your weekly opponent +${COINS.nightWin} · each category you win that night +${COINS.category} · each duel won +${COINS.duel} · sweep all six duels +${COINS.sweep} · win the week +${COINS.weekWin}.</p></div></div>
-      <div class="shop">${SHOP.map(tile).join('')}</div>
-      <p class="hint shop-odds">Rarer cards are better players: Common 1–2★ · Rare 2–3★ · Epic 3–4★ · Legendary 5★ only. Players who average under 12 minutes stay out of packs.</p></section>
+    <section class="panel shop-head"><div class="list-head"><div><h2>Shop</h2></div></div>
+      <div class="shop">${SHOP.map(tile).join('')}</div></section>
     <section class="panel"><div class="list-head"><div><h2>Duplicates · ${dupes.length}</h2><p class="sub">Extra copies of players you already have. Your best card of each player is kept.</p></div>
       ${dupes.length ? `<button class="btn primary" data-action="sell-dupes" ${ui.selling ? 'disabled' : ''}>Sell all · 🪙 ${dupeValue}</button>` : ''}</div>
       ${dupeRows || '<p class="empty">No duplicates right now.</p>'}</section>`;
@@ -1793,7 +1790,7 @@ function streakBanner() {
   const shown = [...stops.filter(x => x > streak), ...(passed ? [passed] : []), ...(streak < 30 ? [30] : [])];
   const ladderStops = [...new Set(shown)].sort((a, b) => a - b);
   const ladder = ladderStops.map(n => `<li class="${streak >= n ? 'done' : n === next ? 'next' : ''}"><b>${n}</b><span>${rewardText(rewardFor(n)).replace(/^a /, '').replace(' + a ', ' + ').replace('the streak badge', 'Badge')}</span></li>`).join('');
-  return `<div class="st-top"><div><div class="st-title">${title}</div><p class="st-line">${line}</p></div>
+  return `<div class="st-top"><div><div class="st-title">${title}</div></div>
       <div class="st-chips">${earned}${moments}${savers}</div></div>
     <ol class="st-ladder" aria-label="Streak rewards">${ladder}</ol>`;
 }
@@ -2240,7 +2237,7 @@ function matchupView() {
     return `<div class="mu-cat ${x.w === 0 ? 'w-me' : x.w === 1 ? 'w-them' : ''}"><span class="mu-v a">${catVal(c.key, x.a)}</span>
       <div class="mu-mid"><span class="mu-cn">${c.name}${c.low ? ' · fewer wins' : ''}</span><div class="mu-bar"><i style="width:${(share * 100).toFixed(1)}%"></i></div></div><span class="mu-v b">${catVal(c.key, x.b)}</span></div>`;
   }).join('');
-  const catPanel = `<section class="panel mu-cats"><div class="list-head"><div><h2>Categories <span class="mu-mini">${r.wins[0]}–${r.wins[1]}</span></h2><p class="sub">${scope === 'week' ? 'Monday to Sunday totals. Win more categories than your opponent to take the week.' : `Just ${dayLabel(n.date)}.`}</p></div>
+  const catPanel = `<section class="panel mu-cats"><div class="list-head"><div><h2>Categories <span class="mu-mini">${r.wins[0]}–${r.wins[1]}</span></h2></div>
       ${n ? `<div class="seg-t"><button data-action="mu-cats" data-s="week" aria-pressed="${scope === 'week'}">Week</button><button data-action="mu-cats" data-s="night" aria-pressed="${scope === 'night'}">${short(n.date)}</button></div>` : ''}</div>
     <div class="mu-catlist">${cats}</div></section>`;
   // The night's two lineups, slot against slot, with each player's box score.
@@ -2253,9 +2250,8 @@ function matchupView() {
     return `<div class="mu-row"><div class="mu-slot-col"><span class="mu-slot">${spotTag(slot)}</span>${dw === 0 ? '<span class="mu-duel me" title="You won this duel">◀</span>' : dw === 1 ? '<span class="mu-duel them" title="They won this duel">▶</span>' : ''}</div>${muSide(sa, day, 'a', dw === 0)}${muSide(sb, day, 'b', dw === 1)}
       ${marks.length ? `<div class="ctr">${marks.map(x => `<span class="ctr-i ${x.mine ? 'good' : 'bad'}">${esc(x.c.text)}${x.mine ? '' : ' (theirs)'}</span>`).join('')}</div>` : ''}</div>`;
   }).join('') : '';
-  const updated = day?.updatedAt && !m.scored ? ` Stats as of ${new Date(day.updatedAt).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}.` : '';
   const face = `<section class="panel mu-face"><div class="list-head"><div><h2>Face-off${n ? ` · ${dayLabel(n.date).split(',')[0]}` : ''}</h2>
-      <p class="sub">${n ? `Duels <b>${n.duels[0]}–${n.duels[1]}</b> · ${f1(n.tot[0]?.fp || 0)} – ${f1(n.tot[1]?.fp || 0)} fantasy pts. Each spot is a duel: the higher fantasy score wins it, +${COINS.duel} coins each and +${COINS.sweep} for sweeping all six.${liveNow ? ' Live stats refresh every minute.' : ''}${updated}` : 'Lineups show here once a night locks.'}</p></div>
+      <p class="sub">${n ? `Duels <b>${n.duels[0]}–${n.duels[1]}</b>` : 'Lineups show here once a night locks.'}</p></div>
       ${n && n.duels[0] === SLOTS.length ? '<span class="badge won">Sweep!</span>' : ''}</div>
     ${tabs ? `<div class="mu-tabs">${tabs}</div>` : ''}
     ${n ? `<div class="mu-links"><div>${links(n.slots[0])}</div><div>${links(n.slots[1])}</div></div><div class="mu-rows">${rows}</div>` : ''}</section>`;

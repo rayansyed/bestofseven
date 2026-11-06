@@ -993,11 +993,18 @@ h1 { font-size: 30px; line-height: 1.15; }
 .links + .legs { margin-top: 14px; }
 @media (max-width: 700px) { .lineup-stage .court-bar h2 { font-size: 32px; } .lineup-stage .court { width: 100%; } }
 /* Phones: a menu button in place of the wrapped nav and account chips */
-.burger, .coin-m { display: none; }
+.burger, .coin-m, .rank-m { display: none; }
 .menu { display: contents; }
 @media (max-width: 860px) {
   .topbar { position: sticky; flex-wrap: nowrap; gap: 10px; padding-block: 12px; }
-  .coin-m { display: inline-flex; margin-left: auto; }
+  .rank-m { display: inline-flex; margin-left: auto; gap: 6px; padding: 6px 9px; border: 0; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .rank-m .tier { padding: 3px; gap: 0; font-size: 0; letter-spacing: 0; }
+  .topbar { gap: 8px; }
+  @media (min-width: 440px) { .rank-m .tier { padding: 2px 6px; gap: 6px; font-size: 10px; } }
+  .coin-m { display: inline-flex; padding: 6px 9px; }
+  .brand + .coin-m { margin-left: auto; }
+  /* Your rank sits in the bar, so the rank card and nights rail on the left are left out on phones. */
+  .app > .side { display: none !important; }
   .burger { position: relative; display: grid; place-content: center; gap: 4px; width: 42px; height: 42px; flex: none; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
   .coin-m + .burger { margin-left: 0; } .brand + .burger { margin-left: auto; }
   .burger i { display: block; width: 18px; height: 2px; border-radius: 2px; background: var(--ink); transition: transform .2s, opacity .2s; }
@@ -1009,7 +1016,7 @@ h1 { font-size: 30px; line-height: 1.15; }
   .menu.open { display: grid; gap: 12px; position: absolute; left: 0; right: 0; top: 100%; z-index: 30; padding: 8px 0 16px; background: var(--bg); border-bottom: 1px solid var(--line); box-shadow: 0 14px 24px rgba(28,30,34,.12); animation: menu-in .18s ease-out; }
   .menu .topnav { display: grid; gap: 2px; }
   .menu .navlink { text-align: left; padding: 12px; border-radius: 10px; border-bottom: 0; font-size: 16px; color: var(--ink); }
-  .menu .navlink.on { background: var(--panel); box-shadow: inset 3px 0 0 var(--ink); }
+  .menu .navlink.on { background: var(--panel); font-weight: 800; }
   .menu .top-right { margin: 0; display: flex; flex-wrap: wrap; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
   .menu .coin-d { display: none; }
 }
@@ -1722,7 +1729,7 @@ function renderTop() {
   const coin = cls => `<button class="tchip coin ${cls}" data-action="view" data-v="packs" title="Coins: spend them on packs">🪙 ${fmt(profile.coins || 0)}</button>`;
   $('#topbar').innerHTML = `
     <div class="brand">BEST OF <span class="seven">7</span></div>
-    ${profile?.name ? coin('coin-m') : ''}
+    ${profile?.name ? `<button class="tchip rank-m" data-action="view" data-v="profile" title="${esc(profile.name)} · ${TIERS[tier]} · ${fmt(rp)} RP">${tierBadge(tier)}<span><b>${fmt(rp)}</b> RP</span></button>` + coin('coin-m') : ''}
     ${me.id ? `<button class="burger" data-action="menu" aria-expanded="${ui.menu ? 'true' : 'false'}" aria-controls="menu" aria-label="${ui.menu ? 'Close menu' : 'Open menu'}"><i></i><i></i><i></i>${giftCount() ? '<span class="burger-dot" aria-hidden="true"></span>' : ''}</button>` : ''}
     <div class="menu ${ui.menu ? 'open' : ''}" id="menu">
     ${me.id && profile?.name && (profile.starterPacks || 0) >= STARTER_PACKS && !ui.reveal ? `<nav class="topnav" aria-label="Sections">${today ? `<button class="navlink ${onToday ? 'on' : ''}" data-action="sel" data-d="${today}" ${onToday ? 'aria-current="page"' : ''}>Today</button>` : ''}${nav('matchup', 'Matchup')}${nav('cards', 'My cards')}${nav('packs', `Packs${giftCount() ? `<span class="nav-dot" aria-label="${giftCount()} gifted packs">${giftCount()}</span>` : ''}`)}${nav('leaders', 'Leaderboard')}${nav('history', 'My nights')}${nav('profile', 'Profile')}</nav>` : ''}

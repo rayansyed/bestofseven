@@ -888,7 +888,20 @@ h1 { font-size: 30px; line-height: 1.15; }
 /* The lineup is the page itself, not a card on it: a big heading, then the court full width */
 /* The squad screen: the court is the page's centre, sized to fit the screen, on a faint playbook backdrop */
 #week:empty { display: none; }
-.mu-link .list-head { align-items: center; padding-bottom: 20px; }
+/* Today on a locked night: the week's score, tappable */
+.ms-card { display: grid; gap: 14px; width: 100%; padding: 18px 22px 22px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); color: var(--ink); text-align: left;
+  box-shadow: 0 1px 2px rgba(28,30,34,.04); transition: transform .15s, box-shadow .15s; }
+.ms-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(28,30,34,.1); }
+.ms-top { display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.ms-go { color: var(--ink); letter-spacing: .04em; }
+.ms-board { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; }
+.ms-who { display: grid; justify-items: center; gap: 6px; min-width: 0; }
+.ms-who b { font-size: 15px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-score { display: flex; align-items: center; gap: 10px; font-variant-numeric: tabular-nums; }
+.ms-score b { font-size: 64px; font-weight: 800; letter-spacing: -.05em; line-height: .9; color: var(--dim); }
+.ms-score b.lead { color: var(--ink); }
+.ms-score i { font-style: normal; font-size: 30px; color: var(--dim); }
+@media (max-width: 520px) { .ms-score b { font-size: 48px; } .ms-who b { font-size: 13px; } }
 /* Weekly Star cards, in the style of a chrome parallel: a thick holographic foil frame around a dark panel with
    notched corners, a white inner frame line and a faint maze pattern; ice-blue tech bars off the edges, a "7" logo
    square, a slanted Weekly Star emblem and a white nameplate. Everything scales with the card (cqw). */
@@ -2410,11 +2423,17 @@ function weekPanel() {
 }
 
 // On a locked night, Today just points to the Matchup page, which has the full battle.
+// On a locked night, Today shows just the week's score; tapping it opens the Matchup page for the full battle.
 function weekView(day, m) {
-  const w = weekState(m);
-  return `<section class="panel mu-link"><div class="list-head"><div><div class="eyebrow">${tierBadge(m.tier)} Week of ${weekLabel(m.week)} · vs ${esc(w.opp.name)}</div><h2>${weekHead(m, w)}</h2></div>
-    <button class="btn primary" data-action="mu-open" data-d="${day.date}">Open matchup</button></div></section>`;
+  const w = weekState(m), [a, b] = w.r.wins;
+  const live = !m.scored && day.games?.some(g => g.status !== 'STATUS_SCHEDULED' && !LIVE_DONE.has(g.status));
+  const who = (sd, mine) => `<span class="ms-who ${mine ? 'me' : ''}">${avatarHtml(sd.bot ? { name: '#' } : peer(sd.uid) || { name: sd.name }, 'md')}<b>${esc(sd.name)}</b></span>`;
+  return `<button class="ms-card" data-action="mu-open" data-d="${day.date}" aria-label="Open the matchup: ${a} to ${b} in categories">
+    <span class="ms-top">${live ? '<span class="mu-live">Live</span>' : m.scored ? 'Final' : `Week of ${weekLabel(m.week)}`}<span class="ms-go">Matchup ›</span></span>
+    <span class="ms-board">${who(w.mine, true)}<span class="ms-score"><b class="${a >= b ? 'lead' : ''}">${a}</b><i>–</i><b class="${b >= a ? 'lead' : ''}">${b}</b></span>${who(w.opp, false)}</span>
+  </button>`;
 }
+
 
 /* ---------- Matchup page: the week's scoreboard, the categories and the two lineups card against card ---------- */
 // This week's matchup, or the latest one if there's none yet this week.
@@ -2688,7 +2707,8 @@ function render() {
   const sat = notice('Not entered', 'You sat this night out', `<p>${profile.nights ? `${profile.lastSaved === ui.sel ? 'Your Streak Saver covered this night, so your streak and RP are safe.' : `Skipping a game night adds nothing to your week and costs ${SKIP_PENALTY} RP and your streak, but it can’t drop you out of your tier.`}` : 'Enter a night to get on the board.'}</p>${nextBtn}`);
   if (e?.group && group && group.date === ui.sel) body = groupView(day);
   else if (e?.invalid) body = notice('Entry not counted', 'This lineup was invalid', `<p>The lineup was rejected (${esc(e.invalid)}), so it didn’t count toward your week.</p>${nextBtn}`) + (wm ? weekView(day, wm) : '');
-  else if (wm) body = (e ? '' : sat) + weekView(day, wm);
+  else if (wm && e) { m.innerHTML = weekView(day, wm); return; }
+  else if (wm) body = sat + weekView(day, wm);
   else if (!e) body = sat;
   else body = notice('Locked in', 'Finding your opponent', `<p>Lineups locked at ${timeLabel(day.lockAt)}. Your opponent for the week is set on the next sync, within 30 minutes of tip-off, and both lineups are revealed then.</p>`);
   keepRacesScroll(() => { m.innerHTML = `<section class="streak" id="streak">${streakBanner()}</section>${heroCard(day)}${body}`; });

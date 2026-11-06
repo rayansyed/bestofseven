@@ -2022,8 +2022,8 @@ function nightsStrip(m, w) {
 // The week at a glance above an open night's cards, so the lineup can chase the categories being lost.
 function weekPanel() {
   const week = weekOf(ui.sel), m = weekMatch(week);
-  if (!m) return `<section class="panel wk"><div class="list-head"><div><div class="eyebrow">Week of ${weekLabel(week)}</div><h2>Your weekly matchup starts at lock</h2>
-    <p class="sub">When this night locks you’re paired with a ${TIERS[tierOf(profile?.rp)]} player until Sunday. Every night you play adds to nine category totals, and the week’s totals decide it.</p></div></div></section>`;
+  // No matchup yet (it's made when the night locks): nothing to show.
+  if (!m) return '';
   const w = weekState(m);
   return `<section class="panel wk"><div class="list-head"><div><div class="eyebrow">${tierBadge(m.tier)} Week of ${weekLabel(m.week)} · vs ${esc(w.opp.name)}</div><h2>${weekHead(m, w)}</h2>
     <p class="sub">Your totals first. Set tonight’s cards to win the categories you’re losing.</p></div>${rpBadge(m, w)}</div>

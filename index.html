@@ -886,6 +886,88 @@ h1 { font-size: 30px; line-height: 1.15; }
 /* The lineup is the page itself, not a card on it: a big heading, then the court full width */
 /* The squad screen: the court is the page's centre, sized to fit the screen, on a faint playbook backdrop */
 #week:empty { display: none; }
+/* Matchup page */
+.mu-hero { display: grid; gap: 14px; padding: 10px 0 6px; text-align: center; }
+.mu-eyebrow { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.mu-live { display: inline-flex; align-items: center; gap: 6px; color: var(--bad); }
+.mu-live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 1.4s ease-in-out infinite; }
+.mu-board { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 18px; }
+.mu-who { display: grid; justify-items: center; gap: 8px; min-width: 0; }
+.mu-who b { font-size: 19px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mu-who .you, .mu-who .bot { margin-left: 0; }
+.mu-score { display: grid; grid-template-columns: auto auto auto; align-items: center; gap: 12px; }
+.mu-score b { font-size: 92px; font-weight: 800; letter-spacing: -.05em; line-height: .9; color: var(--dim); font-variant-numeric: tabular-nums; }
+.mu-score b.lead { color: var(--ink); }
+.mu-score span { font-size: 40px; color: var(--dim); }
+.mu-score small { grid-column: 1 / -1; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.mu-head { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; max-width: none; font-weight: 700; }
+.mu-mini { font-size: 15px; color: var(--muted); margin-left: 6px; font-variant-numeric: tabular-nums; }
+.mu-cats .list-head { align-items: center; }
+.seg-t { display: inline-flex; padding: 3px; border-radius: 10px; background: var(--chip); }
+.seg-t button { border: 0; background: none; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 13px; color: var(--muted); }
+.seg-t button[aria-pressed=true] { background: var(--panel); color: var(--ink); box-shadow: 0 1px 2px rgba(28,30,34,.1); }
+.mu-catlist { display: grid; gap: 12px; padding: 6px 22px 20px; }
+.mu-cat { display: grid; grid-template-columns: 70px minmax(0, 1fr) 70px; gap: 14px; align-items: center; font-variant-numeric: tabular-nums; }
+.mu-v { font-size: 18px; font-weight: 800; color: var(--muted); }
+.mu-v.b { text-align: right; }
+.mu-cat.w-me .mu-v.a { color: var(--good); } .mu-cat.w-them .mu-v.b { color: var(--bad); }
+.mu-mid { display: grid; gap: 5px; }
+.mu-cn { font-size: 12px; font-weight: 700; color: var(--muted); text-align: center; }
+.mu-bar { height: 8px; border-radius: 6px; overflow: hidden; background: color-mix(in srgb, var(--bad) 24%, var(--chip)); }
+.mu-bar i { display: block; height: 100%; background: var(--dim); transition: width .4s ease; }
+.mu-cat.w-me .mu-bar i { background: var(--good); }
+.mu-cat.w-them .mu-bar { background: color-mix(in srgb, var(--bad) 55%, var(--chip)); }
+.mu-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 0 22px 14px; }
+.mu-tab { flex: none; display: grid; justify-items: center; gap: 1px; min-width: 76px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); font-variant-numeric: tabular-nums; }
+.mu-tab span { font-size: 11px; font-weight: 700; color: var(--muted); }
+.mu-tab b { font-size: 12px; }
+.mu-tab[aria-pressed=true] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.mu-links { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 22px 14px; }
+.mu-links > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.mu-links > div:last-child { justify-content: flex-end; }
+.mu-row { display: grid; grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); grid-template-areas: "a s b" "c c c"; gap: 10px 12px; align-items: center; padding: 18px 22px; border-top: 1px solid var(--line); }
+.mu-slot { grid-area: s; justify-self: center; padding: 3px 8px; border-radius: 6px; background: var(--ink); color: #fff; font: 700 14px/1.2 "Oswald", var(--sans); }
+.mu-side { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 14px; align-items: center; min-width: 0; }
+.mu-side.a { grid-area: a; } .mu-side.b { grid-area: b; grid-template-columns: minmax(0, 1fr) 150px; }
+.mu-side.b .mu-card { order: 2; }
+.mu-card { position: relative; display: grid; justify-items: center; }
+.mu-card .tc { width: 100%; }
+.mu-card .bst-chip { position: absolute; top: -9px; z-index: 2; }
+.mu-empty { width: 100%; aspect-ratio: 5 / 7; display: grid; place-items: center; border: 2px dashed var(--chip-2); border-radius: 11px; color: var(--muted); font-size: 12px; font-weight: 700; }
+.mu-stats { display: grid; gap: 8px; min-width: 0; }
+.mu-st-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; }
+.mu-side.b .mu-st-top { flex-direction: row-reverse; }
+.mu-fp { font-size: 28px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.mu-side.up .mu-fp { color: var(--good); }
+.mu-fp small { margin-left: 3px; font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0; }
+.mu-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+.mu-grid span { display: grid; gap: 1px; padding: 5px 7px; border-radius: 7px; background: var(--panel-2); line-height: 1.1; }
+.mu-grid b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.mu-grid i { font-style: normal; font-size: 10px; font-weight: 700; letter-spacing: .04em; color: var(--muted); }
+.mu-grid.none { opacity: .45; }
+.mu-min { font-size: 11px; color: var(--muted); font-weight: 600; }
+.mu-side.b .mu-min { text-align: right; }
+.mu-row .ctr { grid-area: c; grid-column: auto; justify-content: center; }
+@media (max-width: 860px) {
+  body.on-matchup .side { order: 5; }
+  .mu-side, .mu-side.b { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .mu-side.b .mu-card { order: 0; }
+  .mu-card { width: 100%; max-width: 170px; justify-self: center; }
+  .mu-score b { font-size: 68px; }
+}
+@media (max-width: 700px) {
+  .mu-board { gap: 8px; }
+  .mu-who .ava.lg { width: 56px; height: 56px; font-size: 22px; }
+  .mu-who b { font-size: 14px; }
+  .mu-score { gap: 6px; } .mu-score b { font-size: 54px; } .mu-score span { font-size: 26px; }
+  .mu-catlist, .mu-tabs, .mu-links { padding-left: 16px; padding-right: 16px; }
+  .mu-cat { grid-template-columns: 52px minmax(0, 1fr) 52px; gap: 8px; } .mu-v { font-size: 15px; }
+  .mu-links { grid-template-columns: 1fr; } .mu-links > div:last-child { justify-content: flex-start; }
+  .mu-row { grid-template-columns: minmax(0, 1fr) 30px minmax(0, 1fr); gap: 8px; padding: 14px 12px; }
+  .mu-slot { font-size: 12px; padding: 2px 6px; }
+  .mu-fp { font-size: 22px; }
+  .mu-grid { gap: 3px; } .mu-grid span { padding: 4px 5px; } .mu-grid b { font-size: 13px; } .mu-grid i { font-size: 9px; }
+}
 .lineup-stage { position: relative; padding: 6px 0 18px; min-width: 0; isolation: isolate; }
 .lineup-stage::before { content: ""; position: absolute; inset: -16px -8px 0; z-index: -1; pointer-events: none;
   background: radial-gradient(ellipse at 50% 45%, rgba(255,255,255,.9), transparent 70%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M24 0H0V24' fill='none' stroke='%231C1E22' stroke-opacity='.05'/%3E%3C/svg%3E");
@@ -1620,7 +1702,7 @@ function renderTop() {
     ${profile?.name ? coin('coin-m') : ''}
     ${me.id ? `<button class="burger" data-action="menu" aria-expanded="${ui.menu ? 'true' : 'false'}" aria-controls="menu" aria-label="${ui.menu ? 'Close menu' : 'Open menu'}"><i></i><i></i><i></i>${giftCount() ? '<span class="burger-dot" aria-hidden="true"></span>' : ''}</button>` : ''}
     <div class="menu ${ui.menu ? 'open' : ''}" id="menu">
-    ${me.id && profile?.name && (profile.starterPacks || 0) >= STARTER_PACKS && !ui.reveal ? `<nav class="topnav" aria-label="Sections">${today ? `<button class="navlink ${onToday ? 'on' : ''}" data-action="sel" data-d="${today}" ${onToday ? 'aria-current="page"' : ''}>Today</button>` : ''}${nav('cards', 'My cards')}${nav('packs', `Packs${giftCount() ? `<span class="nav-dot" aria-label="${giftCount()} gifted packs">${giftCount()}</span>` : ''}`)}${nav('leaders', 'Leaderboard')}${nav('history', 'My nights')}${nav('profile', 'Profile')}</nav>` : ''}
+    ${me.id && profile?.name && (profile.starterPacks || 0) >= STARTER_PACKS && !ui.reveal ? `<nav class="topnav" aria-label="Sections">${today ? `<button class="navlink ${onToday ? 'on' : ''}" data-action="sel" data-d="${today}" ${onToday ? 'aria-current="page"' : ''}>Today</button>` : ''}${nav('matchup', 'Matchup')}${nav('cards', 'My cards')}${nav('packs', `Packs${giftCount() ? `<span class="nav-dot" aria-label="${giftCount()} gifted packs">${giftCount()}</span>` : ''}`)}${nav('leaders', 'Leaderboard')}${nav('history', 'My nights')}${nav('profile', 'Profile')}</nav>` : ''}
     <div class="top-right">
       <span class="tchip">NBA · 2026–27</span>
       ${profile?.name ? `<span class="tchip">${avatarHtml(profile, 'sm')}${tierBadge(tier)}<span>${esc(profile.name)} · ${fmt(rp)} RP</span></span>${coin('coin-d')}` : ''}
@@ -2060,6 +2142,80 @@ function weekView(day, m) {
   </section>`;
 }
 
+/* ---------- Matchup page: the week's scoreboard, the categories and the two lineups card against card ---------- */
+// This week's matchup, or the latest one if there's none yet this week.
+const muWeek = () => weekMatch(weekOf(etDay())) || [...myMatches].sort((a, b) => String(b.week).localeCompare(String(a.week)))[0] || null;
+// The night to show: the one picked, else tonight, else the latest night with lineups.
+function muNight(m) {
+  const dates = Object.keys(m.nights || {}).sort();
+  return dates.includes(ui.muNight) ? ui.muNight : dates.includes(etDay()) ? etDay() : dates[dates.length - 1] || null;
+}
+// Nights older than the page's few loaded days are fetched once when the matchup page shows them.
+const oldDays = new Map(), oldDaysAsked = new Set();
+function dayFor(date) {
+  if (!date) return null;
+  if (days.has(date)) return days.get(date);
+  if (oldDays.has(date)) return oldDays.get(date);
+  if (db && !oldDaysAsked.has(date)) { oldDaysAsked.add(date); db.doc('days/' + date).get().then(x => { if (x.exists) { oldDays.set(date, x.data()); if (ui.view === 'matchup') { ui.sig = ''; render(); } } }).catch(() => {}); }
+  return null;
+}
+const MU_STATS = [['PTS', 1], ['REB', 2], ['AST', 3], ['STL', 4], ['BLK', 5], ['3PM', 7], ['FG', 'fg'], ['FTM', 10], ['TO', 6]];
+function muSide(sl, day, side, up = false) {
+  if (!sl?.id) return `<div class="mu-side ${side}"><div class="mu-card"><div class="mu-empty">Empty slot</div></div><div class="mu-stats"><span class="pstate off">Scores nothing</span></div></div>`;
+  const p = (day && pmap(day).get(sl.id)) || { id: sl.id, ...roster.get(sl.id) };
+  const line = day?.results?.[sl.id], st = day ? playerState({ p, line }, day) : { kind: 'final', text: 'Final' };
+  const cells = MU_STATS.map(([k, i]) => `<span><b>${!line ? '–' : i === 'fg' ? `${line[8] || 0}/${line[9] || 0}` : line[i] || 0}</b><i>${k}</i></span>`).join('');
+  return `<div class="mu-side ${side} ${up ? 'up' : ''}">
+    <div class="mu-card">${sl.boost ? boostChip(sl.boost) : ''}${cardHtml({ pid: sl.id, rarity: sl.rarity || 'common', name: p.name, team: p.team, pos: p.pos })}</div>
+    <div class="mu-stats"><div class="mu-st-top"><span class="pstate ${st.kind}">${esc(st.text)}</span><b class="mu-fp">${line ? f1(fpOf(line)) : '–'}<small>FP</small></b></div>
+      <div class="mu-grid ${line ? '' : 'none'}">${cells}</div>${line ? `<span class="mu-min">${line[0] || 0} min</span>` : ''}</div></div>`;
+}
+function matchupView() {
+  const m = muWeek();
+  if (!m) return notice('Matchup', 'No matchup yet', `<p>You’re paired with an opponent for the week when your first lineup locks. Set a lineup and check back after tip-off.</p>${nextOpenDate() ? `<div class="row"><button class="btn primary" data-action="sel" data-d="${nextOpenDate()}">Set a lineup</button></div>` : ''}`);
+  const w = weekState(m), date = muNight(m);
+  const n = w.nights.find(x => x.date === date), day = dayFor(date);
+  const liveNow = !!day && !m.scored && day.games.some(g => g.status !== 'STATUS_SCHEDULED' && !LIVE_DONE.has(g.status));
+  const status = m.scored ? 'Final' : liveNow ? '<span class="mu-live">Live</span>' : 'In progress';
+  const who = (sd, mine) => {
+    const u = sd.bot ? { name: '#' } : peer(sd.uid) || { name: sd.name };
+    return `<div class="mu-who">${avatarHtml(u, 'lg')}<b>${esc(sd.name)}${sd.bot ? '' : badgeMark(peer(sd.uid))}</b>${mine ? '<span class="you">You</span>' : sd.bot ? '<span class="bot">Computer</span>' : tierBadge(tierOf(sd.rpBefore))}</div>`;
+  };
+  const [a, b] = w.r.wins;
+  const hero = `<section class="mu-hero">
+    <div class="mu-eyebrow">${tierBadge(m.tier)}<span>Week of ${weekLabel(m.week)}</span><span>·</span>${status}</div>
+    <div class="mu-board">${who(w.mine, true)}<div class="mu-score"><b class="${a >= b ? 'lead' : ''}">${a}</b><span>–</span><b class="${b >= a ? 'lead' : ''}">${b}</b><small>Categories won</small></div>${who(w.opp, false)}</div>
+    <p class="mu-head"><span>${weekHead(m, w)}</span><span class="dimtxt">${f1(w.r.fp[0])} – ${f1(w.r.fp[1])} fantasy pts</span>${rpBadge(m, w)}</p></section>`;
+  // Categories: the week's totals (what decides the matchup), or just the night on show.
+  const scope = ui.muCats === 'night' && n ? 'night' : 'week', empty = addTotals([]);
+  const r = scope === 'night' ? decide(n.tot[0] || empty, n.tot[1] || empty) : w.r;
+  const short = d => dateOf(d).toLocaleDateString('en-US', { weekday: 'short' });
+  const cats = CATS.map((c, i) => {
+    const x = r.cats[i], tot = x.a + x.b, share = !tot ? .5 : c.low ? x.b / tot : x.a / tot;
+    return `<div class="mu-cat ${x.w === 0 ? 'w-me' : x.w === 1 ? 'w-them' : ''}"><span class="mu-v a">${catVal(c.key, x.a)}</span>
+      <div class="mu-mid"><span class="mu-cn">${c.name}${c.low ? ' · fewer wins' : ''}</span><div class="mu-bar"><i style="width:${(share * 100).toFixed(1)}%"></i></div></div><span class="mu-v b">${catVal(c.key, x.b)}</span></div>`;
+  }).join('');
+  const catPanel = `<section class="panel mu-cats"><div class="list-head"><div><h2>Categories <span class="mu-mini">${r.wins[0]}–${r.wins[1]}</span></h2><p class="sub">${scope === 'week' ? 'Monday to Sunday totals. Win more categories than your opponent to take the week.' : `Just ${dayLabel(n.date)}.`}</p></div>
+      ${n ? `<div class="seg-t"><button data-action="mu-cats" data-s="week" aria-pressed="${scope === 'week'}">Week</button><button data-action="mu-cats" data-s="night" aria-pressed="${scope === 'night'}">${short(n.date)}</button></div>` : ''}</div>
+    <div class="mu-catlist">${cats}</div></section>`;
+  // The night's two lineups, slot against slot, with each player's box score.
+  const tabs = w.nights.map(x => `<button class="mu-tab" data-action="mu-night" data-d="${x.date}" aria-pressed="${x.date === date}"><span>${short(x.date)}</span><b>${x.tot[0] ? f1(x.tot[0].fp) : '–'} · ${x.tot[1] ? f1(x.tot[1].fp) : '–'}</b></button>`).join('');
+  const links = list => synergiesOf(list || []).map(sy => `<span class="arch syn" title="${esc(sy.text)}">✦ ${esc(sy.name)} <b>${linkFx(sy)}</b></span>`).join('') || '<span class="dimtxt">No links</span>';
+  const rows = n ? SLOTS.map((slot, i) => {
+    const sa = n.slots[0]?.[i] || null, sb = n.slots[1]?.[i] || null;
+    const marks = [...countersOn(sa, sb).map(c => ({ c, mine: true })), ...countersOn(sb, sa).map(c => ({ c, mine: false }))];
+    const fpA = day?.results?.[sa?.id] ? fpOf(day.results[sa.id]) : null, fpB = day?.results?.[sb?.id] ? fpOf(day.results[sb.id]) : null;
+    return `<div class="mu-row"><span class="mu-slot">${spotTag(slot)}</span>${muSide(sa, day, 'a', fpA != null && (fpB == null || fpA > fpB))}${muSide(sb, day, 'b', fpB != null && (fpA == null || fpB > fpA))}
+      ${marks.length ? `<div class="ctr">${marks.map(x => `<span class="ctr-i ${x.mine ? 'good' : 'bad'}">${esc(x.c.text)}${x.mine ? '' : ' (theirs)'}</span>`).join('')}</div>` : ''}</div>`;
+  }).join('') : '';
+  const updated = day?.updatedAt && !m.scored ? ` Stats as of ${new Date(day.updatedAt).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}.` : '';
+  const face = `<section class="panel mu-face"><div class="list-head"><div><h2>Face-off${n ? ` · ${dayLabel(n.date).split(',')[0]}` : ''}</h2>
+      <p class="sub">${n ? `${f1(n.tot[0]?.fp || 0)} – ${f1(n.tot[1]?.fp || 0)} fantasy pts.${liveNow ? ' Live stats refresh every minute.' : ''}${updated}` : 'Lineups show here once a night locks.'}</p></div></div>
+    ${tabs ? `<div class="mu-tabs">${tabs}</div>` : ''}
+    ${n ? `<div class="mu-links"><div>${links(n.slots[0])}</div><div>${links(n.slots[1])}</div></div><div class="mu-rows">${rows}</div>` : ''}</section>`;
+  return hero + catPanel + face;
+}
+
 /* ---------- Leaderboard and history ---------- */
 function leadersView() {
   const myRow = leaders.findIndex(u => u.id === me.id);
@@ -2184,6 +2340,7 @@ function afterRender() {
   document.body.classList.toggle('has-dock', docked);
   // On phones the court moves to the top of the page while a lineup is being set.
   document.body.classList.toggle('drafting', !!$('#court'));
+  document.body.classList.toggle('on-matchup', ui.view === 'matchup');
   document.body.classList.toggle('no-slip', !$('#slip').innerHTML.trim());
   if (!docked) document.body.classList.remove('sheet-open');
   updateScrollCues();
@@ -2219,7 +2376,7 @@ function render() {
     ui.sel = (days.has(etDay()) ? etDay() : nextOpenDate()) || sorted.filter(d => entries.has(d)).pop() || sorted.pop() || null;
   }
   watchGroup();
-  if (ui.view === 'night' && liveSel !== ui.sel) { liveSel = ui.sel; pollLive(); }
+  if ((ui.view === 'night' || ui.view === 'matchup') && liveSel !== ui.sel) { liveSel = ui.sel; pollLive(); }
   renderSide();
   const m = $('#main');
   if (ui.view === 'cards') { ui.sig = 'cards'; m.innerHTML = cardsView(); $('#slip').innerHTML = ''; return; }
@@ -2229,6 +2386,7 @@ function render() {
     if (stacking && ui.sig === 'packs-stack' && $('#stk')) return;
     ui.sig = stacking ? 'packs-stack' : 'packs'; m.innerHTML = packsView(); $('#slip').innerHTML = ''; return;
   }
+  if (ui.view === 'matchup') { ui.sig = 'matchup'; m.innerHTML = matchupView(); $('#slip').innerHTML = ''; return; }
   if (ui.view === 'leaders') { ui.sig = 'leaders'; m.innerHTML = leadersView(); $('#slip').innerHTML = ''; return; }
   if (ui.view === 'profile') { ui.sig = 'profile'; m.innerHTML = profileView(); $('#slip').innerHTML = ''; return; }
   if (ui.view === 'history') { ui.sig = 'history'; m.innerHTML = historyView(); $('#slip').innerHTML = ''; return; }
@@ -2312,7 +2470,15 @@ document.addEventListener('click', e => {
   if (!b || b.disabled) return;
   const a = b.dataset.action;
   if (a === 'sel') { ui.view = 'night'; ui.sel = b.dataset.d; ui.open = null; ui.sig = ''; render(); window.scrollTo({ top: 0 }); }
-  else if (a === 'view') { ui.view = b.dataset.v; if (ui.view === 'leaders') watchLeaders(); ui.sig = ''; render(); window.scrollTo({ top: 0 }); }
+  else if (a === 'view') {
+    ui.view = b.dataset.v;
+    if (ui.view === 'leaders') watchLeaders();
+    // Live scores follow ui.sel, so point it at the night on show when that night is one of the loaded ones.
+    if (ui.view === 'matchup') { const mm = muWeek(), d = mm && muNight(mm); if (d && days.has(d)) ui.sel = d; }
+    ui.sig = ''; render(); window.scrollTo({ top: 0 });
+  }
+  else if (a === 'mu-night') { ui.muNight = b.dataset.d; if (days.has(ui.muNight)) ui.sel = ui.muNight; ui.sig = ''; render(); }
+  else if (a === 'mu-cats') { ui.muCats = b.dataset.s; ui.sig = ''; render(); }
   else if (a === 'sheet') setSheet(!document.body.classList.contains('sheet-open'));
   else if (a === 'sheet-close') setSheet(false);
   else if (a === 'player') openPlayer(b.dataset.id);
@@ -2569,7 +2735,7 @@ const applyLive = () => { days = new Map([...rawDays].map(([k, d]) => [k, withLi
 
 async function pollLive() {
   const doc = rawDays.get(ui.sel);
-  if (liveBusy || document.hidden || ui.view !== 'night' || !doc || doc.final || !locked(doc)) return;
+  if (liveBusy || document.hidden || (ui.view !== 'night' && ui.view !== 'matchup') || !doc || doc.final || !locked(doc)) return;
   liveBusy = true;
   try {
     const sb = await (await fetch(`${ESPN}/scoreboard?dates=${doc.date}`)).json();

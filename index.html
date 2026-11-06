@@ -428,6 +428,22 @@ body.no-slip main { grid-column: 2 / -1; }
 .leg.open.none { opacity: .6; }
 .leg.bad { background: rgba(248,113,113,.08); }
 .combos { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 18px 0; }
+.arch b { font-weight: 800; opacity: .7; }
+.arch.syn b { opacity: .85; }
+.links { padding: 14px 18px 2px; display: grid; gap: 8px; }
+.links-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-weight: 800; font-size: 14px; }
+.links-h small { font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.link { border-radius: 10px; padding: 9px 11px; display: grid; gap: 3px; border: 1px solid var(--line); background: var(--panel-2); }
+.link.on { border-color: color-mix(in srgb, var(--teal) 45%, transparent); background: var(--teal-soft); }
+.link.near { border-style: dashed; }
+.link-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.link-top b { font-size: 13px; }
+.link.on .link-top b, .link.on .link-fx { color: var(--teal); }
+.link-fx { font-size: 12px; font-weight: 800; white-space: nowrap; color: var(--muted); }
+.link-who { font-size: 12px; color: var(--ink); line-height: 1.45; }
+.link-who i { font-style: normal; color: var(--muted); }
+.link-need { color: var(--muted); font-style: italic; }
+.link-none { font-size: 12px; color: var(--muted); line-height: 1.5; }
 .dimtxt { color: var(--dim); font-size: 12px; }
 
 .tc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 16px; padding: 14px 22px 24px; }
@@ -1194,8 +1210,20 @@ const TRASH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" strok
 
 /* ---------- Cards ---------- */
 const typesOf = id => roster.get(id)?.types || [];
-const typeChip = t => TYPES[t] ? `<span class="arch a-${t}" title="${esc(TYPES[t].name)}: ${esc(TYPES[t].what)}">${TYPES[t].icon} ${esc(TYPES[t].name)}</span>` : '';
-const typeChips = types => (types || []).map(typeChip).join('');
+// An archetype chip; boost adds the stat it lifts, e.g. "Rim Protector +10% BLK".
+const typeChip = (t, boost = false) => TYPES[t] ? `<span class="arch a-${t}" title="${esc(TYPES[t].name)}: ${esc(TYPES[t].what)}">${esc(TYPES[t].name)}${boost ? ` <b>+${Math.round(BOOST * 100)}% ${STAT_LABEL[TYPES[t].boost]}</b>` : ''}</span>` : '';
+const typeChips = (types, boost = false) => (types || []).map(t => typeChip(t, boost)).join('');
+const lastName = n => { const [first, ...rest] = String(n || '').split(' '); return rest.join(' ') || first; };
+const linkFx = sy => `+${Math.round(sy.bonus * 100)}% ${sy.stats.map(k => STAT_LABEL[k]).join(' & ')}`;
+// Every link (combo) for a lineup: who's making it, and whether it's on or one archetype short.
+function linkStatus(lu, day) {
+  const m = pmap(day), slots = lu.map(id => id && m.get(id) ? { id, name: m.get(id).name, types: m.get(id).types || [] } : null).filter(Boolean);
+  return SYNERGIES.map(sy => {
+    const parts = Object.entries(sy.need).map(([t, k]) => ({ t, k, who: slots.filter(sl => sl.types.includes(t)).slice(0, k) }));
+    const missing = parts.reduce((s, p) => s + Math.max(0, p.k - p.who.length), 0);
+    return { sy, parts, missing, on: missing === 0, ids: new Set(parts.flatMap(p => p.who.map(w => w.id))) };
+  });
+}
 const rarityTag = r => r && r !== 'common' ? `<span class="rar r-${r}">${RARITY[r].name}</span>` : '';
 // Card stat labels, in battle category order (the sync's roster stores averages in the same order).
 const STAT_LABEL = { pts: 'PTS', reb: 'REB', ast: 'AST', stl: 'STL', blk: 'BLK', tpm: '3PM', fgp: 'FG%', ftm: 'FTM', to: 'TO' };
@@ -1711,7 +1739,7 @@ function renderCourt() {
   const el = $('#court');
   if (!el) return;
   const day = days.get(ui.sel), lu = ui.draft, m = pmap(day), fill = new Set(fillableSlots(lu, day));
-  const combos = synergiesOf(draftSlots(lu, day));
+  const combos = linkStatus(lu, day).filter(l => l.on);
   const spots = SLOTS.map((slot, i) => {
     const p = lu[i] && m.get(lu[i]), [x, y] = SPOTS[i];
     if (!p) return `<button class="spot empty ${fill.has(i) ? 'open' : ''}" style="--x:${x}%;--y:${y}%" data-action="slot" data-i="${i}" aria-label="${spotName(slot)} spot: ${fill.has(i) ? 'choose a card' : 'none of your cards fit tonight'}">
@@ -1722,7 +1750,7 @@ function renderCourt() {
       ${cardHtml(cards.get(p.id) || { pid: p.id, rarity: 'common', name: p.name, team: p.team, pos: p.pos })}
       <span class="spot-tag ${warn ? 'warn' : ''}">${spotTag(slot)}${warn ? `<i>${warn}</i>` : ''}</span></button>`;
   }).join('');
-  el.innerHTML = `<div class="court-bar"><span class="court-lock">Locks ${timeLabel(day.lockAt)} · ${until(day.lockAt)}</span>${combos.map(sy => `<span class="arch syn" title="${esc(sy.text)}">✦ ${esc(sy.name)}</span>`).join('')}
+  el.innerHTML = `<div class="court-bar"><span class="court-lock">Locks ${timeLabel(day.lockAt)} · ${until(day.lockAt)}</span>${combos.map(l => `<span class="arch syn" title="${esc(l.sy.text)}">✦ ${esc(l.sy.name)} <b>${linkFx(l.sy)}</b></span>`).join('')}
       <span class="court-act">${lu.some(Boolean) ? '<button class="btn" data-action="clear">Clear</button>' : ''}${fill.size ? `<button class="btn primary" data-action="auto">Auto-fill ${fill.size}</button>` : ''}</span></div>
     <div class="court">${COURT_SVG}${spots}</div>`;
 }
@@ -1768,18 +1796,27 @@ function setSheet(open) {
 function renderLineup() {
   const day = days.get(ui.sel), lu = ui.draft, m = pmap(day);
   const open = lu.filter(x => !x).length;
-  const fillable = new Set(fillableSlots(lu, day)), isReady = ready(lu, day);
+  const fillable = new Set(fillableSlots(lu, day)), isReady = ready(lu, day), links = linkStatus(lu, day);
   const legs = SLOTS.map((slot, i) => {
     const p = lu[i] && m.get(lu[i]);
     const notMine = p && !owns(p.id);
     return p ? `<li class="leg rc-${rarityOf(p.id)} ${notMine ? 'bad' : ''}"><button class="x" data-action="remove" data-i="${i}" aria-label="Remove ${esc(p.name)}">✕</button><div>
         <div class="leg-top"><span class="ptag">${slot}</span><b>${plink(p)}</b><span class="leg-sal">${starsHtml(p.stars)}</span></div>
         <div class="leg-sub"><span>${esc(p.team)} ${esc(p.opp)} · FPPG ${f1(p.avg)}${isOut(p) ? ' · <span class="inj out">Out</span>' : ''}${notMine ? ' · <span class="inj out">Not your card</span>' : ''}</span>
-          <span class="leg-types">${boostChip(boostOn(i))}${rarityTag(rarityOf(p.id))}${typeChips(p.types)}</span></div></div></li>`
+          <span class="leg-types">${boostChip(boostOn(i))}${rarityTag(rarityOf(p.id))}${typeChips(p.types, true)}${links.filter(l => l.on && l.ids.has(p.id)).map(l => `<span class="arch syn">✦ ${esc(l.sy.name)}</span>`).join('')}</span></div></div></li>`
       : `<li class="leg open ${fillable.has(i) ? '' : 'none'}"><span></span><div class="leg-top"><span class="ptag dim">${slot}</span><span>${fillable.has(i) ? SLOT_HINT[slot] : 'No card fits · scores nothing'}</span><span></span></div></li>`;
   }).join('');
   const proj = projected(lu, day);
-  const combos = synergiesOf(draftSlots(lu, day));
+  // Links: the ones on, then the ones a single archetype away, each with the players making it.
+  const linkRow = l => {
+    const who = l.parts.flatMap(p => p.who.map(w => `${esc(lastName(w.name))} <i>${esc(TYPES[p.t].name)}</i>`));
+    const need = l.parts.filter(p => p.who.length < p.k).map(p => `${p.k - p.who.length > 1 ? p.k - p.who.length + ' more ' + TYPES[p.t].name + 's' : 'a' + (/^[AEIOU]/.test(TYPES[p.t].name) ? 'n ' : ' ') + TYPES[p.t].name}`);
+    return `<div class="link ${l.on ? 'on' : 'near'}"><div class="link-top"><b>${l.on ? '✦ ' : ''}${esc(l.sy.name)}</b><span class="link-fx">${linkFx(l.sy)}${l.on ? '' : ' if made'}</span></div>
+      <div class="link-who">${who.join(' + ')}${need.length ? `${who.length ? ' · ' : ''}<span class="link-need">add ${need.join(' and ')}</span>` : ''}</div></div>`;
+  };
+  const shown = [...links.filter(l => l.on), ...links.filter(l => !l.on && l.missing === 1 && l.ids.size)];
+  const linksHtml = lu.some(Boolean) ? `<div class="links"><div class="links-h"><span>Links</span><small>${links.filter(l => l.on).length} on · whole-lineup boosts</small></div>
+    ${shown.map(linkRow).join('') || `<p class="link-none">No links yet. ${SYNERGIES.map(sy => `${esc(sy.name)}: ${esc(sy.text.split(':')[0])}`).join(' · ')}.</p>`}</div>` : '';
   const entered = entries.has(ui.sel);
   const skipNote = !entered && profile.nights ? ` ${profile.savers ? 'Skipping tonight uses your Streak Saver.' : `Skipping tonight costs ${SKIP_PENALTY} RP and your streak.`}` : '';
   const wm = weekMatch(weekOf(ui.sel)), opp = wm?.sides.find(x => x.uid !== me.id);
@@ -1796,7 +1833,7 @@ function renderLineup() {
     <div class="slip-head"><span class="count">${6 - open}</span><h3>Lineup</h3><button class="sheet-x" data-action="sheet-close" aria-label="Close lineup">✕</button></div>
     <div class="seg"><span class="on">${esc(profile.name)}</span><span>${TIERS[tierOf(profile.rp)]} · weekly 1v1</span></div>
     <ul class="legs">${legs}</ul>
-    ${combos.length ? `<div class="combos">${combos.map(sy => `<span class="arch syn" title="${esc(sy.text)}">✦ ${esc(sy.name)}</span>`).join('')}</div>` : ''}
+    ${linksHtml}
     <div class="slip-foot">
       <dl class="totals"><div><dt>Cards</dt><dd>${6 - open} of 6</dd></div><div><dt>Stars</dt><dd>${lu.reduce((a, id) => a + (id ? m.get(id)?.stars || 0 : 0), 0)}★</dd></div><div><dt>Projected</dt><dd>${f1(proj)} pts</dd></div></dl>
       <div class="info">${info}</div>

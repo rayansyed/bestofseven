@@ -900,28 +900,35 @@ h1 { font-size: 30px; line-height: 1.15; }
 .sc-side { position: absolute; left: 4cqw; top: 4cqw; bottom: 30cqw; width: 7cqw; display: flex; align-items: center; justify-content: center; overflow: hidden;
   background: #111418; color: #fff; writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap;
   font: 700 max(5.5px, 3.5cqw)/1 "Oswald", var(--sans); letter-spacing: .08em; text-transform: uppercase; }
-.sc-badge { position: absolute; top: 6.5cqw; right: 6.5cqw; z-index: 1; padding: 1.2cqw 2.2cqw; border-radius: 1.2cqw; background: #E5243B; color: #fff;
-  font: 700 max(6px, 4cqw)/1 "Oswald", var(--sans); letter-spacing: .06em; text-transform: uppercase; box-shadow: 0 1cqw 2cqw rgba(0,0,0,.3); }
+
 .sc-rate { position: absolute; top: 6cqw; left: 15cqw; z-index: 1; display: grid; justify-items: center; line-height: 1; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.75); }
 .sc-rate b { font: 700 14cqw/.95 "Oswald", var(--sans); }
 .sc-rate small { font: 800 3.6cqw/1.3 var(--sans); letter-spacing: .08em; }
 .sc .tc-lv { left: 15cqw; bottom: 33cqw; }
-.sc-bar { position: absolute; left: 4cqw; right: 4cqw; bottom: 4cqw; height: 24cqw; display: grid; align-content: center; gap: 1.2cqw; padding: 0 3.6cqw;
+/* The name bar: a "BEST OF 7 / WEEKLY STAR" wordmark on the left, like a set title, and the player on the right. */
+.sc-bar { position: absolute; left: 4cqw; right: 4cqw; bottom: 4cqw; height: 22cqw; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 3cqw; padding: 0 3.4cqw;
   background: #111418; color: #fff; border-top: .9cqw solid #E5243B; }
-.sc-meta { font: 700 max(5.5px, 3.3cqw)/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sc-name { display: block; font: 700 max(9px, 8.6cqw)/1 "Oswald", var(--sans); text-transform: uppercase; letter-spacing: .01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transform: skewX(-6deg); }
-.sc-name small { display: block; font-size: .5em; letter-spacing: .12em; color: rgba(255,255,255,.7); }
-.sc-bonus { font: 700 max(6.5px, 4.4cqw)/1.1 "Oswald", var(--sans); letter-spacing: .03em; color: #FF6B7D; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sc-bonus i { font-style: normal; color: rgba(255,255,255,.6); }
+.sc-title { display: grid; line-height: .95; padding-right: 3cqw; border-right: .4cqw solid rgba(255,255,255,.25); transform: skewX(-8deg); }
+.sc-title small { font: 700 max(5px, 3cqw)/1.1 "Oswald", var(--sans); letter-spacing: .32em; text-transform: uppercase; color: rgba(255,255,255,.75); }
+.sc-title b { font: 700 max(8px, 6.6cqw)/1 "Oswald", var(--sans); letter-spacing: .02em; text-transform: uppercase; color: #fff; -webkit-text-stroke: .25cqw #fff; }
+.sc-who { display: grid; justify-items: end; gap: 1cqw; min-width: 0; text-align: right; }
+.sc-meta { font: 700 max(5px, 3cqw)/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.sc-name { display: block; max-width: 100%; font: 700 max(8px, var(--nm, 7cqw))/1.05 "Oswald", var(--sans); text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The bonus sits on a white tab above the bar, where the date goes on the real thing. */
+.sc-tab { position: absolute; right: 4cqw; bottom: 26.9cqw; z-index: 1; padding: 1.1cqw 2.4cqw; background: #fff; color: #111418; white-space: nowrap;
+  font: 700 max(6px, 3.8cqw)/1 "Oswald", var(--sans); letter-spacing: .05em; text-transform: uppercase; clip-path: polygon(2.4cqw 0, 100% 0, 100% 100%, 0 100%); }
+.sc-tab i { font-style: normal; color: #E5243B; }
 .sc .sc-card::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.35) 50%, transparent 62%);
   background-size: 260% 100%; animation: tc-shine 4.2s ease-in-out infinite; mix-blend-mode: overlay; }
 .tc-tonight.t-pos { background: #111418; color: #fff; }
 @container (max-width: 125px) {
-  .sc-meta, .sc-bonus i, .sc-rate small { display: none; }
+  .sc-meta, .sc-tab i, .sc-rate small, .sc-title small { display: none; }
   .sc-side { font-size: 0; }
-  .sc-badge { font-size: max(5px, 4.6cqw); padding: 1cqw 1.6cqw; top: 5cqw; right: 5cqw; }
-  .sc-bar { height: 22cqw; gap: .6cqw; }
-  .sc-name { font-size: max(8px, 10cqw); } .sc-name small { display: none; }
+  .sc-bar { height: 22cqw; grid-template-columns: minmax(0, 1fr); gap: 0; padding: 0 3cqw; }
+  .sc-title { display: none; }
+  .sc-who { justify-items: start; text-align: left; }
+  .sc-name { font-size: max(8px, calc(var(--nm, 7cqw) * 1.3)); }
+  .sc-tab { font-size: max(5.5px, 5cqw); bottom: 25cqw; }
 }
 @media (prefers-reduced-motion: reduce) { .sc .sc-card::after { animation: none; } }
 /* Card levels */
@@ -1492,12 +1499,13 @@ function starCardHtml(c, { fresh = false, i = 0, tonight = false, tag = null, re
     <div class="sc-card">
       <div class="sc-photo ${photo ? '' : 'head'}">${img}</div>
       <span class="sc-side">${esc(s.caption || `Weekly Star · ${p.team || ''}`)}</span>
-      <span class="sc-badge">★ Weekly Star</span>
+
       <span class="sc-rate"><b>${s.fpg ? Math.round(s.fpg) : p.gp ? Math.round(p.avg) : '–'}</b><small>${s.fpg ? 'FP/G' : 'FPPG'}</small></span>
       ${level > 1 ? `<span class="tc-lv">Level ${level}</span>` : ''}
-      <div class="sc-bar"><span class="sc-meta">${s.week ? `Week of ${weekShort(s.week)}` : 'Team of the week'} · ${esc(p.team || '')} · ${esc(POS_NAME[p.pos] || p.pos || '')}</span>
-        <b class="sc-name">${rest.length ? `<small>${esc(first)}</small>` : ''}${esc(rest.length ? rest.join(' ') : first)}</b>
-        <span class="sc-bonus">+${Math.round(STAR_BONUS * 100)}% ${esc(lbl)}${s.statPg ? `<i> · ${s.statPg} ${esc(lbl)}/G</i>` : ''}<i> · +${Math.round(RARITY.star.bonus * 100)}% all</i></span></div>
+      <span class="sc-tab">+${Math.round(STAR_BONUS * 100)}% ${esc(lbl)}${s.statPg ? `<i> · ${s.statPg}/G</i>` : ''} · +${Math.round(RARITY.star.bonus * 100)}% all</span>
+      <div class="sc-bar"><span class="sc-title"><small>Best of 7</small><b>Weekly Star</b></span>
+        <span class="sc-who"><span class="sc-meta">${rest.length ? esc(first) + ' · ' : ''}${s.week ? `Week of ${weekShort(s.week)}` : esc(p.team || '')}</span>
+          <b class="sc-name" style="--nm:${(n => n <= 8 ? 7 : n <= 10 ? 5.8 : n <= 13 ? 4.8 : 4)((rest.length ? rest.join(' ') : first).length)}cqw">${esc(rest.length ? rest.join(' ') : first)}</b></span></div>
     </div>
     ${tag ? `<span class="tc-tonight t-${tag[1]}">${esc(tag[0])}</span>` : tonight ? '<span class="tc-tonight">Tonight</span>' : ''}
     ${ready ? '<span class="tc-ready">▲ Level up</span>' : ''}

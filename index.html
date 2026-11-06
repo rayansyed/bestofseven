@@ -879,6 +879,28 @@ h1 { font-size: 30px; line-height: 1.15; }
 
 .btn.danger { color: #fff; }
 .gift-head { box-shadow: inset 0 0 0 1.5px rgba(45,91,216,.4); }
+/* Phones: a menu button in place of the wrapped nav and account chips */
+.burger, .coin-m { display: none; }
+.menu { display: contents; }
+@media (max-width: 860px) {
+  .topbar { position: sticky; flex-wrap: nowrap; gap: 10px; padding-block: 12px; }
+  .coin-m { display: inline-flex; margin-left: auto; }
+  .burger { position: relative; display: grid; place-content: center; gap: 4px; width: 42px; height: 42px; flex: none; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+  .coin-m + .burger { margin-left: 0; } .brand + .burger { margin-left: auto; }
+  .burger i { display: block; width: 18px; height: 2px; border-radius: 2px; background: var(--ink); transition: transform .2s, opacity .2s; }
+  .burger[aria-expanded=true] i:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .burger[aria-expanded=true] i:nth-child(2) { opacity: 0; }
+  .burger[aria-expanded=true] i:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+  .burger-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 0 2px var(--panel); }
+  .menu { display: none; }
+  .menu.open { display: grid; gap: 12px; position: absolute; left: 0; right: 0; top: 100%; z-index: 30; padding: 8px 0 16px; background: var(--bg); border-bottom: 1px solid var(--line); box-shadow: 0 14px 24px rgba(28,30,34,.12); animation: menu-in .18s ease-out; }
+  .menu .topnav { display: grid; gap: 2px; }
+  .menu .navlink { text-align: left; padding: 12px; border-radius: 10px; border-bottom: 0; font-size: 16px; color: var(--ink); }
+  .menu .navlink.on { background: var(--panel); box-shadow: inset 3px 0 0 var(--ink); }
+  .menu .top-right { margin: 0; display: flex; flex-wrap: wrap; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .menu .coin-d { display: none; }
+}
+@keyframes menu-in { from { opacity: 0; transform: translateY(-6px); } }
 @media (max-width: 1180px) { .side { align-items: flex-start; } .nav-item { border: 1px solid var(--line); } }
 @media (max-width: 860px) {
   .dock { background: var(--panel); border-top-color: var(--line); box-shadow: 0 -4px 16px rgba(28,30,34,.06); }
@@ -1567,14 +1589,19 @@ function renderTop() {
   const today = days.has(etDay()) ? etDay() : nextOpenDate();
   const onToday = ui.view === 'night' && ui.sel === today;
   const nav = (view, label, extra = '') => `<button class="navlink ${ui.view === view ? 'on' : ''}" data-action="view" data-v="${view}" ${ui.view === view ? 'aria-current="page"' : ''} ${extra}>${label}</button>`;
+  // On phones the sections and account go behind a menu button; the coin balance stays in the bar.
+  const coin = cls => `<button class="tchip coin ${cls}" data-action="view" data-v="packs" title="Coins: spend them on packs">🪙 ${fmt(profile.coins || 0)}</button>`;
   $('#topbar').innerHTML = `
     <div class="brand">BEST OF <span class="seven">7</span></div>
+    ${profile?.name ? coin('coin-m') : ''}
+    ${me.id ? `<button class="burger" data-action="menu" aria-expanded="${ui.menu ? 'true' : 'false'}" aria-controls="menu" aria-label="${ui.menu ? 'Close menu' : 'Open menu'}"><i></i><i></i><i></i>${giftCount() ? '<span class="burger-dot" aria-hidden="true"></span>' : ''}</button>` : ''}
+    <div class="menu ${ui.menu ? 'open' : ''}" id="menu">
     ${me.id && profile?.name && (profile.starterPacks || 0) >= STARTER_PACKS && !ui.reveal ? `<nav class="topnav" aria-label="Sections">${today ? `<button class="navlink ${onToday ? 'on' : ''}" data-action="sel" data-d="${today}" ${onToday ? 'aria-current="page"' : ''}>Today</button>` : ''}${nav('cards', 'My cards')}${nav('packs', `Packs${giftCount() ? `<span class="nav-dot" aria-label="${giftCount()} gifted packs">${giftCount()}</span>` : ''}`)}${nav('leaders', 'Leaderboard')}${nav('history', 'My nights')}${nav('profile', 'Profile')}</nav>` : ''}
     <div class="top-right">
       <span class="tchip">NBA · 2026–27</span>
-      ${profile?.name ? `<span class="tchip">${avatarHtml(profile, 'sm')}${tierBadge(tier)}<span>${esc(profile.name)} · ${fmt(rp)} RP</span></span><button class="tchip coin" data-action="view" data-v="packs" title="Coins: spend them on packs">🪙 ${fmt(profile.coins || 0)}</button>` : ''}
+      ${profile?.name ? `<span class="tchip">${avatarHtml(profile, 'sm')}${tierBadge(tier)}<span>${esc(profile.name)} · ${fmt(rp)} RP</span></span>${coin('coin-d')}` : ''}
       ${me.id ? `<button class="btn" data-action="signout" title="Signed in as ${esc(me.email)}">Sign out</button>` : ''}
-    </div>`;
+    </div></div>`;
 }
 
 document.addEventListener('scroll', e => { if (e.target.matches?.('.races, #side, .tablewrap')) updateScrollCues(); }, true);
@@ -2265,6 +2292,8 @@ function addPlayer(id) {
 
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-action]');
+  // Tapping anything outside the open menu, or any item in it, closes it.
+  if (ui.menu && !(b && b.dataset.action === 'menu') && (!e.target.closest('#menu') || b)) { ui.menu = false; renderTop(); }
   if (!b || b.disabled) return;
   const a = b.dataset.action;
   if (a === 'sel') { ui.view = 'night'; ui.sel = b.dataset.d; ui.open = null; ui.sig = ''; render(); window.scrollTo({ top: 0 }); }
@@ -2280,6 +2309,7 @@ document.addEventListener('click', e => {
   else if (a === 'auth-reset') { ui.auth = ''; render(); }
   else if (a === 'edit-name') { ui.editName = true; ui.sig = ''; render(); }
   else if (a === 'name-cancel') { ui.editName = false; ui.sig = ''; render(); }
+  else if (a === 'menu') { ui.menu = !ui.menu; renderTop(); }
   else if (a === 'pack') openPack('starter');
   else if (a === 'flip') flipNext();
   else if (a === 'flip-all') { const st = curStack(); if (st) { st.i = st.items.length; finishStack(); } }

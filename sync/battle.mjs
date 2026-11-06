@@ -78,8 +78,8 @@ export function sideTotals(slots, opp, results) {
   return { t, fp: Math.round(fp * 10) / 10 };
 }
 
-// The result from each side's category totals ({ t, fp }). Equal category wins fall back to fantasy points.
-export function decide(A, B) {
+// The result from each side's category totals ({ t, fp }). Equal category wins fall back to duels won, then fantasy points.
+export function decide(A, B, duels = [0, 0]) {
   let winsA = 0, winsB = 0;
   const cats = CATS.map(c => {
     const va = A.t[c.key], vb = B.t[c.key];
@@ -88,11 +88,27 @@ export function decide(A, B) {
     if (w === 0) winsA++; else if (w === 1) winsB++;
     return { key: c.key, a: Math.round(va * 10) / 10, b: Math.round(vb * 10) / 10, w };
   });
-  let winner = winsA > winsB ? 0 : winsB > winsA ? 1 : A.fp > B.fp ? 0 : B.fp > A.fp ? 1 : null;
-  return { cats, wins: [winsA, winsB], fp: [A.fp, B.fp], winner, tiebreak: winsA === winsB && winner !== null };
+  const [dA, dB] = duels;
+  const winner = winsA > winsB ? 0 : winsB > winsA ? 1 : dA > dB ? 0 : dB > dA ? 1 : A.fp > B.fp ? 0 : B.fp > A.fp ? 1 : null;
+  const tiebreak = winsA === winsB && winner !== null ? (dA !== dB ? 'duels' : 'fp') : null;
+  return { cats, wins: [winsA, winsB], fp: [A.fp, B.fp], duels: [dA, dB], winner, tiebreak };
+}
+// Duels: the two cards in the same spot face off, and the higher fantasy score wins it. A player without a box
+// score (or an empty spot) scores 0; equal scores, or two empty spots, are nobody's duel.
+export function duelsOf(a, b, results) {
+  const wins = [0, 0], slots = [];
+  const fp = sl => sl?.id && results[sl.id] ? fpOf(results[sl.id]) : 0;
+  for (let i = 0; i < Math.max(a?.length || 0, b?.length || 0); i++) {
+    if (!a?.[i]?.id && !b?.[i]?.id) { slots.push(null); continue; }
+    const fa = Math.round(fp(a?.[i]) * 10), fb = Math.round(fp(b?.[i]) * 10);
+    const w = fa > fb ? 0 : fb > fa ? 1 : null;
+    if (w !== null) wins[w]++;
+    slots.push(w);
+  }
+  return { wins, slots };
 }
 // One night between two lineups.
-export const battle = (a, b, results) => decide(sideTotals(a, b || [], results), sideTotals(b || [], a, results));
+export const battle = (a, b, results) => decide(sideTotals(a, b || [], results), sideTotals(b || [], a, results), duelsOf(a, b, results).wins);
 
 // Adds nightly totals into one week. A null is a night without a lineup.
 export function addTotals(list) {
@@ -109,7 +125,8 @@ export function addTotals(list) {
 // A week's result so far from a matchup's stored nights: { <date>: { sides: [{ slots, tot }, { slots, tot }] } }.
 export function weekResult(nights) {
   const list = Object.values(nights || {});
-  return decide(addTotals(list.map(n => n.sides?.[0]?.tot)), addTotals(list.map(n => n.sides?.[1]?.tot)));
+  const duels = list.reduce((s, n) => [s[0] + (n.duels?.[0] || 0), s[1] + (n.duels?.[1] || 0)], [0, 0]);
+  return decide(addTotals(list.map(n => n.sides?.[0]?.tot)), addTotals(list.map(n => n.sides?.[1]?.tot)), duels);
 }
 
 // Weeks run Monday to Sunday and are named by their Monday (YYYYMMDD, US Eastern game dates).

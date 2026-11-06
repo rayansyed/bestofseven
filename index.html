@@ -832,7 +832,7 @@ button.wn:hover { background: var(--chip); }
   --ink: #1C1E22; --muted: #676B72; --dim: #9B9EA4;
   --accent: #1C1E22; --accent-2: #2D5BD8; --accent-soft: rgba(45,91,216,.08);
   --teal: #0F8A7C; --teal-soft: rgba(15,138,124,.1); --tag: #A06A00; --tag-ink: #fff;
-  --good: #15803D; --bad: #D03B2F; --live: #B45309;
+  --good: #16A34A; --good-bright: #22C55E; --bad: #D03B2F; --live: #B45309;
   --pill: #1C1E22; --pill-ink: #fff;
   --a: #2D5BD8; --b: #E8590C;
   --t0: #B06A3B; --t1: #7D8896; --t2: #B88A12; --t3: #13908F; --t4: #4A73D8; --t5: #7F8F00;
@@ -915,7 +915,8 @@ h1 { font-size: 30px; line-height: 1.15; }
 .mu-cn { font-size: 12px; font-weight: 700; color: var(--muted); text-align: center; }
 .mu-bar { height: 8px; border-radius: 6px; overflow: hidden; background: color-mix(in srgb, var(--bad) 24%, var(--chip)); }
 .mu-bar i { display: block; height: 100%; background: var(--dim); transition: width .4s ease; }
-.mu-cat.w-me .mu-bar i { background: var(--good); }
+.mu-cat.w-me .mu-bar i { background: var(--good-bright); }
+.tc-tonight { background: #4ADE80; color: #052E14; }
 .mu-cat.w-them .mu-bar { background: color-mix(in srgb, var(--bad) 55%, var(--chip)); }
 .mu-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 0 22px 14px; }
 .mu-tab { flex: none; display: grid; justify-items: center; gap: 1px; min-width: 76px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); font-variant-numeric: tabular-nums; }
@@ -926,7 +927,13 @@ h1 { font-size: 30px; line-height: 1.15; }
 .mu-links > div { display: flex; flex-wrap: wrap; gap: 6px; }
 .mu-links > div:last-child { justify-content: flex-end; }
 .mu-row { display: grid; grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); grid-template-areas: "a s b" "c c c"; gap: 10px 12px; align-items: center; padding: 18px 22px; border-top: 1px solid var(--line); }
-.mu-slot { grid-area: s; justify-self: center; padding: 3px 8px; border-radius: 6px; background: var(--ink); color: #fff; font: 700 14px/1.2 "Oswald", var(--sans); }
+.mu-slot-col { grid-area: s; display: grid; justify-items: center; gap: 6px; }
+.mu-duel { font-size: 15px; line-height: 1; }
+.mu-duel.me { color: var(--good); } .mu-duel.them { color: var(--bad); }
+.mu-duels { display: flex; justify-content: center; align-items: baseline; gap: 12px; font-variant-numeric: tabular-nums; }
+.mu-duels b { font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
+.mu-duels span { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.mu-slot { justify-self: center; padding: 3px 8px; border-radius: 6px; background: var(--ink); color: #fff; font: 700 14px/1.2 "Oswald", var(--sans); }
 .mu-side { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 14px; align-items: center; min-width: 0; }
 .mu-side.a { grid-area: a; } .mu-side.b { grid-area: b; grid-template-columns: minmax(0, 1fr) 150px; }
 .mu-side.b .mu-card { order: 2; }
@@ -1038,7 +1045,7 @@ const SLOT_HINT = { G: 'Pick a guard', F: 'Pick a forward', C: 'Pick a center', 
 const CAPTAIN_X = 1.5;   // nights scored in groups had a captain worth 1.5×; battles have none
 const TIERS = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Elite'];
 const RP_WIN = 40, RP_LOSS = -20; // a weekly matchup's win or loss
-const COINS = { nightWin: 20, category: 2, weekWin: 100 }; // keep in step with sync/game.mjs
+const COINS = { nightWin: 20, category: 2, weekWin: 100, duel: 5, sweep: 15 }; // keep in step with sync/game.mjs
 const SKIP_PENALTY = 3; // RP lost for skipping a game night; never drops a player out of their tier
 const LIVE_DONE = new Set(['STATUS_FINAL', 'STATUS_POSTPONED', 'STATUS_CANCELED', 'STATUS_FORFEIT']);
 // Box score line from the sync job: [min, pts, reb, ast, stl, blk, to, threes, fgm, fga, ftm]
@@ -1110,8 +1117,8 @@ function sideTotals(slots, opp, results) {
   t.fgp = t.fga ? (t.fgm / t.fga) * 100 : 0;
   return { t, fp: Math.round(fp * 10) / 10 };
 }
-// The result from each side's category totals ({ t, fp }). Equal category wins fall back to fantasy points.
-function decide(A, B) {
+// The result from each side's category totals ({ t, fp }). Equal category wins fall back to duels won, then fantasy points.
+function decide(A, B, duels = [0, 0]) {
   let winsA = 0, winsB = 0;
   const cats = CATS.map(c => {
     const va = A.t[c.key], vb = B.t[c.key];
@@ -1120,8 +1127,24 @@ function decide(A, B) {
     if (w === 0) winsA++; else if (w === 1) winsB++;
     return { key: c.key, a: Math.round(va * 10) / 10, b: Math.round(vb * 10) / 10, w };
   });
-  const winner = winsA > winsB ? 0 : winsB > winsA ? 1 : A.fp > B.fp ? 0 : B.fp > A.fp ? 1 : null;
-  return { cats, wins: [winsA, winsB], fp: [A.fp, B.fp], winner, tiebreak: winsA === winsB && winner !== null };
+  const [dA, dB] = duels;
+  const winner = winsA > winsB ? 0 : winsB > winsA ? 1 : dA > dB ? 0 : dB > dA ? 1 : A.fp > B.fp ? 0 : B.fp > A.fp ? 1 : null;
+  const tiebreak = winsA === winsB && winner !== null ? (dA !== dB ? 'duels' : 'fp') : null;
+  return { cats, wins: [winsA, winsB], fp: [A.fp, B.fp], duels: [dA, dB], winner, tiebreak };
+}
+// Duels (keep in step with sync/battle.mjs): the cards in the same spot face off, higher fantasy score wins.
+// No box score or an empty spot scores 0; a level score, or two empty spots, is nobody's duel.
+function duelsOf(a, b, results) {
+  const wins = [0, 0], slots = [];
+  const fp = sl => sl?.id && results[sl.id] ? fpOf(results[sl.id]) : 0;
+  for (let i = 0; i < Math.max(a?.length || 0, b?.length || 0); i++) {
+    if (!a?.[i]?.id && !b?.[i]?.id) { slots.push(null); continue; }
+    const fa = Math.round(fp(a?.[i]) * 10), fb = Math.round(fp(b?.[i]) * 10);
+    const w = fa > fb ? 0 : fb > fa ? 1 : null;
+    if (w !== null) wins[w]++;
+    slots.push(w);
+  }
+  return { wins, slots };
 }
 // Adds nightly totals into one week. A null is a night without a lineup.
 function addTotals(list) {
@@ -1583,7 +1606,7 @@ function packsView() {
     <div class="tc-grid">${r.cards.map((c, i) => cardHtml(c, { fresh, i, tag: r.had.has(c.pid) ? ['Duplicate', 'dupe'] : ['New', 'new'] })).join('')}${r.boosters.map((b, j) => boosterHtml(b, { fresh, i: r.cards.length + j })).join('')}</div></section>` : '';
   return `${reveal}${giftPanel}
     <section class="panel shop-head"><div class="list-head"><div><div class="eyebrow">Your coins</div><h2 class="coin-total">🪙 ${fmt(coins)}</h2>
-      <p class="sub">Win the night against your weekly opponent +${COINS.nightWin} · each category you win that night +${COINS.category} · win the week +${COINS.weekWin}.</p></div></div>
+      <p class="sub">Win the night against your weekly opponent +${COINS.nightWin} · each category you win that night +${COINS.category} · each duel won +${COINS.duel} · sweep all six duels +${COINS.sweep} · win the week +${COINS.weekWin}.</p></div></div>
       <div class="shop">${SHOP.map(tile).join('')}</div>
       <p class="hint shop-odds">Rarer cards are better players: Common 1–2★ · Rare 2–3★ · Epic 3–4★ · Legendary 5★ only. Players who average under 12 minutes stay out of packs.</p></section>
     <section class="panel"><div class="list-head"><div><h2>Duplicates · ${dupes.length}</h2><p class="sub">Extra copies of players you already have. Your best card of each player is kept.</p></div>
@@ -2065,9 +2088,11 @@ function weekState(m) {
   const nights = Object.keys(m.nights || {}).sort().map(date => {
     const n = m.nights[date], d = days.get(date), live = d && locked(d);
     const tot = n.sides.map((x, j) => !x.slots ? null : live ? sideTotals(x.slots, n.sides[1 - j].slots || [], d.results || {}) : x.tot);
-    return { date, slots: [n.sides[k].slots, n.sides[1 - k].slots], tot: [tot[k], tot[1 - k]] };
+    const du = live ? duelsOf(n.sides[0].slots || [], n.sides[1].slots || [], d.results || {}).wins : n.duels || [0, 0];
+    return { date, slots: [n.sides[k].slots, n.sides[1 - k].slots], tot: [tot[k], tot[1 - k]], duels: [du[k] || 0, du[1 - k] || 0] };
   });
-  const r = decide(addTotals(nights.map(n => n.tot[0])), addTotals(nights.map(n => n.tot[1])));
+  const duels = nights.reduce((s, n) => [s[0] + n.duels[0], s[1] + n.duels[1]], [0, 0]);
+  const r = decide(addTotals(nights.map(n => n.tot[0])), addTotals(nights.map(n => n.tot[1])), duels);
   return { k, mine: m.sides[k], opp: m.sides[1 - k], nights, r };
 }
 
@@ -2119,7 +2144,8 @@ function weekView(day, m) {
     const u = sd.bot ? { name: '#' } : peer(sd.uid) || { name: sd.name };
     return `<div class="bt-who ${mineSide ? 'me' : ''}">${avatarHtml(u, 'md')}<div><b>${esc(sd.name)}${sd.bot ? '' : badgeMark(peer(sd.uid))}</b>${sd.bot ? '<span class="bot">Computer</span>' : mineSide ? '<span class="you">You</span>' : `<small>${tierBadge(tierOf(sd.rpBefore))}</small>`}</div></div>`;
   };
-  const tb = w.r.tiebreak ? ` Categories are level, so fantasy points decide it: ${f1(w.r.fp[0])} to ${f1(w.r.fp[1])}.` : '';
+  const tb = w.r.tiebreak === 'duels' ? ` Categories are level, so duels won decide it: ${w.r.duels[0]} to ${w.r.duels[1]}.`
+    : w.r.tiebreak ? ` Categories and duels are level, so fantasy points decide it: ${f1(w.r.fp[0])} to ${f1(w.r.fp[1])}.` : '';
   const updated = day.updatedAt && !m.scored ? ` Stats as of ${new Date(day.updatedAt).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}.` : '';
   const combo = list => synergiesOf(list || []).map(sy => `<span class="arch syn" title="${esc(sy.text)}">✦ ${esc(sy.name)}</span>`).join('') || '<span class="dimtxt">No combos</span>';
   const slots = tonight ? SLOTS.map((slot, i) => {
@@ -2185,10 +2211,11 @@ function matchupView() {
   const hero = `<section class="mu-hero">
     <div class="mu-eyebrow">${tierBadge(m.tier)}<span>Week of ${weekLabel(m.week)}</span><span>·</span>${status}</div>
     <div class="mu-board">${who(w.mine, true)}<div class="mu-score"><b class="${a >= b ? 'lead' : ''}">${a}</b><span>–</span><b class="${b >= a ? 'lead' : ''}">${b}</b><small>Categories won</small></div>${who(w.opp, false)}</div>
+    <div class="mu-duels"><b>${w.r.duels[0]}</b><span>Duels won${w.r.tiebreak === 'duels' ? ' · deciding the tie' : ' · tiebreaker'}</span><b>${w.r.duels[1]}</b></div>
     <p class="mu-head"><span>${weekHead(m, w)}</span><span class="dimtxt">${f1(w.r.fp[0])} – ${f1(w.r.fp[1])} fantasy pts</span>${rpBadge(m, w)}</p></section>`;
   // Categories: the week's totals (what decides the matchup), or just the night on show.
   const scope = ui.muCats === 'night' && n ? 'night' : 'week', empty = addTotals([]);
-  const r = scope === 'night' ? decide(n.tot[0] || empty, n.tot[1] || empty) : w.r;
+  const r = scope === 'night' ? decide(n.tot[0] || empty, n.tot[1] || empty, n.duels) : w.r;
   const short = d => dateOf(d).toLocaleDateString('en-US', { weekday: 'short' });
   const cats = CATS.map((c, i) => {
     const x = r.cats[i], tot = x.a + x.b, share = !tot ? .5 : c.low ? x.b / tot : x.a / tot;
@@ -2201,16 +2228,17 @@ function matchupView() {
   // The night's two lineups, slot against slot, with each player's box score.
   const tabs = w.nights.map(x => `<button class="mu-tab" data-action="mu-night" data-d="${x.date}" aria-pressed="${x.date === date}"><span>${short(x.date)}</span><b>${x.tot[0] ? f1(x.tot[0].fp) : '–'} · ${x.tot[1] ? f1(x.tot[1].fp) : '–'}</b></button>`).join('');
   const links = list => synergiesOf(list || []).map(sy => `<span class="arch syn" title="${esc(sy.text)}">✦ ${esc(sy.name)} <b>${linkFx(sy)}</b></span>`).join('') || '<span class="dimtxt">No links</span>';
+  const duel = n && day ? duelsOf(n.slots[0] || [], n.slots[1] || [], day.results || {}) : null;
   const rows = n ? SLOTS.map((slot, i) => {
-    const sa = n.slots[0]?.[i] || null, sb = n.slots[1]?.[i] || null;
+    const sa = n.slots[0]?.[i] || null, sb = n.slots[1]?.[i] || null, dw = duel?.slots[i];
     const marks = [...countersOn(sa, sb).map(c => ({ c, mine: true })), ...countersOn(sb, sa).map(c => ({ c, mine: false }))];
-    const fpA = day?.results?.[sa?.id] ? fpOf(day.results[sa.id]) : null, fpB = day?.results?.[sb?.id] ? fpOf(day.results[sb.id]) : null;
-    return `<div class="mu-row"><span class="mu-slot">${spotTag(slot)}</span>${muSide(sa, day, 'a', fpA != null && (fpB == null || fpA > fpB))}${muSide(sb, day, 'b', fpB != null && (fpA == null || fpB > fpA))}
+    return `<div class="mu-row"><div class="mu-slot-col"><span class="mu-slot">${spotTag(slot)}</span>${dw === 0 ? '<span class="mu-duel me" title="You won this duel">◀</span>' : dw === 1 ? '<span class="mu-duel them" title="They won this duel">▶</span>' : ''}</div>${muSide(sa, day, 'a', dw === 0)}${muSide(sb, day, 'b', dw === 1)}
       ${marks.length ? `<div class="ctr">${marks.map(x => `<span class="ctr-i ${x.mine ? 'good' : 'bad'}">${esc(x.c.text)}${x.mine ? '' : ' (theirs)'}</span>`).join('')}</div>` : ''}</div>`;
   }).join('') : '';
   const updated = day?.updatedAt && !m.scored ? ` Stats as of ${new Date(day.updatedAt).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}.` : '';
   const face = `<section class="panel mu-face"><div class="list-head"><div><h2>Face-off${n ? ` · ${dayLabel(n.date).split(',')[0]}` : ''}</h2>
-      <p class="sub">${n ? `${f1(n.tot[0]?.fp || 0)} – ${f1(n.tot[1]?.fp || 0)} fantasy pts.${liveNow ? ' Live stats refresh every minute.' : ''}${updated}` : 'Lineups show here once a night locks.'}</p></div></div>
+      <p class="sub">${n ? `Duels <b>${n.duels[0]}–${n.duels[1]}</b> · ${f1(n.tot[0]?.fp || 0)} – ${f1(n.tot[1]?.fp || 0)} fantasy pts. Each spot is a duel: the higher fantasy score wins it, +${COINS.duel} coins each and +${COINS.sweep} for sweeping all six.${liveNow ? ' Live stats refresh every minute.' : ''}${updated}` : 'Lineups show here once a night locks.'}</p></div>
+      ${n && n.duels[0] === SLOTS.length ? '<span class="badge won">Sweep!</span>' : ''}</div>
     ${tabs ? `<div class="mu-tabs">${tabs}</div>` : ''}
     ${n ? `<div class="mu-links"><div>${links(n.slots[0])}</div><div>${links(n.slots[1])}</div></div><div class="mu-rows">${rows}</div>` : ''}</section>`;
   return hero + catPanel + face;

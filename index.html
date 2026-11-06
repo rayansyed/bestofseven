@@ -502,16 +502,121 @@ body.no-slip main { grid-column: 2 / -1; }
 .tc.fresh { animation: tc-in .5s cubic-bezier(.2,.8,.3,1.2) both; animation-delay: calc(var(--i) * 120ms); }
 @keyframes tc-in { from { opacity: 0; transform: translateY(18px) rotateY(80deg) scale(.9); } to { opacity: 1; transform: none; } }
 .pack-start { padding: 28px 22px; display: grid; justify-items: center; gap: 16px; text-align: center; }
-.pack { width: 210px; height: 290px; border: 0; border-radius: 18px; display: grid; align-content: center; justify-items: center; gap: 10px; color: #fff;
-  background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.18), transparent 45%), linear-gradient(150deg, #1D9BF0, #0B4F86 60%, #0A2B4A); box-shadow: 0 18px 40px rgba(29,155,240,.25), inset 0 0 0 2px rgba(255,255,255,.12); transition: transform .2s; }
-.pack:hover:not(:disabled) { transform: translateY(-4px) rotate(-1deg); }
+/* A foil pack: crimped zigzag ends, a silver foil top with two players, a coloured band with the wordmark,
+   foil grain and a shimmer sweep. Everything scales with the pack's width (cqw). --c1/--c2 are the pack's colours. */
+.pack { --c1: #2049B8; --c2: #0E2462; position: relative; display: block; width: 210px; aspect-ratio: 5 / 7.8; border: 0; padding: 0; background: none; color: #fff;
+  container-type: inline-size; cursor: pointer; filter: drop-shadow(0 12px 14px rgba(28,30,34,.28)); transition: transform .2s, filter .2s; }
+.pack:hover:not(:disabled) { transform: translateY(-4px) rotate(-1deg); filter: drop-shadow(0 18px 18px rgba(28,30,34,.3)); }
 .pack.busy { animation: pack-shake .5s infinite; }
+.pack:disabled { cursor: not-allowed; }
+.pack:disabled .pk { filter: grayscale(.75) brightness(.95); opacity: .6; }
+.pack.busy:disabled .pk { filter: none; opacity: 1; }
 @keyframes pack-shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-2deg); } 75% { transform: rotate(2deg); } }
-.pack-brand { font-weight: 800; font-size: 20px; display: flex; gap: 6px; align-items: center; }
-.pack-brand .seven { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 7px; background: #fff; color: var(--accent); transform: skewX(-10deg); }
-.pack-label { font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; opacity: .85; }
-.pack-n { font-size: 40px; font-weight: 800; }
-.pack-cta { font-size: 12px; font-weight: 700; background: rgba(255,255,255,.16); padding: 6px 12px; border-radius: 999px; }
+.p-daily { --c1: #1E9E52; --c2: #0A4A26; }
+.p-premium { --c1: #1A1A1D; --c2: #000; }
+.p-standard { --c1: #2049B8; --c2: #0E2462; }
+.pk { --z: 4.2cqw; position: absolute; inset: 0; overflow: hidden; display: grid; grid-template-rows: 7% 1fr auto 7%;
+  -webkit-mask: conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) top / var(--z) 51% repeat-x, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / var(--z) 51% repeat-x;
+  mask: conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) top / var(--z) 51% repeat-x, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / var(--z) 51% repeat-x;
+  background: linear-gradient(118deg, #C9CED6, #F6F7F9 26%, #A9B0BA 48%, #EEF0F3 70%, #BCC3CC); }
+.p-premium .pk { background: linear-gradient(118deg, #C99A2E, #FFE9A6 26%, #A87A1C 48%, #FBE08A 70%, #B98B24); }
+/* Heat-sealed ends: fine vertical ridges */
+.pk-crimp { position: relative; z-index: 2; background: repeating-linear-gradient(90deg, rgba(255,255,255,.5) 0 .9cqw, rgba(0,0,0,.2) .9cqw 1.8cqw), var(--c1); box-shadow: inset 0 -.6cqw 0 rgba(0,0,0,.25); }
+.pk-crimp.b { box-shadow: inset 0 .6cqw 0 rgba(0,0,0,.25); }
+.pk-top { position: relative; z-index: 3; display: grid; align-content: start; justify-items: center; padding-top: 4cqw; isolation: isolate; }
+.pk-year { font: 700 6.2cqw/1 "Oswald", var(--sans); letter-spacing: .04em; color: var(--c2); text-transform: uppercase; }
+.p-premium .pk-year { color: #2A1B02; }
+.pk-art { position: absolute; left: 0; right: 0; bottom: 0; height: 80%; z-index: -1; }
+.pk-art img { position: absolute; bottom: 0; height: 100%; width: auto; max-width: none; filter: drop-shadow(0 2cqw 2cqw rgba(0,0,0,.35)); }
+.pk-art img:first-child { left: -6%; } .pk-art img:last-child { right: -6%; }
+.pk-art::before { content: "7"; position: absolute; left: 50%; top: 6%; transform: translateX(-50%) skewX(-8deg); font: 700 70cqw/1 "Oswald", var(--sans); color: rgba(0,0,0,.07); }
+.pk-badge { position: absolute; left: 50%; bottom: 0; transform: translate(-50%, 50%); z-index: 3; width: 17cqw; height: 17cqw; border-radius: 50%; display: grid; place-items: center;
+  background: #fff; color: var(--c1); border: 1.2cqw solid var(--c1); font: 700 9cqw/1 "Oswald", var(--sans); box-shadow: 0 1cqw 2cqw rgba(0,0,0,.3); }
+.p-premium .pk-badge { color: #A87A1C; border-color: #A87A1C; background: #111; }
+.pk-band { position: relative; display: grid; justify-items: center; gap: 2cqw; padding: 11cqw 6cqw 7cqw; background: linear-gradient(var(--c1), var(--c2)); box-shadow: inset 0 1cqw 0 rgba(255,255,255,.25); }
+.pk-band::before { content: ""; position: absolute; inset: 3.5cqw 4cqw; border: .5cqw solid rgba(255,255,255,.35); border-radius: 1.5cqw; pointer-events: none; }
+.p-premium .pk-band::before { border-color: rgba(245,196,81,.6); }
+.pk-names { position: absolute; top: 5cqw; left: 7cqw; right: 7cqw; display: flex; justify-content: space-between; font: 700 3.6cqw/1.1 var(--sans); letter-spacing: .05em; text-transform: uppercase; opacity: .85; }
+.pk-names span { max-width: 34%; overflow-wrap: anywhere; } .pk-names span:last-child { text-align: right; }
+.pk-word { font: 700 15cqw/.9 "Oswald", var(--sans); letter-spacing: .01em; transform: skewX(-8deg); text-shadow: 0 .8cqw 0 rgba(0,0,0,.35); white-space: nowrap; }
+.pk-word b { color: #F5C451; }
+.pk-kind { font: 700 5.6cqw/1 "Oswald", var(--sans); letter-spacing: .22em; margin-right: -.22em; text-transform: uppercase; color: rgba(255,255,255,.85); }
+.p-premium .pk-kind { color: #F5C451; }
+.pk-count { font: 700 6.4cqw/1 "Oswald", var(--sans); letter-spacing: .04em; text-transform: uppercase; padding: 1.6cqw 3cqw; border: .5cqw solid currentColor; border-radius: 1cqw; }
+/* Foil grain and a shimmer that sweeps across */
+.pk-grain { position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: .32; mix-blend-mode: overlay;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1.4 -.2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.12) 0 1px, transparent 1px 5px); }
+.pk-shine { position: absolute; inset: 0; z-index: 5; pointer-events: none;
+  background: linear-gradient(90deg, rgba(0,0,0,.28), transparent 9%, transparent 91%, rgba(0,0,0,.28)),
+    linear-gradient(105deg, transparent 35%, rgba(255,255,255,.55) 46%, rgba(255,255,255,.1) 52%, transparent 60%) no-repeat; background-size: 100% 100%, 250% 100%;
+  animation: pk-shine 4.5s ease-in-out infinite; mix-blend-mode: soft-light; }
+.pack:hover .pk-shine { animation-duration: 1.6s; }
+@keyframes pk-shine { 0% { background-position: 0 0, 140% 0; } 60%, 100% { background-position: 0 0, -60% 0; } }
+.pk-price { font-weight: 800; font-size: 14px; }
+.pk-cta { font-size: 12px; color: var(--muted); font-weight: 600; }
+
+/* Opening: the pack's cards in a face-down stack. Each tap flips the next one; boosters come first. */
+.stk-stage { position: relative; display: grid; justify-items: center; gap: 14px; padding: 14px 16px 22px; overflow: hidden; }
+.stk-wrap { position: relative; width: min(240px, 64vw); aspect-ratio: 5 / 7; margin: 54px 0 6px; }
+.stk { position: absolute; inset: 0; border: 0; padding: 0; background: none; cursor: pointer; perspective: 1400px; z-index: 1; }
+.stk-card { position: absolute; inset: 0; z-index: calc(50 - var(--d)); transform: translate(calc(var(--d) * 5px), calc(var(--d) * -5px));
+  transition: transform .55s cubic-bezier(.2,.8,.25,1), opacity .45s; }
+.stk-card.deep { opacity: 0; }
+.stk-card.up { z-index: 60; transform: scale(1.03); }
+.stk-card.gone { z-index: 55; transform: translate(-30%, 34%) rotate(-14deg) scale(.4); opacity: 0; pointer-events: none; }
+.stk-in { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .65s cubic-bezier(.3,.7,.2,1); }
+.stk-card.up .stk-in, .stk-card.gone .stk-in { transform: rotateY(180deg); }
+.stk-back, .stk-face { position: absolute; inset: 0; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+.stk-face { transform: rotateY(180deg); }
+.stk-face > .tc { width: 100%; height: 100%; }
+.stk-face .tc:hover { transform: none; }
+.stk-back { border-radius: 11px; padding: 6%; background: #15171A; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), 0 8px 18px rgba(28,30,34,.2); }
+.stk-back::before { content: ""; position: absolute; inset: 6%; border-radius: 7px; border: 2px solid rgba(255,255,255,.18);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80' fill='none' stroke='%23fff' stroke-opacity='.09' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M8 8l9 9M17 8l-9 9M48 46l9 9M57 46l-9 9'/%3E%3Ccircle cx='58' cy='16' r='6'/%3E%3Ccircle cx='18' cy='58' r='6'/%3E%3Cpath d='M26 52C34 40 40 34 50 30' stroke-dasharray='4 5'/%3E%3C/svg%3E") center / 50% repeat; }
+.stk-back span { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 4px; color: #fff; font: 700 20px/1 "Oswald", var(--sans); letter-spacing: .04em; }
+.stk-back span b { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 12px; background: #fff; color: #15171A; font-size: 34px; transform: skewX(-8deg); }
+.stk-hint { font-size: 13px; color: var(--muted); font-weight: 600; text-align: center; }
+.stk-hint b { color: var(--ink); }
+.stk-strip { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; min-height: 0; }
+.stk-thumb { width: 54px; animation: thumb-in .35s ease both; }
+.stk-thumb .tc-tonight { display: none; }
+.stk-thumb .tc:hover { transform: none; }
+@keyframes thumb-in { from { opacity: 0; transform: translateY(8px) scale(.8); } }
+
+/* Pull effects for Rare, Epic and Legendary cards: rays and a glow behind the card, sparks and a label in front */
+.fx-back, .fx-front { position: absolute; inset: 0; pointer-events: none; }
+.fx-back { z-index: 0; }
+.fx-front { z-index: 2; }
+.fx-rays { position: absolute; left: 50%; top: 50%; width: 300%; aspect-ratio: 1; transform: translate(-50%, -50%);
+  background: repeating-conic-gradient(var(--fx) 0 7deg, transparent 7deg 20deg); -webkit-mask: radial-gradient(closest-side, #000 20%, transparent); mask: radial-gradient(closest-side, #000 20%, transparent);
+  animation: fx-rays 2s ease-out both; }
+.fx-glow { position: absolute; left: 50%; top: 50%; width: 170%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%;
+  background: radial-gradient(closest-side, var(--fx), transparent); animation: fx-glow 1.8s ease-out both; }
+.fx-p { position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; margin: -4.5px; border-radius: 2px; background: var(--fx);
+  animation: fx-p var(--t) cubic-bezier(.15,.7,.3,1) both; }
+.fx-label { position: absolute; left: 50%; top: -42px; transform: translateX(-50%); white-space: nowrap; font: 700 34px/1 "Oswald", var(--sans); letter-spacing: .04em; text-transform: uppercase;
+  color: #fff; -webkit-text-stroke: 1.5px rgba(0,0,0,.35); text-shadow: 0 0 18px var(--fx), 0 3px 0 rgba(0,0,0,.25); animation: fx-label 1.9s cubic-bezier(.2,.9,.3,1.3) both; }
+.fx-rare { --fx: rgba(79,179,246,.7); }
+.fx-epic { --fx: rgba(183,140,255,.75); }
+.fx-epic .fx-rays { background: repeating-conic-gradient(rgba(255,0,170,.5) 0 7deg, transparent 7deg 20deg, rgba(0,220,255,.5) 20deg 27deg, transparent 27deg 40deg, rgba(255,230,0,.5) 40deg 47deg, transparent 47deg 60deg); }
+.fx-epic .fx-p:nth-child(3n) { background: #FF4FD8; } .fx-epic .fx-p:nth-child(3n+1) { background: #4FE3FF; } .fx-epic .fx-p:nth-child(3n+2) { background: #FFE14F; }
+.fx-legendary { --fx: rgba(245,184,61,.85); }
+.fx-legendary .fx-rays { width: 380%; animation-duration: 2.6s; }
+.fx-legendary .fx-label { top: -50px; font-size: 40px; color: #F5C451; -webkit-text-stroke: 1.5px #3A2606; }
+.stk-card.up.hit .tc { animation: hit-glow 1.8s ease-out; }
+@keyframes hit-glow { 0% { box-shadow: 0 0 0 0 var(--fx); } 25% { box-shadow: 0 0 34px 10px var(--fx); } 100% { box-shadow: 0 8px 18px rgba(28,30,34,.16); } }
+@keyframes fx-rays { 0% { opacity: 0; transform: translate(-50%, -50%) rotate(0) scale(.4); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) rotate(70deg) scale(1); } }
+@keyframes fx-glow { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.3); } 25% { opacity: .9; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.1); } }
+@keyframes fx-p { 0% { opacity: 1; transform: rotate(var(--a)) translateY(0) scale(1.2); } 100% { opacity: 0; transform: rotate(var(--a)) translateY(calc(-1 * var(--r))) rotate(180deg) scale(.4); } }
+@keyframes fx-label { 0% { opacity: 0; transform: translateX(-50%) scale(.4); } 18% { opacity: 1; transform: translateX(-50%) scale(1.12); } 30% { transform: translateX(-50%) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
+.stk-stage.shake { animation: stage-shake .5s cubic-bezier(.36,.07,.19,.97); }
+@keyframes stage-shake { 10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(4px); } 30%, 50%, 70% { transform: translateX(-6px); } 40%, 60% { transform: translateX(6px); } }
+@media (prefers-reduced-motion: reduce) {
+  .pk-shine, .fx-rays, .fx-glow, .fx-p, .stk-stage.shake { animation: none; } .fx-rays, .fx-glow, .fx-p { display: none; }
+  .stk-card, .stk-in { transition-duration: .01s; }
+}
+
 .pack-reveal .tc-grid { grid-template-columns: repeat(auto-fit, minmax(165px, 200px)); justify-content: center; padding-top: 22px; }
 .pack-row { justify-content: center; padding: 0 22px 24px; }
 .arch-legend { padding-bottom: 18px; }
@@ -638,12 +743,7 @@ body.no-slip main { grid-column: 2 / -1; }
 .shop { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; padding: 8px 22px 22px; }
 .shop-odds { padding: 0 22px 20px; }
 .shop-item { display: grid; gap: 8px; justify-items: center; text-align: center; }
-.shop .pack { width: 100%; max-width: 220px; height: auto; aspect-ratio: 3 / 4; }
-.shop .pack-n { font-size: 32px; }
-.pack.p-daily { background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.2), transparent 45%), linear-gradient(150deg, #22C55E, #0E7A3A 60%, #0A3D20); box-shadow: 0 18px 40px rgba(34,197,94,.22), inset 0 0 0 2px rgba(255,255,255,.12); }
-.pack.p-premium { background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.28), transparent 45%), linear-gradient(150deg, #F5C451, #B8801A 55%, #3A2606); box-shadow: 0 18px 40px rgba(245,184,61,.28), inset 0 0 0 2px rgba(255,255,255,.18); }
-.pack.p-premium .pack-brand .seven { color: #B8801A; }
-.pack:disabled { opacity: .5; cursor: not-allowed; }
+.shop .pack { width: 100%; max-width: 200px; }
 /* Booster cards: Nytro Boost bottles on a retro promo card. --fl is the flavour colour. */
 .bc .bc-card { position: relative; height: 100%; border-radius: 3cqw; padding: 5cqw; background: var(--fl); box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
 .bc-tab { position: absolute; top: 5.5cqw; right: 7cqw; font: 700 max(8px, 6cqw)/1 "Oswald", var(--sans); font-style: italic; letter-spacing: .08em; color: #fff; }
@@ -680,13 +780,7 @@ body.no-slip main { grid-column: 2 / -1; }
 @media (max-width: 700px) {
   .shop { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 6px 14px 16px; }
   .shop-item, .shop .pack { min-width: 0; }
-  .shop .pack { border-radius: 12px; gap: 6px; padding: 8px 4px; overflow: hidden; }
-  .shop .pack-label { text-align: center; line-height: 1.2; }
-  .shop .pack-brand { font-size: 12px; gap: 3px; }
-  .shop .pack-brand .seven { width: 16px; height: 16px; border-radius: 4px; }
-  .shop .pack-label { font-size: 8.5px; letter-spacing: .06em; }
-  .shop .pack-n { font-size: 18px; }
-  .shop .pack-cta { font-size: 9.5px; padding: 4px 6px; }
+  .pk-price { font-size: 12.5px; } .pk-cta { font-size: 11px; line-height: 1.3; }
   .shop-item .hint { font-size: 11px; }
 }
 /* Weekly matchup: category grid above an open night, and the Monday-to-Sunday strip */
@@ -756,7 +850,7 @@ h1 { font-size: 30px; line-height: 1.15; }
 .tc { background: linear-gradient(155deg, #FFFFFF, #ECEAE4 55%, #F7F6F2); box-shadow: inset 0 0 0 1px rgba(28,30,34,.1), 0 8px 18px rgba(28,30,34,.16), 0 1px 2px rgba(28,30,34,.1); }
 .r-legendary { box-shadow: inset 0 0 0 1px rgba(28,30,34,.1), 0 10px 24px rgba(184,128,26,.35); }
 .pick.on .tc { box-shadow: 0 0 0 3px var(--ink), 0 8px 18px rgba(28,30,34,.16); }
-.pack { box-shadow: 0 14px 28px rgba(28,30,34,.2), inset 0 0 0 2px rgba(255,255,255,.14) !important; }
+
 
 /* Spots that were tuned for the dark look */
 .tabs input, .tabs select, .field input[type=text], .field select, .linkbox input { background: var(--panel); border-color: var(--chip-2); }
@@ -1205,6 +1299,86 @@ const SHOP = [
   { type: 'premium', name: 'Premium pack', price: 400, what: '5 players with at least one Rare, plus 2 boosters' },
 ];
 const SELL_VALUE = { common: 10, rare: 30, epic: 75, legendary: 200 };
+const PACK_CARDS = { starter: 5, daily: 4, standard: 5, premium: 7 };
+// Two players on the wrapper, from the top of the roster down: Premium gets the league's best, the others the next ones.
+function packArt(type) {
+  const off = { premium: 0, standard: 2, daily: 4, starter: 6 }[type] || 0;
+  return [...roster].filter(([, p]) => p.gp && p.stars >= 4).sort((a, b) => b[1].avg - a[1].avg).slice(off, off + 2).map(([id, p]) => ({ id, name: p.name }));
+}
+// The pack itself. inner is the button's attributes; the price and what tapping does go under it.
+function packHtml(type, name, attrs, busy = false) {
+  const art = packArt(type), img = a => `<img src="https://a.espncdn.com/i/headshots/nba/players/full/${encodeURIComponent(a.id)}.png" alt="" loading="lazy" onerror="this.remove()">`;
+  return `<button class="pack p-${type} ${busy ? 'busy' : ''}" ${attrs}><span class="pk">
+    <span class="pk-crimp"></span>
+    <span class="pk-top"><span class="pk-year">2026–27 Basketball Cards</span><span class="pk-art">${art.map(img).join('')}</span><span class="pk-badge">7</span></span>
+    <span class="pk-band"><span class="pk-names">${art.map(a => `<span>${esc(a.name)}</span>`).join('')}</span>
+      <span class="pk-word">BEST OF <b>7</b></span><span class="pk-kind">${esc(name.replace(/ pack$/i, ''))}</span><span class="pk-count">${PACK_CARDS[type]} cards per pack</span></span>
+    <span class="pk-crimp b"></span>
+    <span class="pk-grain"></span><span class="pk-shine"></span></span></button>`;
+}
+
+// The card stack shown while opening: boosters first, then the players. st = { items, i }, i = cards flipped so far.
+const stackItems = (cards, boosters = []) => [...boosters.map(b => ({ b })), ...cards.map(c => ({ c }))];
+const STK_BACK = '<span><b>7</b>BEST OF 7</span>';
+function stkFace(it, had) {
+  const html = it.b ? boosterHtml(it.b) : cardHtml(it.c, { tag: had ? (had.has(it.c.pid) ? ['Duplicate', 'dupe'] : ['New', 'new']) : null });
+  return html.replace(/ data-pid="[^"]*"/, '');
+}
+function stkHint(st) {
+  const n = st.items.length;
+  return !st.i ? `Tap the stack to flip your first card · <b>${n}</b> cards` : st.i < n ? `Tap for the next card · <b>${st.i}</b> of ${n}` : 'Tap to see the whole pack';
+}
+function stageHtml(st, had) {
+  const cards = st.items.map((it, k) => {
+    const d = Math.max(0, k - st.i), cls = k < st.i - 1 ? 'gone' : k === st.i - 1 ? 'up' : d > 4 ? 'deep' : '';
+    return `<div class="stk-card ${cls}" style="--d:${d}"><div class="stk-in"><div class="stk-back">${STK_BACK}</div><div class="stk-face">${stkFace(it, had)}</div></div></div>`;
+  }).join('');
+  const thumbs = st.items.slice(0, Math.max(0, st.i - 1)).map(it => `<div class="stk-thumb">${stkFace(it)}</div>`).join('');
+  return `<div class="stk-stage" id="stk"><div class="stk-wrap"><button class="stk" data-action="flip" aria-label="Flip the next card">${cards}</button></div>
+    <p class="stk-hint" id="stk-hint" aria-live="polite">${stkHint(st)}</p><div class="stk-strip" id="stk-strip">${thumbs}</div>
+    <button class="linkbtn" data-action="flip-all">Show all cards</button></div>`;
+}
+const curStack = () => ui.packReveal?.st && !ui.packReveal.st.done ? ui.packReveal.st : ui.reveal && ui.revealSt && !ui.revealSt.done ? ui.revealSt : null;
+function finishStack() {
+  const st = curStack(); if (!st) return;
+  st.done = true;
+  if (ui.packReveal?.st === st) ui.packReveal.played = true; else ui.revealPlayed = true;
+  ui.sig = ''; render(); window.scrollTo({ top: 0 });
+}
+// Flips the next card in place, without redrawing the page, so the animation runs.
+function flipNext() {
+  const st = curStack(), el = $('#stk');
+  if (!st) return;
+  if (st.i >= st.items.length) { finishStack(); return; }
+  st.i++;
+  if (!el) { ui.sig = ''; render(); return; }
+  el.querySelectorAll('.stk-card').forEach((c, k) => {
+    const d = Math.max(0, k - st.i);
+    c.style.setProperty('--d', d);
+    c.classList.toggle('gone', k < st.i - 1); c.classList.toggle('up', k === st.i - 1); c.classList.toggle('deep', k >= st.i && d > 4); c.classList.remove('hit');
+  });
+  if (st.i >= 2) $('#stk-strip').insertAdjacentHTML('beforeend', `<div class="stk-thumb">${stkFace(st.items[st.i - 2])}</div>`);
+  $('#stk-hint').innerHTML = stkHint(st);
+  const rarity = st.items[st.i - 1].c?.rarity;
+  if (rarity && rarity !== 'common') setTimeout(() => pullFx(el, rarity, el.querySelectorAll('.stk-card')[st.i - 1]), 380);
+}
+// A burst for a Rare, Epic or Legendary pull; Legendary also shakes the stage.
+function pullFx(stage, rarity, card) {
+  if (!stage.isConnected) return;
+  const wrap = stage.querySelector('.stk-wrap'), n = { rare: 12, epic: 20, legendary: 28 }[rarity] || 12;
+  stage.querySelectorAll('.fx-back, .fx-front').forEach(x => x.remove());
+  const back = document.createElement('div'), front = document.createElement('div');
+  back.className = front.className = '';
+  back.className = `fx-back fx-${rarity}`; front.className = `fx-front fx-${rarity}`;
+  back.innerHTML = '<i class="fx-rays"></i><i class="fx-glow"></i>';
+  front.innerHTML = Array.from({ length: n }, (_, j) => `<i class="fx-p" style="--a:${Math.round(j * 360 / n + Math.random() * 12)}deg;--r:${Math.round(120 + Math.random() * (rarity === 'legendary' ? 140 : 90))}px;--t:${(.7 + Math.random() * .6).toFixed(2)}s"></i>`).join('')
+    + `<b class="fx-label">${RARITY[rarity].name}!</b>`;
+  wrap.prepend(back); wrap.append(front);
+  if (card) { card.style.setProperty('--fx', getComputedStyle(back).getPropertyValue('--fx')); card.classList.remove('hit'); void card.offsetWidth; card.classList.add('hit'); }
+  if (rarity === 'legendary') { stage.classList.remove('shake'); void stage.offsetWidth; stage.classList.add('shake'); }
+  setTimeout(() => { back.remove(); front.remove(); }, 2700);
+}
+
 // Packs given to the player by hand (giftPacks on their user document, set in the Firebase console).
 const giftCount = () => Object.values(profile?.giftPacks || {}).reduce((s, n) => s + (n > 0 ? n : 0), 0);
 
@@ -1220,8 +1394,8 @@ function packsView() {
   const tile = t => {
     const daily = t.type === 'daily', can = daily ? !dailyDone : coins >= t.price, busy = ui.opening === t.type;
     const cta = busy ? 'Opening…' : daily ? (dailyDone ? `New pack in ${untilTomorrow()}` : 'Open free') : can ? 'Open' : `Need 🪙 ${t.price - coins} more`;
-    return `<div class="shop-item"><button class="pack p-${t.type} ${busy ? 'busy' : ''}" data-action="buy" data-t="${t.type}" ${!can || ui.opening ? 'disabled' : ''} aria-label="${t.name}, ${t.price ? t.price + ' coins' : 'free'}: ${t.what}">
-      <span class="pack-brand">BEST OF <span class="seven">7</span></span><span class="pack-label">${t.name}</span><span class="pack-n">${t.price ? `🪙 ${t.price}` : 'FREE'}</span><span class="pack-cta">${cta}</span></button>
+    return `<div class="shop-item">${packHtml(t.type, t.name, `data-action="buy" data-t="${t.type}" ${!can || ui.opening ? 'disabled' : ''} aria-label="${t.name}, ${t.price ? t.price + ' coins' : 'free'}: ${t.what}"`, busy)}
+      <span class="pk-price">${t.price ? `🪙 ${t.price}` : 'Free'}</span><span class="pk-cta">${cta}</span>
       <p class="hint">${t.what}.</p></div>`;
   };
   // Extra copies of a player beyond your best card of him.
@@ -1241,13 +1415,15 @@ function packsView() {
   if (r) r.played = true;
   const giftTile = t => {
     const n = profile.giftPacks[t.type], busy = ui.opening === 'gift-' + t.type;
-    return `<div class="shop-item"><button class="pack p-${t.type} ${busy ? 'busy' : ''}" data-action="gift" data-t="${t.type}" ${ui.opening ? 'disabled' : ''} aria-label="Open a gifted ${t.name}. You have ${n}.">
-      <span class="pack-brand">BEST OF <span class="seven">7</span></span><span class="pack-label">${t.name}</span><span class="pack-n">🎁 ×${n}</span><span class="pack-cta">${busy ? 'Opening…' : 'Open gift'}</span></button>
+    return `<div class="shop-item">${packHtml(t.type, t.name, `data-action="gift" data-t="${t.type}" ${ui.opening ? 'disabled' : ''} aria-label="Open a gifted ${t.name}. You have ${n}."`, busy)}
+      <span class="pk-price">Gift ×${n}</span><span class="pk-cta">${busy ? 'Opening…' : 'Tap to open'}</span>
       <p class="hint">${t.what}.</p></div>`;
   };
   const gifts = SHOP.filter(t => (profile.giftPacks?.[t.type] || 0) > 0);
   const giftPanel = gifts.length ? `<section class="panel gift-head"><div class="list-head"><div><div class="eyebrow">Gifts</div><h2>You’ve been given ${giftCount()} pack${giftCount() > 1 ? 's' : ''}</h2>
       <p class="sub">Free to open. They don’t use coins or your daily pack.</p></div></div><div class="shop">${gifts.map(giftTile).join('')}</div></section>` : '';
+  if (r && r.st && !r.st.done) return `<section class="panel pack-reveal"><div class="list-head"><div><div class="eyebrow">${r.gift ? 'Gifted ' : ''}${SHOP.find(t => t.type === r.type)?.name || 'Pack'}</div>
+      <h2>Your pack is open</h2></div></div>${stageHtml(r.st, r.had)}</section>`;
   const reveal = r ? `<section class="panel pack-reveal"><div class="list-head"><div><div class="eyebrow">${r.gift ? 'Gifted ' : ''}${SHOP.find(t => t.type === r.type)?.name || 'Pack'}</div>
       <h2>${r.cards.length} players and ${r.boosters.length} booster${r.boosters.length === 1 ? '' : 's'}</h2></div><button class="btn" data-action="reveal-done">Done</button></div>
     <div class="tc-grid">${r.cards.map((c, i) => cardHtml(c, { fresh, i, tag: r.had.has(c.pid) ? ['Duplicate', 'dupe'] : ['New', 'new'] })).join('')}${r.boosters.map((b, j) => boosterHtml(b, { fresh, i: r.cards.length + j })).join('')}</div></section>` : '';
@@ -1289,8 +1465,10 @@ async function openPack(type, gift = false) {
   ui.opening = gift ? 'gift-' + type : type; ui.sig = ''; render();
   try {
     const out = await api('/api/packs', gift ? { type, gift: true } : { type });
-    if (type === 'starter') { ui.reveal = out.cards; ui.revealNo = no; ui.revealPlayed = false; }
-    else { ui.packReveal = { type, gift, cards: out.cards, boosters: out.boosters || [], had }; window.scrollTo({ top: 0 }); }
+    // Played = the grid's flip-in is skipped afterwards, since the stack already showed each card.
+    if (type === 'starter') { ui.reveal = out.cards; ui.revealNo = no; ui.revealPlayed = true; ui.revealSt = { items: stackItems(out.cards), i: 0 }; }
+    else { ui.packReveal = { type, gift, cards: out.cards, boosters: out.boosters || [], had, played: true, st: { items: stackItems(out.cards, out.boosters || []), i: 0 } }; }
+    window.scrollTo({ top: 0 });
   } catch (err) { toast(err.message); }
   ui.opening = false; ui.sig = ''; render();
 }
@@ -1310,6 +1488,7 @@ function packView() {
   const opened = Math.max(profile.starterPacks || 0, ui.reveal ? ui.revealNo : 0), left = STARTER_PACKS - opened;
   const intro = `<section class="hero-card"><div><div class="eyebrow">Welcome, ${esc(profile.name)}</div><h1>${ui.reveal ? `Pack ${opened} of ${STARTER_PACKS}` : 'Open your starter packs'}</h1>
     <p class="hero-sub">${ui.reveal ? (left ? `${left} more to open.` : 'That’s your starting collection: 15 cards.') : `You get ${STARTER_PACKS} free packs of 5 cards: 2 guards, 2 forwards and a center in each. Your lineups are built from the cards you own.`}</p></div></section>`;
+  if (ui.reveal && ui.revealSt && !ui.revealSt.done) return intro + `<section class="panel pack-reveal">${stageHtml(ui.revealSt)}</section>`;
   if (ui.reveal) {
     // As on the Packs page, the flip-in plays only on the reveal's first draw.
     const fresh = !ui.revealPlayed;
@@ -1318,9 +1497,8 @@ function packView() {
       <div class="row pack-row">${left ? `<button class="btn primary" data-action="pack" ${ui.opening ? 'disabled' : ''}>${ui.opening ? 'Opening…' : `Open pack ${opened + 1}`}</button>` : '<button class="btn primary" data-action="pack-done">Start playing</button>'}</div></section>`;
   }
   return intro + `<section class="panel pack-start">
-    <button class="pack ${ui.opening ? 'busy' : ''}" data-action="pack" ${ui.opening ? 'disabled' : ''} aria-label="Open starter pack ${opened + 1} of ${STARTER_PACKS}">
-      <span class="pack-brand">BEST OF <span class="seven">7</span></span><span class="pack-label">Starter pack</span><span class="pack-n">${opened + 1} / ${STARTER_PACKS}</span>
-      <span class="pack-cta">${ui.opening ? 'Opening…' : 'Tap to open'}</span></button>
+    ${packHtml('starter', 'Starter pack', `data-action="pack" ${ui.opening ? 'disabled' : ''} aria-label="Open starter pack ${opened + 1} of ${STARTER_PACKS}"`, !!ui.opening)}
+    <span class="pk-price">Pack ${opened + 1} of ${STARTER_PACKS}</span><span class="pk-cta">${ui.opening ? 'Opening…' : 'Tap the pack to open it'}</span>
     <p class="hint">Starter cards are all Common and leave out the league’s top-rated players. The first pack favours players with a game in the next two days, so you can play right away.</p></section>`;
 }
 
@@ -1956,7 +2134,7 @@ function render() {
   // New players open their starter packs before anything else.
   if ((profile.starterPacks || 0) < STARTER_PACKS || ui.reveal) {
     $('#side').innerHTML = ''; $('#slip').innerHTML = '';
-    const sig = 'packs|' + (profile.starterPacks || 0) + '|' + ui.opening + '|' + (ui.reveal ? ui.revealNo : 0);
+    const sig = 'packs|' + (profile.starterPacks || 0) + '|' + ui.opening + '|' + (ui.reveal ? ui.revealNo : 0) + '|' + (ui.revealSt?.done ? 1 : 0);
     if (sig !== ui.sig) { ui.sig = sig; $('#main').innerHTML = packView(); }
     return;
   }
@@ -1969,7 +2147,12 @@ function render() {
   renderSide();
   const m = $('#main');
   if (ui.view === 'cards') { ui.sig = 'cards'; m.innerHTML = cardsView(); $('#slip').innerHTML = ''; return; }
-  if (ui.view === 'packs') { ui.sig = 'packs'; m.innerHTML = packsView(); $('#slip').innerHTML = ''; return; }
+  if (ui.view === 'packs') {
+    // While the stack is out, later updates (the new cards and coins arriving) mustn't redraw it mid-flip.
+    const stacking = !!(ui.packReveal?.st && !ui.packReveal.st.done);
+    if (stacking && ui.sig === 'packs-stack' && $('#stk')) return;
+    ui.sig = stacking ? 'packs-stack' : 'packs'; m.innerHTML = packsView(); $('#slip').innerHTML = ''; return;
+  }
   if (ui.view === 'leaders') { ui.sig = 'leaders'; m.innerHTML = leadersView(); $('#slip').innerHTML = ''; return; }
   if (ui.view === 'profile') { ui.sig = 'profile'; m.innerHTML = profileView(); $('#slip').innerHTML = ''; return; }
   if (ui.view === 'history') { ui.sig = 'history'; m.innerHTML = historyView(); $('#slip').innerHTML = ''; return; }
@@ -2063,6 +2246,8 @@ document.addEventListener('click', e => {
   else if (a === 'edit-name') { ui.editName = true; ui.sig = ''; render(); }
   else if (a === 'name-cancel') { ui.editName = false; ui.sig = ''; render(); }
   else if (a === 'pack') openPack('starter');
+  else if (a === 'flip') flipNext();
+  else if (a === 'flip-all') { const st = curStack(); if (st) { st.i = st.items.length; finishStack(); } }
   else if (a === 'buy') openPack(b.dataset.t);
   else if (a === 'gift') openPack(b.dataset.t, true);
   else if (a === 'reveal-done') { ui.packReveal = null; ui.sig = ''; render(); }

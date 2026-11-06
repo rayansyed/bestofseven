@@ -888,6 +888,9 @@ h1 { font-size: 30px; line-height: 1.15; }
 /* The lineup is the page itself, not a card on it: a big heading, then the court full width */
 /* The squad screen: the court is the page's centre, sized to fit the screen, on a faint playbook backdrop */
 #week:empty { display: none; }
+.spot-fp { --fl: #14171C; font-variant-numeric: tabular-nums; }
+.spot-fp.live { --fl: var(--good); }
+.lineup-stage + .ms-card { margin-top: 4px; }
 /* Today on a locked night: the week's score, tappable */
 .ms-card { display: grid; gap: 14px; width: 100%; padding: 18px 22px 22px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); color: var(--ink); text-align: left;
   box-shadow: 0 1px 2px rgba(28,30,34,.04); transition: transform .15s, box-shadow .15s; }
@@ -2423,6 +2426,22 @@ function weekPanel() {
 }
 
 // On a locked night, Today just points to the Matchup page, which has the full battle.
+// Tonight's lineup once it has locked: the same court, read-only, with each player's fantasy points so far.
+function lockedCourt(day, e) {
+  const m = pmap(day), live = day.games.some(g => g.status !== 'STATUS_SCHEDULED' && !LIVE_DONE.has(g.status));
+  const spots = SLOTS.map((slot, i) => {
+    const id = e.ids?.[i], p = id && m.get(id), [x, y] = SPOTS[i];
+    if (!p) return `<div class="spot empty" style="--x:${x}%;--y:${y}%"><span class="slot-card"><span>Empty</span></span><span class="spot-tag">${spotTag(slot)}</span></div>`;
+    const line = day.results?.[id], st = playerState({ p, line }, day);
+    const chip = line ? `${f1(fpOf(line))} FP` : st.kind === 'soon' ? esc(st.text) : st.kind === 'off' ? esc(st.text) : '0 FP';
+    return `<div class="spot filled" style="--x:${x}%;--y:${y}%"><span class="spot-boost spot-fp ${st.kind}">${chip}</span>
+      ${cardHtml(cards.get(id) || { pid: id, rarity: 'common', name: p.name, team: p.team, pos: p.pos })}<span class="spot-tag">${spotTag(slot)}</span></div>`;
+  }).join('');
+  return `<section class="court-panel lineup-stage" aria-labelledby="lineup-h"><div class="court-bar"><h2 id="lineup-h">Lineup</h2>
+      <span class="court-lock">${dayLabel(day.date).split(',')[0]} · ${live ? '<span class="mu-live">Live</span>' : day.final ? 'Final' : 'Locked'}</span></div>
+    <div class="court">${COURT_SVG}${spots}</div></section>`;
+}
+
 // On a locked night, Today shows just the week's score; tapping it opens the Matchup page for the full battle.
 function weekView(day, m) {
   const w = weekState(m), [a, b] = w.r.wins;
@@ -2707,7 +2726,7 @@ function render() {
   const sat = notice('Not entered', 'You sat this night out', `<p>${profile.nights ? `${profile.lastSaved === ui.sel ? 'Your Streak Saver covered this night, so your streak and RP are safe.' : `Skipping a game night adds nothing to your week and costs ${SKIP_PENALTY} RP and your streak, but it can’t drop you out of your tier.`}` : 'Enter a night to get on the board.'}</p>${nextBtn}`);
   if (e?.group && group && group.date === ui.sel) body = groupView(day);
   else if (e?.invalid) body = notice('Entry not counted', 'This lineup was invalid', `<p>The lineup was rejected (${esc(e.invalid)}), so it didn’t count toward your week.</p>${nextBtn}`) + (wm ? weekView(day, wm) : '');
-  else if (wm && e) { m.innerHTML = weekView(day, wm); return; }
+  else if (wm && e) { m.innerHTML = lockedCourt(day, e) + weekView(day, wm); return; }
   else if (wm) body = sat + weekView(day, wm);
   else if (!e) body = sat;
   else body = notice('Locked in', 'Finding your opponent', `<p>Lineups locked at ${timeLabel(day.lockAt)}. Your opponent for the week is set on the next sync, within 30 minutes of tip-off, and both lineups are revealed then.</p>`);
